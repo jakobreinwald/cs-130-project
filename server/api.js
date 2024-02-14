@@ -12,8 +12,8 @@ class SpotifyAPI {
     this.redirect_uri = redirect_uri;
   }
 
-  getHeadersWithAccessToken() {
-    return {'Authorization': `Bearer ${this.access_token}`};
+  getHeadersWithAccessToken(access_token) {
+    return {'Authorization': `Bearer ${access_token}`};
   }
 
   async getAccessToken(code) {
@@ -55,7 +55,7 @@ class SpotifyAPI {
     })}`;
   }
 
-  async getUserProfile() {
+  async getUserProfile(user_id) {
     return axios.get(`${base_url}/me`, {
         headers: this.getHeadersWithAccessToken()
       });
