@@ -6,7 +6,8 @@ const mongoose = require('mongoose');
 const Artist = new mongoose.Schema({
   artist_id: {
     type: String,
-    required: true
+    required: true,
+    index: true
   },
   listener_id_to_rank: {
     type: Map,
@@ -22,11 +23,7 @@ const Artist = new mongoose.Schema({
   name: {
     type: String
   },
-  timestamp: {
-    type: Date,
-    default: Date.now,
-    required: true
-  }
+  timestamps: true
 });
 
 // Export Artist model

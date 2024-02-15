@@ -20,7 +20,8 @@ const User = new mongoose.Schema({
   },
   user_id: {
     type: String,
-    required: true
+    required: true,
+    index: true
   },
   timestamp: {
     type: Date,

@@ -3,17 +3,15 @@ const mongoose = require('mongoose');
 
 // Genre schema
 const Genre = new mongoose.Schema({
-  genre_id: {
-    type: String,
-    required: true
-  },
-  listener_id_to_rank: {
+  listener_id_to_count: {
     type: Map,
     of: Number,
-    required: true
+    required: true,
+    default: {}
   },
   name: {
-    type: String
+    type: String,
+    required: true
   }
 });
 

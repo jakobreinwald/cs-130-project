@@ -9,7 +9,7 @@ const Track = new mongoose.Schema({
     type: Album
   },
   artists: {
-    type: [Artist]
+    type: [String]
   },
   name: {
     type: String
@@ -19,13 +19,10 @@ const Track = new mongoose.Schema({
   },
   track_id: {
     type: String,
-    required: true
+    required: true,
+    index: true
   },
-  timestamp: {
-    type: Date,
-    default: Date.now,
-    required: true
-  }
+  timestamps: true
 });
 
 // Export Track model

@@ -6,7 +6,8 @@ const mongoose = require('mongoose');
 const Album = new mongoose.Schema({
   album_id: {
     type: String,
-    required: true 
+    required: true,
+    index: true
   },
   album_type: {
     type: String,
@@ -33,11 +34,7 @@ const Album = new mongoose.Schema({
     enum: ['year', 'month', 'day'],
     required: true
   },
-  timestamp: {
-    type: Date,
-    default: Date.now,
-    required: true
-  }
+  timestamps: true
 });
 
 // Export Album model
