@@ -1,10 +1,10 @@
+// Constants
+const connection = `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_CLUSTER}.${process.env.MONGO_HOST}/?retryWrites=true&w=majority`;
+
 // Dependencies
 const { Album, Artist, Genre, Track, User } = require('./models');
 const mongoose = require('mongoose');
-require('dotenv').config({ path: '.env.local' }); 
-
-// Connect to database
-const connection = `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_CLUSTER}.${process.env.MONGO_HOST}/?retryWrites=true&w=majority`;
+require('dotenv').config({ path: '.env.local' });
 
 class Database {
   constructor() {
@@ -20,7 +20,6 @@ class Database {
       width: image_obj.width
     });
   }
-  
 
   async createOrUpdateAlbum(album_obj) {
     // Convert album_obj to Album model
@@ -35,11 +34,11 @@ class Database {
     };
 
     // Update existing Album document, otherwise create new document
-    await Album.updateOne(
+    Album.updateOne(
       { album_id: album_obj.id },
       album,
       { upsert: true, setDefaultsOnInsert: true }
-    );
+    ).exec();
   }
 
   async createOrUpdateArtist(artist_obj, listener_id, rank_for_listener) {
@@ -52,6 +51,8 @@ class Database {
     };
 
     // TODO: add remaining Artist fields and update listener_id_to_rank
+    // Update existing Artist document, if any
+    // If no Artist document exists, create new document
   }
 
   async createOrUpdateGenre(name, listener_id) {
@@ -76,18 +77,23 @@ class Database {
   }
 
   async getAlbum(album_id) {
+    Album.findOne({ album_id: album_id }).exec();
   }
 
   async getArtist(artist_id) {
+    Artist.findOne({ artist_id: artist_id }).exec();
   }
 
-  async getGenre(genre_id) {
+  async getGenre(name) {
+    Genre.findOne({ name: name }).exec();
   }
 
   async getTrack(track_id) {
+    Track.findOne({ track_id: track_id }).exec();
   }
   
   async getUser(user_id) {
+    User.findOne({ user_id: user_id }).exec();
   }
 }
 

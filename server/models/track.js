@@ -9,7 +9,7 @@ const Track = new mongoose.Schema({
     type: Album
   },
   artists: {
-    type: [String]
+    type: [Artist]
   },
   name: {
     type: String

@@ -3,6 +3,7 @@ const port = 3001;
 const redirect_uri = `http://localhost:${port}/callback`;
 
 // Dependencies
+const db = require('./db');
 const express = require('express');
 const spotify_api = require('./api');
 const app = express();
