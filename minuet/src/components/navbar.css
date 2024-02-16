@@ -1,0 +1,19 @@
+.navbar{
+    height: 100px;
+    padding: 20px;
+}
+
+.navBarContainer{
+    height: 80px;
+}
+
+.navBarButtons{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+
+.navBarBrand {
+    color: black; /* blue colors for links too */
+    text-decoration: none; /* no underline */
+}
