@@ -127,9 +127,14 @@ class Database {
     return Promise.all([album, ...artists, ...genres, track]);
   }
 
-  async createOrUpdateUser(user_obj) {
+  async createOrUpdateUser(top_artists, top_tracks, user_obj) {
+    // Create or update Artist and Track documents
+    const listener_id = user_obj.id;
+    const artists = top_artists.map((artist, rank) => this.createOrUpdateArtist(artist, listener_id, rank));
+    const tracks = top_tracks.map(track => this.createOrUpdateTrack(track, listener_id));
+
     // Update existing User document, otherwise create new document
-    return User.findOneAndUpdate(
+    const user = User.findOneAndUpdate(
       { user_id: user_obj.id },
       {
         display_name: user_obj.display_name,
@@ -137,26 +142,29 @@ class Database {
       },
       { upsert: true }
     ).exec();
+
+    // Return promise for all artist, track, and user updates
+    return Promise.all([...artists, ...tracks, user]);
   }
 
   async getAlbum(album_id) {
-    Album.findOne({ album_id: album_id }).exec();
+    return Album.findOne({ album_id: album_id }).exec();
   }
 
   async getArtist(artist_id) {
-    Artist.findOne({ artist_id: artist_id }).exec();
+    return Artist.findOne({ artist_id: artist_id }).exec();
   }
 
   async getGenre(name) {
-    Genre.findOne({ name: name }).exec();
+    return Genre.findOne({ name: name }).exec();
   }
 
   async getTrack(track_id) {
-    Track.findOne({ track_id: track_id }).exec();
+    return Track.findOne({ track_id: track_id }).exec();
   }
   
   async getUser(user_id) {
-    User.findOne({ user_id: user_id }).exec();
+    return User.findOne({ user_id: user_id }).exec();
   }
 }
 

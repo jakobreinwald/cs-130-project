@@ -3,6 +3,7 @@ const base_url = 'https://api.spotify.com/v1';
 
 // Dependencies
 const axios = require('axios');
+const Database = require('./db');
 const querystring = require('querystring');
 
 class SpotifyAPI {
@@ -10,6 +11,7 @@ class SpotifyAPI {
     this.client_id = client_id;
     this.client_secret = client_secret;
     this.redirect_uri = redirect_uri;
+    this.db = new Database();
   }
 
   getHeadersWithAccessToken(access_token) {
@@ -61,7 +63,7 @@ class SpotifyAPI {
       });
   }
 
-  async getUserTopItems(item_type, time_range, limit) {
+  async fetchUserTopItemsFromApi(item_type, time_range, limit) {
     return axios.get(`${base_url}/me/top/${item_type}`, {
         headers: this.getHeadersWithAccessToken(),
         params: {
@@ -72,11 +74,11 @@ class SpotifyAPI {
   }
 
   async getUserTopArtists(time_range, limit) {
-    return this.getUserTopItems('artists', time_range, limit);
+    return this.fetchUserTopItemsFromApi('artists', time_range, limit);
   }
 
   async getUserTopTracks(time_range, limit) {
-    return this.getUserTopItems('tracks', time_range, limit);
+    return this.fetchUserTopItemsFromApi('tracks', time_range, limit);
   }
 }
 

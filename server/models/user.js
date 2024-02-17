@@ -1,6 +1,4 @@
 // Dependencies
-const Artist = require('./artist');
-const Track = require('./track');
 const Image = require('./image');
 const mongoose = require('mongoose');
 
@@ -23,11 +21,7 @@ const User = new mongoose.Schema({
     required: true,
     index: true
   },
-  timestamp: {
-    type: Date,
-    default: Date.now,
-    required: true
-  }
+  timestamps: true
 });
 
 // Export User model

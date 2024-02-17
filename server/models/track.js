@@ -1,6 +1,4 @@
 // Dependencies
-const Album = require('./album');
-const Artist = require('./artist');
 const mongoose = require('mongoose');
 
 // Track schema
