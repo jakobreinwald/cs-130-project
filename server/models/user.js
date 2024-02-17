@@ -12,11 +12,11 @@ const User = new mongoose.Schema({
   images: {
     type: [Image]
   },
-  top_artists: {
-    type: [Artist]
+  top_artist_ids: {
+    type: [String]
   },
-  top_tracks: {
-    type: [Track]
+  top_track_ids: {
+    type: [String]
   },
   user_id: {
     type: String,

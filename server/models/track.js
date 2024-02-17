@@ -5,11 +5,11 @@ const mongoose = require('mongoose');
 
 // Track schema
 const Track = new mongoose.Schema({
-  album: {
-    type: Album
+  album_id: {
+    type: String,
   },
-  artists: {
-    type: [Artist]
+  artist_ids: {
+    type: [String]
   },
   name: {
     type: String

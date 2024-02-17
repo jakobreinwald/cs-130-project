@@ -23,8 +23,7 @@ class Database {
 
   async createOrUpdateAlbum(album_obj) {
     // Convert album_obj to Album model
-    const album = {
-      album_id: album_obj.id,
+    const album_model = {
       album_type: album_obj.album_type,
       artist_ids: album_obj.artists.map(artist => artist.id),
       images: album_obj.images.map(this.saveImageObj),
@@ -34,46 +33,110 @@ class Database {
     };
 
     // Update existing Album document, otherwise create new document
-    Album.updateOne(
+   return Album.findOneAndUpdate(
       { album_id: album_obj.id },
-      album,
-      { upsert: true, setDefaultsOnInsert: true }
+      album_model,
+      { upsert: true }
     ).exec();
   }
 
-  async createOrUpdateArtist(artist_obj, listener_id, rank_for_listener) {
-    // Convert artist_obj to Artist model
-    const artist = {
-      artist_id: artist_obj.id,
-      genres: artist_obj.genres.map(genre => this.createOrUpdateGenre(genre, listener_id)),
+  async createArtistModel(artist_obj) {
+    // Convert Spotify API object to Artist model
+    return {
+      genres: artist_obj.genres,
       images: artist_obj.images.map(this.saveImageObj),
-      name: artist_obj.name,
+      name: artist_obj.name
     };
+  }
 
-    // TODO: add remaining Artist fields and update listener_id_to_rank
-    // Update existing Artist document, if any
-    // If no Artist document exists, create new document
+  async createOrUpdateArtist(artist_obj) {
+    // Create or update genre counts for given listener
+    const genres = artist_obj.genres.map(this.createOrUpdateGenre);
+
+    // Update existing Artist document, otherwise create new document
+    const artist = Artist.findOneAndUpdate(
+      { artist_id: artist_obj.id },
+      this.createArtistModel(artist_obj),
+      { upsert: true }
+    ).exec();
+
+    // Return promise for all artist and genre updates
+    return Promise.all([artist, ...genres]);
+  }
+
+  async createOrUpdateArtist(artist_obj, listener_id, rank_for_listener) {
+    // Create or update genre counts for given listener
+    const genres = artist_obj.genres.map(genre => this.createOrUpdateGenre(genre, listener_id));
+
+    // Update existing Artist document, otherwise create new document
+    const artist = Artist.findOneAndUpdate(
+      { artist_id: artist_obj.id },
+      {
+        ...this.createArtistModel(artist_obj),
+        [`listener_id_to_rank.${listener_id}`]: rank_for_listener
+      },
+      { upsert: true }
+    ).exec();
+
+    // Return promise for all artist and genre updates
+    return Promise.all([artist, ...genres]);
+  }
+
+  async createOrUpdateGenre(name) {
+    // Update existing Genre document, otherwise create new document
+    return Genre.findOneAndUpdate(
+      { name: name },
+      {},
+      { upsert: true }
+    ).exec();
   }
 
   async createOrUpdateGenre(name, listener_id) {
-    // Update existing Genre document, if any
-    const genre = await Genre.findOneAndUpdate({ name: name }, {
-      $inc: { [`listener_id_to_count.${listener_id}`]: 1 }
-    });
-
-    // If no Genre document exists, create new document
-    if (!genre) {
-      await Genre.create({
-        name: name,
-        listener_id_to_count: { [listener_id]: 1 }
-      });
-    }
+    // Update existing Genre document, otherwise create new document
+    return Genre.findOneAndUpdate(
+      { name: name },
+      { $inc: { [`listener_id_to_count.${listener_id}`]: 1 } },
+      { upsert: true }
+    ).exec();
   }
 
-  async createOrUpdateTrack(track_obj) {
+  async createTrackModel(track_obj) {
+    // Convert Spotify API object to Track model
+    return {
+      album_id: track_obj.album.id,
+      artist_ids: track_obj.artists.map(artist => artist.id),
+      name: track_obj.name,
+      preview_url: track_obj.preview_url,
+    };
   }
 
-  async createOrUpdateUser(top_artists, top_tracks, user_obj) {
+  async createOrUpdateTrack(track_obj, listener_id) {
+    // Create or update Album, Artist, and Genre documents
+    const album = this.createOrUpdateAlbum(track_obj.album);
+    const artists = track_obj.artists.map(this.createOrUpdateArtist);
+    const genres = track_obj.artists.genres.map(genre => this.createOrUpdateGenre(genre, listener_id));
+
+    // Update existing Track document, otherwise create new document
+    const track = Track.findOneAndUpdate(
+      { track_id: track_obj.id },
+      this.createTrackModel(track_obj),
+      { upsert: true }
+    ).exec();
+
+    // Return promise for all album, artist, genre, and track updates
+    return Promise.all([album, ...artists, ...genres, track]);
+  }
+
+  async createOrUpdateUser(user_obj) {
+    // Update existing User document, otherwise create new document
+    return User.findOneAndUpdate(
+      { user_id: user_obj.id },
+      {
+        display_name: user_obj.display_name,
+        images: user_obj.images.map(this.saveImageObj),
+      },
+      { upsert: true }
+    ).exec();
   }
 
   async getAlbum(album_id) {
