@@ -3,7 +3,6 @@ const base_url = 'https://api.spotify.com/v1';
 
 // Dependencies
 const axios = require('axios');
-const Database = require('./db');
 const querystring = require('querystring');
 
 class SpotifyAPI {
@@ -11,10 +10,9 @@ class SpotifyAPI {
     this.client_id = client_id;
     this.client_secret = client_secret;
     this.redirect_uri = redirect_uri;
-    this.db = new Database();
   }
 
-  getHeadersWithAccessToken(access_token) {
+  static getHeadersWithAccessToken(access_token) {
     return {'Authorization': `Bearer ${access_token}`};
   }
 
@@ -32,13 +30,7 @@ class SpotifyAPI {
       }
     };
 
-    return axios.post('https://accounts.spotify.com/api/token', data, authOptions)
-      .then(response => {
-        this.access_token = response.data.access_token;
-        this.refresh_token = response.data.refresh_token;
-        console.log('Access token for user:', this.access_token);
-      })
-      .catch(console.error);
+    return axios.post('https://accounts.spotify.com/api/token', data, authOptions);
   }
 
   getLoginRedirectURL() {
@@ -57,15 +49,15 @@ class SpotifyAPI {
     })}`;
   }
 
-  async getUserProfile(user_id) {
+  async fetchUserProfile(access_token) {
     return axios.get(`${base_url}/me`, {
-        headers: this.getHeadersWithAccessToken()
-      });
+      headers: this.getHeadersWithAccessToken(access_token)
+    });
   }
 
-  async fetchUserTopItemsFromApi(item_type, time_range, limit) {
+  async fetchUserTopItems(access_token, item_type, time_range, limit) {
     return axios.get(`${base_url}/me/top/${item_type}`, {
-        headers: this.getHeadersWithAccessToken(),
+        headers: this.getHeadersWithAccessToken(access_token),
         params: {
           time_range: time_range,
           limit: limit
@@ -73,12 +65,12 @@ class SpotifyAPI {
       });
   }
 
-  async getUserTopArtists(time_range, limit) {
-    return this.fetchUserTopItemsFromApi('artists', time_range, limit);
+  async fetchUserTopArtists(access_token, time_range, limit) {
+    return this.fetchUserTopItems(access_token, 'artists', time_range, limit);
   }
 
-  async getUserTopTracks(time_range, limit) {
-    return this.fetchUserTopItemsFromApi('tracks', time_range, limit);
+  async fetchUserTopTracks(access_token, time_range, limit) {
+    return this.fetchUserTopItems(access_token, 'tracks', time_range, limit);
   }
 }
 

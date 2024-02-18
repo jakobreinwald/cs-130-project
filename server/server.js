@@ -3,16 +3,17 @@ const port = 3001;
 const redirect_uri = `http://localhost:${port}/callback`;
 
 // Dependencies
-const db = require('./db');
 const express = require('express');
-const spotify_api = require('./api');
+const Middleware = require('./middleware');
+const SpotifyAPI = require('./spotify_api');
 const app = express();
 require('dotenv').config({ path: '.env.local' });
 
 // Setup API client
 const client_id = process.env.SPOTIFY_CLIENT_ID;
 const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
-const api = new spotify_api(client_id, client_secret, redirect_uri);
+const api = new SpotifyAPI(client_id, client_secret, redirect_uri);
+const middleware = new Middleware(redirect_uri);
 
 // Endpoints
 app.get('/login', (req, res) => {
@@ -21,16 +22,14 @@ app.get('/login', (req, res) => {
 
 app.get('/callback', (req, res) => {
   api.getAccessToken(req.query.code)
-    .then(() => res.send('Logged in!'));
-});
-
-app.get('/user/profile', (req, res) => {
-  api.getUserProfile()
     .then(response => {
-      console.log(response.data);
       res.send(response.data);
     })
     .catch(console.error);
+});
+
+app.get('/user/:id', (req, res) => {
+  
 });
 
 app.get('/user/top/artists', (req, res) => {

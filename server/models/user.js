@@ -10,6 +10,12 @@ const User = new mongoose.Schema({
   images: {
     type: [Image]
   },
+  matched_user_ids: {
+    type: [String]
+  },
+  recommended_track_ids: {
+    type: [String]
+  },
   top_artist_ids: {
     type: [String]
   },
