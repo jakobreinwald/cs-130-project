@@ -4,13 +4,16 @@ import { Routes, Route } from 'react-router-dom';
 import ProfileFinder from './pages/profileFinder';
 import SongFinder from './pages/songFinder';
 import UserProfile from './pages/userProfile';
+import LandingPage from './pages/landingPage';
+
+const isLoggedIn = true; //todo based on whether logged in or not
 
 function App() {
   return (
     <div>
-      <NavBar />
+      { isLoggedIn ? <NavBar /> : null }
       <Routes>
-        <Route path='/' element={<UserProfile />} />
+        <Route path='/' element={isLoggedIn ? <UserProfile /> : <LandingPage />} />
         <Route path='/song-finder' element={<SongFinder />} />
         <Route path='/profile-finder' element={<ProfileFinder />} />
       </Routes>
