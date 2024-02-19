@@ -1,6 +1,6 @@
 import './App.css';
 import NavBar from './components/navbar';
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import ProfileFinder from './pages/profileFinder';
 import SongFinder from './pages/songFinder';
 import UserProfile from './pages/userProfile';

@@ -1,6 +1,4 @@
 import React from 'react';
-
-import NavBar from '../components/navbar';
 import './userProfile.css'
 
 function UserProfile() {
