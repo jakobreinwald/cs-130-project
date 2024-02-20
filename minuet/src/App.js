@@ -1,23 +1,22 @@
-import logo from './logo.svg';
 import './App.css';
+import NavBar from './components/navbar';
+import { Routes, Route } from 'react-router-dom';
+import ProfileFinder from './pages/profileFinder';
+import SongFinder from './pages/songFinder';
+import UserProfile from './pages/userProfile';
+import LandingPage from './pages/landingPage';
+
+const isLoggedIn = true; //todo based on whether logged in or not
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      { isLoggedIn ? <NavBar /> : null }
+      <Routes>
+        <Route path='/' element={isLoggedIn ? <UserProfile /> : <LandingPage />} />
+        <Route path='/song-finder' element={<SongFinder />} />
+        <Route path='/profile-finder' element={<ProfileFinder />} />
+      </Routes>
     </div>
   );
 }
