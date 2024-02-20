@@ -45,8 +45,8 @@ function App() {
         { isLoggedIn ? <NavBar /> : null }
         <Routes>
             <Route path='/' element={isLoggedIn ? <UserProfile /> : <LandingPage />} />
-            <Route path='/song-finder' element={<SongFinder />} />
-            <Route path='/profile-finder' element={<ProfileFinder />} />
+            <Route path='/song-finder' element={isLoggedIn ? <SongFinder /> : <LandingPage />} />
+            <Route path='/profile-finder' element={isLoggedIn ? <ProfileFinder /> : <LandingPage />} />
         </Routes>
     </ThemeProvider>
   );
