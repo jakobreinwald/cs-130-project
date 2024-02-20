@@ -1,6 +1,9 @@
+@import url('https://fonts.googleapis.com/css?family=Poppins');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
 .navbar{
     height: 100px;
-    background-color: var(--secondary-bg-color);
+    background-color: #282828;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -28,7 +31,7 @@
 }
 
 .navbarAppName{
-    color: var(--text-color);
+    color: white;
     text-decoration: none;
     font-family: 'Poppins', sans-serif;
     font-weight: 500;
@@ -42,7 +45,7 @@
     align-items: center;
 }
 .logInOutButton {
-    background-color: var(--primary-accent-color) !important;
+    background-color: #21A4B6 !important;
     border-radius: 30px !important;
     font-size: 20px !important;
     font-weight: 500 !important;
@@ -52,7 +55,7 @@ a.navbarLink {
     overflow: hidden;
     position: relative;
     display: inline-block;
-    color: var(--text-color);
+    color: white;
     font-size: 24px;
     font-weight: 200;
 }
@@ -65,7 +68,7 @@ a.navbarLink::after {
     left: 0;
 }
 a.navbarLink::before {
-    background-color: var(--primary-accent-color);
+    background-color: #21A4B6;
     height: 2px;
     bottom: 0;
     transform-origin: 100% 50%;
@@ -80,7 +83,7 @@ a.navbarLink::after {
     transform-origin: 100% 50%;
     transform: translate3d(200%, 0, 0);
     transition: transform .3s cubic-bezier(0.76, 0, 0.24, 1);
-    color: var(--primary-accent-color);
+    color: #21A4B6;
 }
   
 a.navbarLink:hover::before {
