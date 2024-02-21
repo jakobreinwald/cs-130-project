@@ -12,7 +12,7 @@ class SpotifyAPI {
     this.redirect_uri = redirect_uri;
   }
 
-  static getHeadersWithAccessToken(access_token) {
+  static getHeaders(access_token) {
     return {'Authorization': `Bearer ${access_token}`};
   }
 
@@ -51,13 +51,13 @@ class SpotifyAPI {
 
   async fetchUserProfile(access_token) {
     return axios.get(`${base_url}/me`, {
-      headers: this.getHeadersWithAccessToken(access_token)
+      headers: SpotifyAPI.getHeaders(access_token)
     });
   }
 
   async fetchUserTopItems(access_token, item_type, time_range, limit) {
     return axios.get(`${base_url}/me/top/${item_type}`, {
-        headers: this.getHeadersWithAccessToken(access_token),
+        headers: SpotifyAPI.getHeaders(access_token),
         params: {
           time_range: time_range,
           limit: limit

@@ -18,11 +18,18 @@ class Middleware {
   }
 
   async updateLoggedInUser(access_token) {
+    const artists = this.api.fetchUserTopArtists(access_token, 'medium_term', 50);
+    const tracks = this.api.fetchUserTopTracks(access_token, 'medium_term', 50);
     const user = this.api.fetchUserProfile(access_token);
-    const top_artists = this.api.fetchUserTopArtists(access_token, 'medium_term', 50);
-    const top_tracks = this.api.fetchUserTopTracks(access_token, 'medium_term', 50);
 
-    return Promise.all([user, top_artists, top_tracks])
-      .then(([user, top_artists, top_tracks]) => this.db.createOrUpdateUser(top_artists, top_tracks, user));
+    return Promise.all([artists, tracks, user])
+      .then(([artists, tracks, user]) => {
+        const top_artists = artists.data.items;
+        const top_tracks = tracks.data.items;
+        const user_obj = user.data;
+        return this.db.createOrUpdateUser(top_artists, top_tracks, user_obj);
+      });
   }
 }
+
+module.exports = Middleware;

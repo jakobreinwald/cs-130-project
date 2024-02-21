@@ -1,24 +1,22 @@
-// Constants
-const connection = `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_CLUSTER}.${process.env.MONGO_HOST}/?retryWrites=true&w=majority`;
-
 // Dependencies
-const { Album, Artist, Genre, Track, User } = require('./models');
+const { Album, Artist, Genre, Image, Track, User } = require('./models');
 const mongoose = require('mongoose');
 require('dotenv').config({ path: '.env.local' });
 
 class Database {
   constructor() {
+    const connection = `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_CLUSTER}.${process.env.MONGO_HOST}/?retryWrites=true&w=majority`;
     mongoose.connect(connection, { useNewUrlParser: true, useUnifiedTopology: true })
       .then(() => console.log('Connected to Minuet database'))
       .catch(console.error);
   }
 
   saveImageObj(image_obj) {
-    return new Image({
+    return {
       url: image_obj.url,
       height: image_obj.height,
       width: image_obj.width
-    });
+    };
   }
 
   async createOrUpdateAlbum(album_obj) {
