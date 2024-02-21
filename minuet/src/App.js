@@ -4,6 +4,7 @@ import { Routes, Route } from 'react-router-dom';
 import ProfileFinder from './pages/profileFinder';
 import SongFinder from './pages/songFinder';
 import UserProfile from './pages/userProfile';
+import OtherUserProfile from './pages/otherUserProfile';
 import LandingPage from './pages/landingPage';
 import React from 'react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -47,6 +48,7 @@ function App() {
             <Route path='/' element={isLoggedIn ? <UserProfile /> : <LandingPage />} />
             <Route path='/song-finder' element={isLoggedIn ? <SongFinder /> : <LandingPage />} />
             <Route path='/profile-finder' element={isLoggedIn ? <ProfileFinder /> : <LandingPage />} />
+            <Route path="/user/:userId" element={isLoggedIn ? <OtherUserProfile /> : <LandingPage />} />
         </Routes>
     </ThemeProvider>
   );
