@@ -1,0 +1,52 @@
+.landingPage {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.landingPageTwoColContent{
+    display: flex;
+    flex-direction: row;
+    /* flex-wrap: wrap; */
+    align-items: center;
+    justify-content: center;
+    gap: 50px;
+    width: 80%;
+    margin: auto;
+}
+
+.landingPageWelcome {
+    font-size: 48px;
+    margin: 0  0 30px 0 !important;
+    font-weight: 300;
+}
+
+.landingPageHeading {
+    font-size: 128px;
+    font-family: 'Poppins', sans-serif;
+    margin: 0 !important;
+    font-weight: 300
+}
+
+.landingPageSubheading {
+    font-size: 32px;
+    margin: 0  0 60px 0 !important;
+    font-weight: 200;
+}
+
+.landingPageButton {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.logInButton {
+    background-color: var(--primary-accent-color) !important;
+    border-radius: 30px !important;
+    font-size: 28px !important;
+    font-weight: 500 !important;
+    font-family: 'Open Sans', sans-serif !important;
+}
