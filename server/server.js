@@ -15,7 +15,7 @@ const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
 const api = new SpotifyAPI(client_id, client_secret, redirect_uri);
 const middleware = new Middleware(redirect_uri);
 
-// Endpoints
+// GET endpoints
 app.get('/login', (req, res) => {
   res.redirect(api.getLoginRedirectURL());
 });
@@ -28,25 +28,27 @@ app.get('/callback', (req, res) => {
     .catch(console.error);
 });
 
-app.get('/user/:id', (req, res) => {
-  
-});
-
-app.get('/user/top/artists', (req, res) => {
-  api.getUserTopArtists('medium_term', 10)
-    .then(response => {
-      console.log(response.data);
-      res.send(response.data.items);
-    })
+app.get('/user/:id/profile', (req, res) => {
+  middleware.getUser(req.params.id)
+    .then(user => res.json(user))
     .catch(console.error);
 });
 
-app.get('/user/top/tracks', (req, res) => {
-  api.getUserTopTracks('medium_term', 10)
-    .then(response => {
-      console.log(response.data);
-      res.send(response.data.items);
-    })
+// POST endpoints
+app.post('/user/update', (req, res) => {
+  // Reject request if no auth header is present
+  const auth = req.header('Authorization');
+
+  if (!auth) {
+    res.status(401).send('Unauthorized');
+  }
+
+  // Identify access token ('Bearer ...') from auth header
+  const access_token = auth.split(' ')[1];
+
+  // Use access token to fetch user profile and top items from Spotify API
+  middleware.updateLoggedInUser(access_token)
+    .then(user => res.json(user))
     .catch(console.error);
 });
 

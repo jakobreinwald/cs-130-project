@@ -13,14 +13,14 @@ class Middleware {
     this.db = new Database();
   }
 
-  async getMatchedUser(user_id) {
+  async getUser(user_id) {
     return this.db.getUser(user_id);
   }
 
   async updateLoggedInUser(access_token) {
     const user = this.api.fetchUserProfile(access_token);
-    const top_artists = this.api.getUserTopArtists(access_token, 'medium_term', 50);
-    const top_tracks = this.api.getUserTopTracks(access_token, 'medium_term', 50);
+    const top_artists = this.api.fetchUserTopArtists(access_token, 'medium_term', 50);
+    const top_tracks = this.api.fetchUserTopTracks(access_token, 'medium_term', 50);
 
     return Promise.all([user, top_artists, top_tracks])
       .then(([user, top_artists, top_tracks]) => this.db.createOrUpdateUser(top_artists, top_tracks, user));
