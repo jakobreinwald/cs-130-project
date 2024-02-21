@@ -11,8 +11,8 @@ function ProfileCard({ cardTitle, profileInfo }) {
                 </Typography>
                 {profileInfo.map(function(profile, i) {
                     return (
-                        <Link to={`/user/${profile.id}`} style={{ color:'white', textDecoration: 'none' }}>
-                            <Box key={i} sx={{display:'flex', flexDirection: 'row', gap: 1, mt: 2, p: 1, '&:hover': { bgcolor: 'primary.main'}, borderRadius: 2}}>
+                        <Link to={`/user/${profile.id}`} key={i} style={{ color:'white', textDecoration: 'none' }}>
+                            <Box sx={{display:'flex', flexDirection: 'row', gap: 1, mt: 2, p: 1, '&:hover': { bgcolor: 'primary.main'}, borderRadius: 2}}>
                                 <Avatar sx={{ bgcolor: 'text.primary'}} variant="rounded"/>
                                 <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center',}}>
                                     <Typography variant="body1">{profile.name}</Typography>

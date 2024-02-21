@@ -26,7 +26,7 @@ function UserProfile() {
             <Box sx={{display: 'flex', flexDirection: 'row', gap: 3, maxWidth: '75%',}}>
                 <Avatar sx={{ bgcolor: 'grey.900', width: 250, height: 250, m: 5,}} />
                 <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center',}}>
-                    <Typography variant="h2" sx={{ color: 'text.primary', mb: 3}}>
+                    <Typography variant="h2" sx={{ mb: 3, background: (theme) => `linear-gradient(200deg, ${theme.palette.primary.complementary} 50%, ${theme.palette.primary.main}) 50%`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'}}>
                         Hi, {username}
                     </Typography>
                     <Typography variant="h4" sx={{ color: 'text.primary'}}>
@@ -34,7 +34,7 @@ function UserProfile() {
                     </Typography>
                 </Box>
             </Box>
-        <Box sx={{display: 'flex', flexDirection:'row', gap: 5, justifyContent: 'center',}}>
+        <Box sx={{display: 'flex', flexDirection:'row', gap: 5, m: 5, justifyContent: 'center',}}>
             <SongCard cardTitle="Matched Songs" songInfo={matchedSongInfo}/>
             <Divider orientation="vertical" flexItem />
             <ProfileCard cardTitle="Matched Profiles" profileInfo={matchedProfileInfo}/>

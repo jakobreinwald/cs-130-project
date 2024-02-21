@@ -108,7 +108,7 @@ function AnimatedMatchPercentage({ targetValue }) {
   
     return (
         <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, alignItems: 'center', width: '100%' }}>
-            <LinearProgress value={progress} variant='determinate' sx={{ width: '75%', height: 15, borderRadius: 1}}/>
+            <LinearProgress value={progress} variant="determinate" sx={{ width: '75%', height: 15, borderRadius: 1, '& .MuiLinearProgress-bar': { backgroundImage: theme => `linear-gradient(to right, ${theme.palette.primary.complementary}, 70%, ${theme.palette.primary.main})` }}} />
             <Typography variant="h5" sx={{ color: 'text.primary'}}> {Math.round(progress)}% Match</Typography>
         </Box>
     );
