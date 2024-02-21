@@ -25,6 +25,14 @@ const theme = createTheme({
     },
     typography: {
       fontFamily: 'Poppins, Open Sans, sans-serif',
+      h1: {
+        fontFamily: 'Poppins, sans-serif',
+        fontWeight: 300,
+        fontSize: '128px',
+      },
+      h3: {
+        fontFamily: 'Open Sans, sans-serif',
+      },
       h4: {
         fontFamily: 'Open Sans, sans-serif',
       },
@@ -37,7 +45,7 @@ const theme = createTheme({
     },
   });
 
-const isLoggedIn = true; //todo based on whether logged in or not
+const isLoggedIn = false; //todo based on whether logged in or not
 
 function App() {
   return (

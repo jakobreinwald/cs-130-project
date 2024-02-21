@@ -1,30 +1,52 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import MinuetLogo from '../assets/logo.svg'
-import { Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
-import './landingPage.css'
+const ResizableSVG = () => {
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth * 0.4);
+  useEffect(() => {
+    // Update window width in state when the window is resized
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth * 0.4);
+    };
+
+    // Attach the event listener for window resize
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  return (<img src={MinuetLogo} alt="Minuet logo" height={windowWidth} />);
+}
 
 function LandingPage() {
+  
+
   return (
-    <div className="landingPage">
-      <div className="landingPageTwoColContent">
-        <div className="landingPageText">
-          <div>
-            <h3 className="landingPageWelcome">Welcome to</h3>
-            <div>
-              <h1 className="landingPageHeading">Minuet</h1>
-              <h2 className="landingPageSubheading">Find your sound soulmate.</h2>
-            </div>
-          </div>
-          <div className="landingPageButton">
-            <Button variant="contained" className='logInButton'>Log in with Spotify</Button>
-          </div>
-        </div>
-        <div className="langingPageLogo">
-          <img src={MinuetLogo} alt="Minuet logo" height={500} />
-        </div>
-      </div>
-    </div>
+    <Box sx={{ bgcolor: 'background.primary', minHeight: '100vh', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '50px', width: '80%', margin: 'auto', flexWrap: 'wrap-reverse' }}>
+        <Box>
+          <Typography variant='h3' sx={{ color: 'text.primary', marginBottom: '30px', fontWeight: 300 }}>
+            Welcome to 
+          </Typography>
+          <Box>
+            <Typography variant='h1' sx={{ color: 'text.primary' }}> Minuet </Typography>
+            <Typography variant='h4' sx={{ color: 'text.primary', marginBottom: '60px', fontWeight: 200 }}>
+              Find your sound soulmate.
+              </Typography>
+          </Box>
+          <Button 
+            variant="contained" 
+            sx={{ color: 'text.primary', backgroundColor: 'theme.palette.primary.main', borderRadius: '30px', fontSize: '28px', fontWeight: 500, width: '100%'}}>
+              Log in with Spotify
+          </Button>
+        </Box>
+        <ResizableSVG />
+      </Box>
+    </Box>
   );
 }
 
