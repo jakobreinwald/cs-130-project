@@ -166,6 +166,23 @@ class Database {
     return Promise.all([...artists, ...tracks, user]);
   }
 
+  async dismissMatch(user_id, match_id) {
+    // TODO: increment match offset in user document
+    // TODO: adds match_id to matched_and_dismissed_user_ids in user document
+  }
+
+  async dismissRecommendation(user_id, rec_id) {
+    // TODO: adds rec_id to recommended_and_dismissed_track_ids in user document
+  }
+
+  async likeMatch(user_id, match_id) {
+    // TODO: adds match_id to matched_and_liked_user_ids in user document
+  }
+
+  async likeRecommendation(user_id, rec_id) {
+    // TODO: adds rec_id to recommended_and_liked_track_ids in user document
+  }
+
   async getAlbum(album_id) {
     return Album.findOne({ album_id: album_id }).exec();
   }

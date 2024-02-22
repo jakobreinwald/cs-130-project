@@ -49,6 +49,10 @@ class SpotifyAPI {
     })}`;
   }
 
+  async addRecommendedTrack(access_token, track_id) {
+    // TODO: add recommended track to user's library/playlist
+  }
+
   async fetchArtist(access_token, artist_id) {
     return axios.get(`${base_url}/artists/${artist_id}`, {
       headers: SpotifyAPI.getHeaders(access_token)
