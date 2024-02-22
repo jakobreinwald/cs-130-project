@@ -6,7 +6,6 @@ const Genre = new mongoose.Schema({
   listener_id_to_count: {
     type: Map,
     of: Number,
-    required: true,
     default: {}
   },
   name: {

@@ -13,14 +13,15 @@ const Artist = new mongoose.Schema(
     listener_id_to_rank: {
       type: Map,
       of: Number,
-      required: true,
       default: {}
     },
     genres: {
-      type: [String]
+      type: [String],
+      default: []
     },
     images: {
-      type: [Image]
+      type: [Image],
+      default: []
     },
     name: {
       type: String
