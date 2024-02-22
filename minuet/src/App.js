@@ -42,6 +42,9 @@ const theme = createTheme({
       h6: {
         fontFamily: 'Open Sans, sans-serif',
       },
+      p: {
+        fontFamily: 'Open Sans, sans-serif',
+      },
     },
   });
 

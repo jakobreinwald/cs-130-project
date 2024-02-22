@@ -40,8 +40,10 @@ function LandingPage() {
           </Box>
           <Button 
             variant="contained" 
-            sx={{ color: 'text.primary', backgroundColor: 'theme.palette.primary.main', borderRadius: '30px', fontSize: '28px', fontWeight: 500, width: '100%'}}>
-              Log in with Spotify
+            sx={{ backgroundColor: 'theme.palette.primary.main', borderRadius: '30px', width: '100%'}}>
+              <Typography variant="p" sx={{ color: 'text.primary', fontSize: '28px', fontWeight: 500 }}>
+                Log in with Spotify
+              </Typography>
           </Button>
         </Box>
         <ResizableSVG />
