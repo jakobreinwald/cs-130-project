@@ -6,7 +6,7 @@ require('dotenv').config({ path: '.env.local' });
 class Database {
 	constructor() {
 		const connection = `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_CLUSTER}.${process.env.MONGO_HOST}/?retryWrites=true&w=majority`;
-		mongoose.connect(connection, { useNewUrlParser: true, useUnifiedTopology: true })
+		mongoose.connect(connection)
 			.then(() => console.log('Connected to Minuet database'))
 			.catch(console.error);
 	}
@@ -42,14 +42,16 @@ class Database {
 		// Convert Spotify API object to Artist model
 		return {
 			genres: artist_obj.genres,
-			images: artist_obj.images.map(this.saveImageObj),
+			images: artist_obj.images ? artist_obj.images.map(this.saveImageObj) : [],
 			name: artist_obj.name
 		};
 	}
 
 	async createOrUpdateArtist(artist_obj) {
 		// Create or update genre counts for given listener
-		const genres = artist_obj.genres.map(this.createOrUpdateGenre);
+		if (artist_obj.genres) {
+			const genres = artist_obj.genres.map(this.createOrUpdateGenre);
+		}
 
 		// Update existing Artist document, otherwise create new document
 		const artist = Artist.findOneAndUpdate(
@@ -64,20 +66,22 @@ class Database {
 
 	async createOrUpdateArtist(artist_obj, listener_id, rank_for_listener) {
 		// Create or update genre counts for given listener
-		const genres = artist_obj.genres.map(genre => this.createOrUpdateGenre(genre, listener_id));
+		if (artist_obj.genres) {
+			const genres = artist_obj.genres.map(genre => this.createOrUpdateGenre(genre, listener_id));
+		}
 
 		// Update existing Artist document, otherwise create new document
 		const artist = Artist.findOneAndUpdate(
 			{ artist_id: artist_obj.id },
 			{
-				...this.createArtistModel(artist_obj),
+				...(this.createArtistModel(artist_obj)),
 				[`listener_id_to_rank.${listener_id}`]: rank_for_listener
 			},
 			{ upsert: true }
 		).exec();
 
 		// Return promise for all artist and genre updates
-		return Promise.all([artist, ...genres]);
+		return Promise.all([artist]);
 	}
 
 	async createOrUpdateGenre(name) {
@@ -111,8 +115,9 @@ class Database {
 	async createOrUpdateTrack(track_obj, listener_id) {
 		// Create or update Album, Artist, and Genre documents
 		const album = this.createOrUpdateAlbum(track_obj.album);
-		const artists = track_obj.artists.map(this.createOrUpdateArtist);
-		const genres = track_obj.artists.genres.map(genre => this.createOrUpdateGenre(genre, listener_id));
+		const artists = track_obj.artists.map(artist => this.createOrUpdateArtist(artist));
+		// TODO: genres are not returned in artist object belonging to a track, so fetch artist separately
+		// const genres = track_obj.artists.genres.map(genre => this.createOrUpdateGenre(genre, listener_id));
 
 		// Update existing Track document, otherwise create new document
 		const track = Track.findOneAndUpdate(
@@ -122,7 +127,7 @@ class Database {
 		).exec();
 
 		// Return promise for all album, artist, genre, and track updates
-		return Promise.all([album, ...artists, ...genres, track]);
+		return Promise.all([album, ...artists, track]);
 	}
 
 	async createOrUpdateUser(top_artists, top_tracks, user_obj) {
