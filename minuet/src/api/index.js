@@ -3,6 +3,7 @@ import axios from 'axios';
 const url = 'http://localhost:3001';
 
 export const fetchUsers = () => axios.get(`${url}/users`);
+// export const fetchProfile = ()
 
 // export const fetchUsers = () => axios.get(`${url}`);
 // export const createPost = (newPost) => axios.post(url, newPost);
