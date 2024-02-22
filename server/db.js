@@ -11,6 +11,25 @@ class Database {
       .catch(console.error);
   }
 
+  createArtistModel(artist_obj) {
+    // Convert Spotify API object to Artist model
+    return {
+      genres: artist_obj.genres,
+      images: artist_obj.images ? artist_obj.images.map(this.saveImageObj) : [],
+      name: artist_obj.name
+    };
+  }
+
+  createTrackModel(track_obj) {
+    // Convert Spotify API object to Track model
+    return {
+      album_id: track_obj.album.id,
+      artist_ids: track_obj.artists.map(artist => artist.id),
+      name: track_obj.name,
+      preview_url: track_obj.preview_url,
+    };
+  }
+
   saveImageObj(image_obj) {
     return {
       url: image_obj.url,
@@ -38,20 +57,9 @@ class Database {
     ).exec();
   }
 
-  async createArtistModel(artist_obj) {
-    // Convert Spotify API object to Artist model
-    return {
-      genres: artist_obj.genres,
-      images: artist_obj.images ? artist_obj.images.map(this.saveImageObj) : [],
-      name: artist_obj.name
-    };
-  }
-
   async createOrUpdateArtist(artist_obj) {
     // Create or update genre counts for given listener
-    if (artist_obj.genres) {
-      const genres = artist_obj.genres.map(this.createOrUpdateGenre);
-    }
+    const genres = this.createOrUpdateGenreList(artist_obj.genres);
 
     // Update existing Artist document, otherwise create new document
     const artist = Artist.findOneAndUpdate(
@@ -61,14 +69,12 @@ class Database {
     ).exec();
 
     // Return promise for all artist and genre updates
-    return Promise.all([artist, ...genres]);
+    return Promise.all([artist, genres]);
   }
 
   async createOrUpdateArtist(artist_obj, listener_id, rank_for_listener) {
     // Create or update genre counts for given listener
-    if (artist_obj.genres) {
-      const genres = artist_obj.genres.map(genre => this.createOrUpdateGenre(genre, listener_id));
-    }
+    const genres = this.createOrUpdateGenreList(artist_obj.genres, listener_id);
     
     // Update existing Artist document, otherwise create new document
     const artist = Artist.findOneAndUpdate(
@@ -81,7 +87,7 @@ class Database {
     ).exec();
 
     // Return promise for all artist and genre updates
-    return Promise.all([artist]);
+    return Promise.all([artist, genres]);
   }
 
   async createOrUpdateGenre(name) {
@@ -102,14 +108,24 @@ class Database {
     ).exec();
   }
 
-  async createTrackModel(track_obj) {
-    // Convert Spotify API object to Track model
-    return {
-      album_id: track_obj.album.id,
-      artist_ids: track_obj.artists.map(artist => artist.id),
-      name: track_obj.name,
-      preview_url: track_obj.preview_url,
-    };
+  async createOrUpdateGenreList(genres) {
+    // Ignore if no genres provided
+    if (!genres) {
+      return Promise.resolve();
+    }
+    
+    // Create or update genre counts for given listener
+    return Promise.all(genres.map(genre => this.createOrUpdateGenre(genre)));
+  }
+
+  async createOrUpdateGenreList(genres, listener_id) {
+    // Ignore if no genres provided
+    if (!genres) {
+      return Promise.resolve();
+    }
+    
+    // Create or update genre counts for given listener
+    return Promise.all(genres.map(genre => this.createOrUpdateGenre(genre, listener_id)));
   }
 
   async createOrUpdateTrack(track_obj, listener_id) {

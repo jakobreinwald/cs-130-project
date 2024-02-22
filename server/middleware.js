@@ -22,6 +22,8 @@ class Middleware {
     const tracks = this.api.fetchUserTopTracks(access_token, 'medium_term', 50);
     const user = this.api.fetchUserProfile(access_token);
 
+    // TODO: fetch each artist associated with top tracks to get genres
+
     return Promise.all([artists, tracks, user])
       .then(([artists, tracks, user]) => {
         const top_artists = artists.data.items;

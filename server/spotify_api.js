@@ -49,6 +49,12 @@ class SpotifyAPI {
     })}`;
   }
 
+  async fetchArtist(access_token, artist_id) {
+    return axios.get(`${base_url}/artists/${artist_id}`, {
+      headers: SpotifyAPI.getHeaders(access_token)
+    });
+  }
+
   async fetchUserProfile(access_token) {
     return axios.get(`${base_url}/me`, {
       headers: SpotifyAPI.getHeaders(access_token)
