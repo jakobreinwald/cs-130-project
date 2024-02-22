@@ -6,8 +6,14 @@ const redirect_uri = `http://localhost:${port}/callback`;
 const express = require('express');
 const Middleware = require('./middleware');
 const SpotifyAPI = require('./spotify_api');
+const cors = require('cors');
 const app = express();
 require('dotenv').config({ path: '.env.local' });
+
+// Allow requests from our React app
+app.use(cors({
+	origin: 'http://localhost:3000'
+}));
 
 // Setup API client
 const client_id = process.env.SPOTIFY_CLIENT_ID;
