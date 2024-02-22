@@ -17,42 +17,48 @@ const middleware = new Middleware(redirect_uri);
 
 // GET endpoints
 app.get('/login', (req, res) => {
-  res.redirect(api.getLoginRedirectURL());
+	res.redirect(api.getLoginRedirectURL());
 });
 
 app.get('/callback', (req, res) => {
-  api.getAccessToken(req.query.code)
-    .then(response => {
-      res.send(response.data);
-    })
-    .catch(console.error);
+	api.getAccessToken(req.query.code)
+		.then(response => {
+			res.send(response.data);
+		})
+		.catch(console.error);
 });
 
 app.get('/user/:id/profile', (req, res) => {
-  middleware.getUser(req.params.id)
-    .then(user => res.json(user))
-    .catch(console.error);
+	middleware.getUser(req.params.id)
+		.then(user => res.json(user))
+		.catch(console.error);
+});
+
+app.get('/users', (req, res) => {
+	middleware.getAllUsers()
+		.then(users => res.json(users))
+		.catch(console.error);
 });
 
 // POST endpoints
 app.post('/user/update', (req, res) => {
-  // Reject request if no auth header is present
-  const auth = req.header('Authorization');
+	// Reject request if no auth header is present
+	const auth = req.header('Authorization');
 
-  if (!auth) {
-    res.status(401).send('Unauthorized');
-  }
+	if (!auth) {
+		res.status(401).send('Unauthorized');
+	}
 
-  // Identify access token ('Bearer ...') from auth header
-  const access_token = auth.split(' ')[1];
+	// Identify access token ('Bearer ...') from auth header
+	const access_token = auth.split(' ')[1];
 
-  // Use access token to fetch user profile and top items from Spotify API
-  middleware.updateLoggedInUser(access_token)
-    .then(user => res.json(user))
-    .catch(console.error);
+	// Use access token to fetch user profile and top items from Spotify API
+	middleware.updateLoggedInUser(access_token)
+		.then(user => res.json(user))
+		.catch(console.error);
 });
 
 // Start Express server
 app.listen(port, () => {
-  console.log(`Minuet server listening on port ${port}`)
+	console.log(`Minuet server listening on port ${port}`)
 });
