@@ -28,11 +28,15 @@ app.get('/callback', (req, res) => {
     .catch(console.error);
 });
 
+app.get('/user/:id/matches', (req, res) => {});
+
 app.get('/user/:id/profile', (req, res) => {
   middleware.getUser(req.params.id)
     .then(user => res.json(user))
     .catch(console.error);
 });
+
+app.get('/user/:id/recommendations', (req, res) => {});
 
 // POST endpoints
 app.post('/user/update', (req, res) => {
