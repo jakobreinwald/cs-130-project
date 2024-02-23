@@ -11,6 +11,25 @@ class Database {
 			.catch(console.error);
 	}
 
+	createArtistModel(artist_obj) {
+		// Convert Spotify API object to Artist model
+		return {
+			genres: artist_obj.genres,
+			images: artist_obj.images ? artist_obj.images.map(this.saveImageObj) : [],
+			name: artist_obj.name
+		};
+	}
+
+	createTrackModel(track_obj) {
+		// Convert Spotify API object to Track model
+		return {
+			album_id: track_obj.album.id,
+			artist_ids: track_obj.artists.map(artist => artist.id),
+			name: track_obj.name,
+			preview_url: track_obj.preview_url,
+		};
+	}
+
 	saveImageObj(image_obj) {
 		return {
 			url: image_obj.url,
@@ -81,7 +100,7 @@ class Database {
 		).exec();
 
 		// Return promise for all artist and genre updates
-		return Promise.all([artist]);
+		return Promise.all([artist, genres]);
 	}
 
 	async createOrUpdateGenre(name) {
@@ -110,6 +129,26 @@ class Database {
 			name: track_obj.name,
 			preview_url: track_obj.preview_url,
 		};
+	}
+
+	async createOrUpdateGenreList(genres) {
+		// Ignore if no genres provided
+		if (!genres) {
+			return Promise.resolve();
+		}
+
+		// Create or update genre counts for given listener
+		return Promise.all(genres.map(genre => this.createOrUpdateGenre(genre)));
+	}
+
+	async createOrUpdateGenreList(genres, listener_id) {
+		// Ignore if no genres provided
+		if (!genres) {
+			return Promise.resolve();
+		}
+
+		// Create or update genre counts for given listener
+		return Promise.all(genres.map(genre => this.createOrUpdateGenre(genre, listener_id)));
 	}
 
 	async createOrUpdateTrack(track_obj, listener_id) {
@@ -148,6 +187,23 @@ class Database {
 
 		// Return promise for all artist, track, and user updates
 		return Promise.all([...artists, ...tracks, user]);
+	}
+
+	async dismissMatch(user_id, match_id) {
+		// TODO: increment match offset in user document
+		// TODO: adds match_id to matched_and_dismissed_user_ids in user document
+	}
+
+	async dismissRecommendation(user_id, rec_id) {
+		// TODO: adds rec_id to recommended_and_dismissed_track_ids in user document
+	}
+
+	async likeMatch(user_id, match_id) {
+		// TODO: adds match_id to matched_and_liked_user_ids in user document
+	}
+
+	async likeRecommendation(user_id, rec_id) {
+		// TODO: adds rec_id to recommended_and_liked_track_ids in user document
 	}
 
 	async getAlbum(album_id) {

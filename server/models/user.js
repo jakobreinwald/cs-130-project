@@ -11,6 +11,11 @@ const User = new mongoose.Schema(
     images: {
       type: [Image]
     },
+    genre_counts: {
+      type: Map,
+      of: Number,
+      default: {}
+    },
     matched_and_dismissed_user_ids: {
       type: [String]
     },
