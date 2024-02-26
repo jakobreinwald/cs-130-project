@@ -36,7 +36,11 @@ app.get('/user/:id/profile', (req, res) => {
     .catch(console.error);
 });
 
-app.get('/user/:id/recommendations', (req, res) => {});
+app.get('/user/:id/recs', (req, res) => {
+  middleware.getRecommendations(req.params.id)
+    .then(recs => res.json(recs))
+    .catch(console.error);
+});
 
 // POST endpoints
 app.post('/user/update', (req, res) => {

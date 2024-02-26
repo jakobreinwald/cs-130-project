@@ -38,6 +38,14 @@ class Database {
     };
   }
 
+  async addRecommendation(user_id, track_id) {
+    // Add new recommended track that user has not yet acted upon
+    return User.findOneAndUpdate(
+      { user_id: user_id },
+      { $set: { [`recommended_track_to_outcome.${track_id}`]: 'none' } }
+    ).exec();
+  }
+
   async createOrUpdateAlbum(album_obj) {
     // Convert album_obj to Album model
     const album_model = {
@@ -146,24 +154,18 @@ class Database {
     return Promise.all([album, ...artists, track]);
   }
 
-  async createOrUpdateUser(top_artists, top_tracks, user_obj) {
-    // Create or update Artist and Track documents
-    const listener_id = user_obj.id;
-    const artists = top_artists.map((artist, rank) => this.createOrUpdateArtist(artist, listener_id, rank));
-    const tracks = top_tracks.map(track => this.createOrUpdateTrack(track, listener_id));
-
+  async createOrUpdateUser(top_artist_ids, top_track_ids, user_obj) {
     // Update existing User document, otherwise create new document
-    const user = User.findOneAndUpdate(
+    return User.findOneAndUpdate(
       { user_id: user_obj.id },
       {
         display_name: user_obj.display_name,
         images: user_obj.images.map(this.saveImageObj),
+        top_artist_ids: top_artist_ids,
+        top_track_ids: top_track_ids
       },
       { upsert: true }
     ).exec();
-
-    // Return promise for all artist, track, and user updates
-    return Promise.all([...artists, ...tracks, user]);
   }
 
   async dismissMatch(user_id, match_id) {
@@ -172,7 +174,10 @@ class Database {
   }
 
   async dismissRecommendation(user_id, rec_id) {
-    // TODO: adds rec_id to recommended_and_dismissed_track_ids in user document
+    return User.updateOne(
+      { user_id: user_id },
+      { $set: { [`recommended_track_to_outcome.${rec_id}`]: 'dismissed' } }
+    ).exec();
   }
 
   async likeMatch(user_id, match_id) {
@@ -180,7 +185,10 @@ class Database {
   }
 
   async likeRecommendation(user_id, rec_id) {
-    // TODO: adds rec_id to recommended_and_liked_track_ids in user document
+    return User.updateOne(
+      { user_id: user_id },
+      { $set: { [`recommended_track_to_outcome.${rec_id}`]: 'liked' } }
+    ).exec();
   }
 
   async getAlbum(album_id) {
