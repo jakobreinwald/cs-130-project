@@ -29,7 +29,7 @@ class Middleware {
     // TODO: cache list of matches
   }
 
-  async generateRecommendations(access_token, user_id, num_recs) {
+  async generateRecommendations(access_token, user_id, batch_len, num_req) {
     // Fetch user document from database and extract top artists
     const user = await this.db.getUser(user_id).catch(console.error);
     const top_artists = user.top_artist_ids;
@@ -39,8 +39,8 @@ class Middleware {
       .sort((a, b) => b[1] - a[1])
       .map(genre => genre[0]);
 
-    let first_rec_id = null;
     let processed_recs = [];
+    let rec_ids = [];
 
     // Generate recommendations in batches
     for (let artist_offset = 0; artist_offset < top_artists.length; artist_offset += 5) {
@@ -50,14 +50,13 @@ class Middleware {
       const selected_genres = top_genres.slice(genre_offset, genre_offset + 5);
 
       // Call recommendation endpoint of Spotify API to fetch recommended tracks
-      const recs = this.api.fetchRecommendedTracks(access_token, num_recs, selected_artists, selected_genres)
+      const recs = this.api.fetchRecommendedTracks(access_token, batch_len, selected_artists, selected_genres)
         .then(response => response.data.tracks)
         .catch(console.error);
 
-      // If first batch, isolate first recommended track id
-      if (artist_offset === 0) {
-        first_rec_id = recs[0].id;
-      }
+      // Keep track of first num_req recommended track ids, immediately returned in response
+      const rem_req = num_req - rec_ids.length;
+      rec_ids.push(...recs.slice(0, rem_req).map(track => track.id));
 
       // Cache recommendation track ids and track objects in database
       const cached_rec_ids = recs.map(track => this.db.addRecommendation(user_id, track.id));
@@ -66,34 +65,39 @@ class Middleware {
     }
 
     return Promise.all(processed_recs)
-      .then(() => first_rec_id);
+      .then(() => rec_ids);
   }
 
   async getMatches(user_id, offset) {
     // TODO: fetch cached list of matches, from offset index onwards
   }
 
-  async getRecommendation(access_token, user_id) {
+  async getRecommendations(access_token, user_id, num_req) {
     // Fetch user document from database
     const user = await this.db.getUser(user_id).catch(console.error);
     
     // Isolate first recommended track id that user has not yet interacted with
-    let rec_id = null;
+    let rec_ids = [];
 
     for (const [track_id, outcome] of user.recommended_track_to_outcome) {
       if (outcome === 'none') {
-        rec_id = track_id;
+        rec_ids.push(track_id);
+      }
+
+      if (rec_ids.length === num_req) {
         break;
       }
     }
 
     // If no cached recommendations available, generate new recommendations
-    if (!rec_id) {
-      rec_id = await this.generateRecommendations(access_token, user_id, 10).catch(console.error);
+    if (rec_ids.length < num_req) {
+      const rem_req = num_req - rec_ids.length;
+      rec_ids = await this.generateRecommendations(access_token, user_id, 10, rem_req).catch(console.error);
     }
 
-    // Fetch track object from database
-    return this.db.getTrack(rec_id);
+    // Fetch track objects from database
+    const recs = rec_ids.map(track_id => this.db.getTrack(track_id))
+    return Promise.all(recs);
   }
 
   async getUser(user_id) {
