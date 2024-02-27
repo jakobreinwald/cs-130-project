@@ -58,8 +58,10 @@ app.get('/users/:id/recs', (req, res) => {
 
 // POST endpoints
 app.post('/users/:user_id/recs/:rec_id', (req, res) => {
+  // Get action from query string, either 'like' or 'dismiss'
   const action = req.query.action;
 
+  // Execute requested action for the given recommendation
   if (action === 'dismiss') {
     middleware.dismissRecommendation(req.params.user_id, req.params.rec_id)
       .then(() => res.status(200).send('Dismissed recommendation'))

@@ -82,7 +82,7 @@ class Database {
 
   async createOrUpdateArtist(artist_obj, listener_id, rank_for_listener) {
     // Create or update genre counts for given listener
-    const genres = this.createOrUpdateGenreList(artist_obj.genres, listener_id);
+    const genres = this.createOrUpdateGenreList(artist_obj.genres);
     
     // Update existing Artist document, otherwise create new document
     const artist = Artist.findOneAndUpdate(
@@ -107,11 +107,11 @@ class Database {
     ).exec();
   }
 
-  async createOrUpdateGenre(name, listener_id) {
+  async createOrUpdateGenre(name, listener_id, count) {
     // Update existing Genre document, otherwise create new document
     return Genre.findOneAndUpdate(
       { name: name },
-      { $inc: { [`listener_id_to_count.${listener_id}`]: 1 } },
+      { [`listener_id_to_count.${listener_id}`]: count },
       { upsert: true }
     ).exec();
   }
@@ -140,8 +140,6 @@ class Database {
     // Create or update Album, Artist, and Genre documents
     const album = this.createOrUpdateAlbum(track_obj.album);
     const artists = track_obj.artists.map(artist => this.createOrUpdateArtist(artist));
-    // TODO: genres are not returned in artist object belonging to a track, so fetch artist separately
-    // const genres = track_obj.artists.genres.map(genre => this.createOrUpdateGenre(genre, listener_id));
 
     // Update existing Track document, otherwise create new document
     const track = Track.findOneAndUpdate(
@@ -154,12 +152,13 @@ class Database {
     return Promise.all([album, ...artists, track]);
   }
 
-  async createOrUpdateUser(top_artist_ids, top_track_ids, user_obj) {
+  async createOrUpdateUser(genre_counts, top_artist_ids, top_track_ids, user_obj) {
     // Update existing User document, otherwise create new document
     return User.findOneAndUpdate(
       { user_id: user_obj.id },
       {
         display_name: user_obj.display_name,
+        genre_counts: genre_counts,
         images: user_obj.images.map(this.saveImageObj),
         top_artist_ids: top_artist_ids,
         top_track_ids: top_track_ids
