@@ -3,16 +3,20 @@ import MinuetLogo from '../assets/logo.svg';
 import Button from '@mui/material/Button';
 import {Link} from 'react-router-dom';
 import './navbar.css'
+import { Typography } from '@mui/material';
 
 function LogOutButton () {
     // todo: onClick to log out
-    return <Button variant="contained" className='logInOutButton'>Log Out</Button>
+    return <Button variant="contained" sx={{ backgroundColor: 'theme.palatte.primary.main', borderRadius: '30px', paddingLeft: 3.5, paddingRight: 3.5 }}>
+            <Typography variant='p' sx={{color: 'text.primary', fontSize: '20px', fontWeight: 500 }}>
+                Log out
+            </Typography>
+        </Button>
 }
 
 function NavBar () {
     return (
         <div className='navbar'>
-            
             <div className='navbarContent'>
                 <div className='navbarAppLogoName'>
                     <Link to='/'>
@@ -26,7 +30,6 @@ function NavBar () {
                     <LogOutButton />
                 </div>
             </div>
-            
         </div>
     );
 }
