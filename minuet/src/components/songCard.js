@@ -5,8 +5,8 @@ function SongCard({ cardTitle, songInfo }) {
     return (
         <Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '90%', borderRadius: 5}}>
             <CardContent>
-                <Typography gutterBottom variant="h5" component="div" align='center'>
-                    <b>{cardTitle}</b>
+                <Typography gutterBottom variant="h5" component="div" align='center' fontWeight='bold'>
+                    {cardTitle}
                 </Typography>
                 {songInfo.map(function(song, i) {
                     return (

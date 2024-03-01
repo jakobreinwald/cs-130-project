@@ -6,8 +6,8 @@ function ProfileCard({ cardTitle, profileInfo }) {
     return (
         <Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '90%', borderRadius: 5}}>
             <CardContent>
-                <Typography gutterBottom variant="h5" component="div" align='center'>
-                    <b>{cardTitle}</b>
+                <Typography gutterBottom variant="h5" component="div" align='center' fontWeight='bold'>
+                    {cardTitle}
                 </Typography>
                 {profileInfo.map(function(profile, i) {
                     return (
