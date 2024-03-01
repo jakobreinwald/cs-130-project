@@ -1,14 +1,14 @@
 import React from 'react';
-import './finderImage.css'
+import { Box, Typography } from '@mui/material';
 
-function FinderImage() {
+function FinderImage({ image, mainText, subText }) {
   return (
-    <div className="finderImage">
-      <div className="image">
-        <p>this is the finder Image component</p>
-      </div>
-    </div>
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      <image src={image} style={{ width: '50vh', height: '50vh' }}/>
+      <Typography variant='h4' sx={{ fontWeight: 500 }}> { mainText } </Typography>
+      <Typography variant='h5'> { subText } </Typography>
+    </Box>
   );
 }
 
-export default UserProfile;
+export default FinderImage;
