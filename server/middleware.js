@@ -39,11 +39,63 @@ class Middleware {
   }
 
   async generateMatches(user_id) {
-    // TODO: fetch user's top artists and genres from database
+    // fetch user's top artists and genres from database
+    user = await this.db.getUser(user_id).catch(console.error);
+
+    // top artists_ids is a sorted list of artists by rank
+    const top_artists = user.topartist_ids.size < 5 ? user.top_artist_ids : user.top_artist_ids.slice(0, 5);
+    const genre_counts = user.genre_counts;
+    // get genre_counts keys and sort by descending order
+    let tmp = Array.from(genre_counts.entries()).sort((a, b) => b[1] - a[1]).map(entry => entry[0]);
+    const user_genres = tmp.size < 5 ? tmp : tmp.slice(0, 5);
+    let potential_matches = new Set();
+
+    // loop through all genres and find all users who listen to the genre
+    for (const genre of user_genres) {
+      genre_obj = await this.db.getGenre(genre);
+      potential_matches.add(genre_obj.listener_id_to_count.keys());
+    }
+    // loop through all artists and find all users who listen to the artist
+    for (const artist of top_artists) {
+      artist_obj = await this.db.getArtist(artist);
+      potential_matches.add(artist_obj.listener_id_to_rank.keys());
+    }
+
+    for (const pot_user_id of potential_matches) {
+      // calculate match score
+      match_score = this.calculateMatchScore(user, await this.db.getUser(pot_user_id));
+      // add match to database
+      
+    }
+    
     // TODO: fetch cached artist and genre data from database
     // TODO: find users with similar top artists and genres
     // TODO: pass data through a matching algorithm to find best matches
     // TODO: cache list of matches
+  }
+
+  async calculateMatchScore(user, match_user) {
+    const user_total_genre_count = user.total_genre_count;
+    const user_avg_genre_count = user_total_genre_count / user.genre_counts.size;
+
+    const match_total_genre_count = match_user.total_genre_count;
+    const match_avg_genre_count = match_total_genre_count / match_user.genre_counts.size;
+
+    // calculate genre match score
+    let genre_match_score = 0;
+    let count = 0;
+    for (const genre of user.genre_counts.keys()) {
+      norm_user_genre_count = user.genre_counts.get(genre) / user_avg_genre_count;
+      norm_match_genre_count = match_user.genre_counts.get(genre) / match_avg_genre_count;
+      genre_match_score += norm_user_genre_count * norm_match_genre_count;
+      count++;
+    }
+    genre_match_score /= count;
+
+    // calculate artist match score
+    for (const artist of user.top_artist_ids) {
+      
+    }
   }
 
   async generateRecommendations(access_token, user_id, batch_len, num_req) {
