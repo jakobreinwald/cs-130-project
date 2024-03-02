@@ -40,6 +40,9 @@ const User = new mongoose.Schema(
     top_track_ids: {
       type: [String]
     },
+    total_genre_count: {
+      type: Number
+    },
     user_id: {
       type: String,
       required: true,

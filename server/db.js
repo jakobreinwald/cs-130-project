@@ -154,6 +154,8 @@ class Database {
 
   async createOrUpdateUser(genre_counts, top_artist_ids, top_track_ids, user_obj) {
     // Update existing User document, otherwise create new document
+    // sum the values of the genre_counts map
+    const total_genre_count = Array.from(genre_counts.values()).reduce((a, b) => a + b, 0);
     return User.findOneAndUpdate(
       { user_id: user_obj.id },
       {
@@ -161,7 +163,8 @@ class Database {
         genre_counts: genre_counts,
         images: user_obj.images.map(this.saveImageObj),
         top_artist_ids: top_artist_ids,
-        top_track_ids: top_track_ids
+        top_track_ids: top_track_ids,
+        total_genre_count: total_genre_count
       },
       { upsert: true }
     ).exec();
