@@ -1,6 +1,7 @@
 // Dependencies
 const { Album, Artist, Genre, Image, Track, User } = require('./models');
 const mongoose = require('mongoose');
+const genre = require('./models/genre');
 require('dotenv').config({ path: '.env.local' });
 
 class Database {
@@ -67,7 +68,7 @@ class Database {
 
   async createOrUpdateArtist(artist_obj) {
     // Create or update genre counts for given listener
-    const genres = this.createOrUpdateGenreList(artist_obj.genres);
+    const genres = this.updateGenreCounts(artist_obj.genres);
 
     // Update existing Artist document, otherwise create new document
     const artist = Artist.findOneAndUpdate(
@@ -82,7 +83,7 @@ class Database {
 
   async createOrUpdateArtist(artist_obj, listener_id, rank_for_listener) {
     // Create or update genre counts for given listener
-    const genres = this.createOrUpdateGenreList(artist_obj.genres);
+    const genres = this.updateGenreCounts(artist_obj.genres);
     
     // Update existing Artist document, otherwise create new document
     const artist = Artist.findOneAndUpdate(
@@ -98,42 +99,33 @@ class Database {
     return Promise.all([artist, genres]);
   }
 
-  async createOrUpdateGenre(name) {
-    // Update existing Genre document, otherwise create new document
-    return Genre.findOneAndUpdate(
-      { name: name },
-      {},
-      { upsert: true }
-    ).exec();
-  }
+  async createOrUpdateGenreCounts(genre_counts, listener_id) {
+    // Find all genre documents with listener_id
+    const genres = await Genre
+      .find({ [`listener_id_to_count.${listener_id}`]: { $exists: true } })
+      .exec();
 
-  async createOrUpdateGenre(name, listener_id, count) {
-    // Update existing Genre document, otherwise create new document
-    return Genre.findOneAndUpdate(
-      { name: name },
-      { [`listener_id_to_count.${listener_id}`]: count },
-      { upsert: true }
-    ).exec();
-  }
-
-  async createOrUpdateGenreList(genres) {
-    // Ignore if no genres provided
-    if (!genres) {
-      return Promise.resolve();
-    }
+    // Determine genres in genre_counts that are not in database
+    const db_genres = new Set(genres.map(genre => genre.name));
+    const all_genres = [...db_genres, ...genre_counts.keys()];
     
-    // Create or update genre counts for given listener
-    return Promise.all(genres.map(genre => this.createOrUpdateGenre(genre)));
-  }
-
-  async createOrUpdateGenreList(genres, listener_id) {
-    // Ignore if no genres provided
-    if (!genres) {
-      return Promise.resolve();
+    // Update listener_id_to_count for each genre
+    const update_command = (genre) => {
+      if (genre_counts.has(genre)) {
+        return { $set: { [`listener_id_to_count.${listener_id}`]: genre_counts.get(genre) } };
+      } else {
+        return { $unset: { [`listener_id_to_count.${listener_id}`]: '' } };
+      }
     }
-    
-    // Create or update genre counts for given listener
-    return Promise.all(genres.map(genre => this.createOrUpdateGenre(genre, listener_id)));
+
+    // Return promise for all genre document updates
+    return Genre.bulkWrite(all_genres.map(genre => ({
+      updateOne: {
+        filter: { name: genre },
+        update: update_command(genre),
+        upsert: true
+      }
+    })));
   }
 
   async createOrUpdateTrack(track_obj, listener_id) {

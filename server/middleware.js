@@ -167,11 +167,12 @@ class Middleware {
     // Sum genre counts across all top tracks
     const genre_counts = this.calcGenreCounts(fetched_artists, fetched_tracks, top_track_associated_artists);
 
-    // TODO: update genre documents in database with user's new listen count
+    // Update genre documents in database with user's new listen count
+    const cached_genres = this.db.createOrUpdateGenreCounts(genre_counts, listener_id);
     
     // Create or update user document in database
     const cached_user = this.db.createOrUpdateUser(genre_counts, top_artist_ids, top_track_ids, fetched_user);
-    return Promise.all([...cached_artists, ...cached_tracks, cached_user]);
+    return Promise.all([...cached_artists, ...cached_tracks, cached_genres, cached_user]);
   }
 }
 
