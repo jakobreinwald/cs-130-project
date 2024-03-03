@@ -119,11 +119,13 @@ class Middleware {
 
   async getTopTrackAssociatedArtists(access_token, fetched_tracks, top_artist_ids) {
     const top_artist_set = new Set(top_artist_ids);
-    return fetched_tracks
+    const fetched_artists = fetched_tracks
       .flatMap(track => track.artists.map(artist => artist.id))
       .filter(artist_id => !top_artist_set.has(artist_id))
       .map(artist_id => this.api.fetchArtist(access_token, artist_id))
-      .map(artist => artist.then(response => response.data).catch(console.error));
+    
+    return Promise.all(fetched_artists)
+      .then(res => res.map(artist => artist.data));
   }
 
   async getUser(user_id) {
@@ -146,11 +148,17 @@ class Middleware {
     const artists = this.api.fetchUserTopArtists(access_token, 'medium_term', 50);
     const tracks = this.api.fetchUserTopTracks(access_token, 'medium_term', 50);
     const user = this.api.fetchUserProfile(access_token);
+    const fetched_data = Promise.all([artists, tracks, user]);
 
-    const fetched_artists = artists.then(response => response.data.items).catch(console.error);
-    const fetched_tracks = tracks.then(response => response.data.items).catch(console.error);
-    const fetched_user = user.then(response => response.data).catch(console.error);
+    const [fetched_artists, fetched_tracks, fetched_user] = await fetched_data
+      .then(([artists, tracks, user]) => [artists.data.items, tracks.data.items, user.data])
+      .catch(console.error);
 
+    if (!fetched_user) {
+      return Promise.reject('Failed to fetch user data');
+    }
+
+    // Extract user id, top artist ids, and top track ids
     const listener_id = fetched_user.id;
     const top_artist_ids = fetched_artists.map(artist => artist.id);
     const top_track_ids = fetched_tracks.map(track => track.id);
@@ -160,14 +168,13 @@ class Middleware {
     const cached_tracks = fetched_tracks.map(track => this.db.createOrUpdateTrack(track, listener_id));
     
     // Determine all artists associated with top tracks that are not already in top artists
-    const top_track_associated_artists = this.getTopTrackAssociatedArtists(access_token, fetched_tracks, top_artist_ids);
+    const top_track_associated_artists = await this.getTopTrackAssociatedArtists(access_token, fetched_tracks, top_artist_ids)
+      .catch(console.error);
     const additional_cached_artists = top_track_associated_artists.map(artist => this.db.createOrUpdateArtist(artist));
     cached_artists.push(...additional_cached_artists);
     
-    // Sum genre counts across all top tracks
+    // Sum genre counts across top tracks and update genre documents in database
     const genre_counts = this.calcGenreCounts(fetched_artists, fetched_tracks, top_track_associated_artists);
-
-    // Update genre documents in database with user's new listen count
     const cached_genres = this.db.createOrUpdateGenreCounts(genre_counts, listener_id);
     
     // Create or update user document in database

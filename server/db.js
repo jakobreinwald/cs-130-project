@@ -1,7 +1,6 @@
 // Dependencies
 const { Album, Artist, Genre, Image, Track, User } = require('./models');
 const mongoose = require('mongoose');
-const genre = require('./models/genre');
 require('dotenv').config({ path: '.env.local' });
 
 class Database {
@@ -29,6 +28,32 @@ class Database {
       name: track_obj.name,
       preview_url: track_obj.preview_url,
     };
+  }
+
+  getArtistUpdateOperation(artist_obj, listener_id = null, rank = null) {
+    // Convert Spotify API object to Artist model
+    const update_command = {
+      $set: {
+        genres: artist_obj.genres,
+        images: artist_obj.images ? artist_obj.images.map(this.saveImageObj) : [],
+        name: artist_obj.name
+      }
+    };
+
+    if (listener_id && rank) {
+      update_command.$set[`listener_id_to_rank.${listener_id}`] = rank;
+    }
+
+    // Generate update command for Artist document
+    const update_op = {
+      updateOne: {
+        filter: { artist_id: artist_obj.id },
+        update: update_command,
+        upsert: true
+      }
+    };
+
+    return update_op;
   }
 
   saveImageObj(image_obj) {
@@ -67,26 +92,17 @@ class Database {
   }
 
   async createOrUpdateArtist(artist_obj) {
-    // Create or update genre counts for given listener
-    const genres = this.updateGenreCounts(artist_obj.genres);
-
     // Update existing Artist document, otherwise create new document
-    const artist = Artist.findOneAndUpdate(
+    return Artist.findOneAndUpdate(
       { artist_id: artist_obj.id },
       this.createArtistModel(artist_obj),
       { upsert: true }
     ).exec();
-
-    // Return promise for all artist and genre updates
-    return Promise.all([artist, genres]);
   }
 
   async createOrUpdateArtist(artist_obj, listener_id, rank_for_listener) {
-    // Create or update genre counts for given listener
-    const genres = this.updateGenreCounts(artist_obj.genres);
-    
     // Update existing Artist document, otherwise create new document
-    const artist = Artist.findOneAndUpdate(
+    return Artist.findOneAndUpdate(
       { artist_id: artist_obj.id },
       {
         ...(this.createArtistModel(artist_obj)),
@@ -94,9 +110,17 @@ class Database {
       },
       { upsert: true }
     ).exec();
+  }
 
-    // Return promise for all artist and genre updates
-    return Promise.all([artist, genres]);
+  async createOrUpdateArtists(artists, listener_id = null, ranked = false) {
+    // Update existing Artist documents, otherwise create new documents
+    return Artist.bulkWrite(artists.map((artist, rank) => {
+      if (ranked) {
+        return this.getArtistUpdateOperation(artist, listener_id, rank);
+      } else {
+        return this.getArtistUpdateOperation(artist);
+      }
+    }));
   }
 
   async createOrUpdateGenreCounts(genre_counts, listener_id) {
