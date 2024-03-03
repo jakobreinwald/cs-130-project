@@ -1,5 +1,5 @@
 // Dependencies
-const { Album, Artist, Genre, Image, Track, User } = require('./models');
+const { Album, Artist, Genre, Track, User } = require('./models');
 const mongoose = require('mongoose');
 require('dotenv').config({ path: '.env.local' });
 
@@ -11,34 +11,20 @@ class Database {
       .catch(console.error);
   }
 
-  createArtistModel(artist_obj) {
-    // Convert Spotify API object to Artist model
+  constructAlbumUpdateOperation(album_obj) {
+    // Generate update command for Album document
     return {
-      genres: artist_obj.genres,
-      images: artist_obj.images ? artist_obj.images.map(this.saveImageObj) : [],
-      name: artist_obj.name
-    };
-  }
-
-  createTrackModel(track_obj) {
-    // Convert Spotify API object to Track model
-    return {
-      album_id: track_obj.album.id,
-      artist_ids: track_obj.artists.map(artist => artist.id),
-      name: track_obj.name,
-      preview_url: track_obj.preview_url,
-    };
-  }
-
-  getArtistUpdateOperation(artist_obj, listener_id = null, rank = null) {
-    // Convert Spotify API object to Artist model
-    const update_command = {
-      $set: {
-        genres: artist_obj.genres,
-        images: artist_obj.images ? artist_obj.images.map(this.saveImageObj) : [],
-        name: artist_obj.name
+      updateOne: {
+        filter: { album_id: album_obj.id },
+        update: { $set: this.createAlbumModel(album_obj) },
+        upsert: true
       }
     };
+  }
+
+  constructArtistUpdateOperation(artist_obj, listener_id = null, rank = null) {
+    // Convert Spotify API object to Artist model
+    const update_command = { $set: this.createArtistModel(artist_obj) };
 
     if (listener_id && rank) {
       update_command.$set[`listener_id_to_rank.${listener_id}`] = rank;
@@ -56,11 +42,53 @@ class Database {
     return update_op;
   }
 
-  saveImageObj(image_obj) {
+  constructTrackUpdateOperation(track_obj) {
+    // Generate update command for Track document
+    return {
+      updateOne: {
+        filter: { track_id: track_obj.id },
+        update: { $set: this.createTrackModel(track_obj) },
+        upsert: true
+      }
+    };
+  }
+
+  createAlbumModel(album_obj) {
+    // Convert Spotify API object to Album model
+    return {
+      album_type: album_obj.album_type,
+      artist_ids: album_obj.artists.map(artist => artist.id),
+      images: album_obj.images.map(this.createImageModel),
+      name: album_obj.name,
+      release_date: album_obj.release_date,
+      release_date_precision: album_obj.release_date_precision
+    };
+  }
+
+  createArtistModel(artist_obj) {
+    // Convert Spotify API object to Artist model
+    return {
+      genres: artist_obj.genres,
+      images: artist_obj.images ? artist_obj.images.map(this.createImageModel) : [],
+      name: artist_obj.name
+    };
+  }
+
+  createImageModel(image_obj) {
     return {
       url: image_obj.url,
       height: image_obj.height,
       width: image_obj.width
+    };
+  }
+
+  createTrackModel(track_obj) {
+    // Convert Spotify API object to Track model
+    return {
+      album_id: track_obj.album.id,
+      artist_ids: track_obj.artists.map(artist => artist.id),
+      name: track_obj.name,
+      preview_url: track_obj.preview_url,
     };
   }
 
@@ -73,22 +101,17 @@ class Database {
   }
 
   async createOrUpdateAlbum(album_obj) {
-    // Convert album_obj to Album model
-    const album_model = {
-      album_type: album_obj.album_type,
-      artist_ids: album_obj.artists.map(artist => artist.id),
-      images: album_obj.images.map(this.saveImageObj),
-      name: album_obj.name,
-      release_date: album_obj.release_date,
-      release_date_precision: album_obj.release_date_precision
-    };
-
     // Update existing Album document, otherwise create new document
    return Album.findOneAndUpdate(
       { album_id: album_obj.id },
-      album_model,
+      this.createAlbumModel(album_obj),
       { upsert: true }
     ).exec();
+  }
+
+  async createOrUpdateAlbums(albums) {
+    // Update existing Album documents, otherwise create new documents
+    return Album.bulkWrite(albums.map(album => this.constructAlbumUpdateOperation(album)));
   }
 
   async createOrUpdateArtist(artist_obj) {
@@ -112,15 +135,12 @@ class Database {
     ).exec();
   }
 
-  async createOrUpdateArtists(artists, listener_id = null, ranked = false) {
+  async createOrUpdateArtists(ranked_artists, unranked_artists, listener_id) {
     // Update existing Artist documents, otherwise create new documents
-    return Artist.bulkWrite(artists.map((artist, rank) => {
-      if (ranked) {
-        return this.getArtistUpdateOperation(artist, listener_id, rank);
-      } else {
-        return this.getArtistUpdateOperation(artist);
-      }
-    }));
+    const ranked_ops = ranked_artists.map((artist, rank) => this.constructArtistUpdateOperation(artist, listener_id, rank));
+    const unranked_ops = unranked_artists.map(artist => this.constructArtistUpdateOperation(artist));
+    const update_ops = ranked_ops.concat(unranked_ops);
+    return Artist.bulkWrite(update_ops);
   }
 
   async createOrUpdateGenreCounts(genre_counts, listener_id) {
@@ -152,10 +172,9 @@ class Database {
     })));
   }
 
-  async createOrUpdateTrack(track_obj, listener_id) {
-    // Create or update Album, Artist, and Genre documents
+  async createOrUpdateTrack(track_obj) {
+    // Create or update Album document
     const album = this.createOrUpdateAlbum(track_obj.album);
-    const artists = track_obj.artists.map(artist => this.createOrUpdateArtist(artist));
 
     // Update existing Track document, otherwise create new document
     const track = Track.findOneAndUpdate(
@@ -165,7 +184,12 @@ class Database {
     ).exec();
 
     // Return promise for all album, artist, genre, and track updates
-    return Promise.all([album, ...artists, track]);
+    return Promise.all([album, track]);
+  }
+
+  async createOrUpdateTracks(tracks) {
+    // Update existing Track documents, otherwise create new documents
+    return Track.bulkWrite(tracks.map(track => this.constructTrackUpdateOperation(track)));
   }
 
   async createOrUpdateUser(genre_counts, top_artist_ids, top_track_ids, user_obj) {
@@ -175,7 +199,7 @@ class Database {
       {
         display_name: user_obj.display_name,
         genre_counts: genre_counts,
-        images: user_obj.images.map(this.saveImageObj),
+        images: user_obj.images.map(this.createImageModel),
         top_artist_ids: top_artist_ids,
         top_track_ids: top_track_ids
       },
