@@ -2,6 +2,7 @@
 const client_id = process.env.SPOTIFY_CLIENT_ID;
 const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
 const num_top_artists = 50;
+const max_artist_match_score = num_top_artists*(num_top_artists+1)*(2*num_top_artists+1)/6;
 
 // Dependencies
 const Database = require('./db');
@@ -44,11 +45,13 @@ class Middleware {
     user = await this.db.getUser(user_id).catch(console.error);
 
     // top artists_ids is a sorted list of artists by rank
-    const top_artists = user.topartist_ids.size < 5 ? user.top_artist_ids : user.top_artist_ids.slice(0, 5);
+    const top_artists = user.top_artist_ids;
     const genre_counts = user.genre_counts;
+
     // get genre_counts keys and sort by descending order
+    // number of genres is in the thousands, so slice to get the top num_top_artists genres
     let tmp = Array.from(genre_counts.entries()).sort((a, b) => b[1] - a[1]).map(entry => entry[0]);
-    const user_genres = tmp.size < 5 ? tmp : tmp.slice(0, 5);
+    const user_genres = tmp.slice(0, num_top_artists);
     let potential_matches = new Set();
 
     // loop through all genres and find all users who listen to the genre
@@ -94,10 +97,16 @@ class Middleware {
     genre_match_score /= hypotenuse;
 
     // calculate artist match score
-
+    let artist_match_score = 0;
     for (const artist of user.top_artist_ids) {
-      
+      user_artist_rank = user.artist_id_to_rank.get(artist) ?? num_top_artists;
+      match_artist_rank = match_user.artist_id_to_rank.get(artist) ?? num_top_artists;
+      artist_match_score += (num_top_artists - user_artist_rank) * (num_top_artists - match_artist_rank);
     }
+    artist_match_score /= max_artist_match_score;
+
+    // return total match score
+    return genre_match_score * 2/3 + artist_match_score * 1/3;
   }
 
   async generateRecommendations(access_token, user_id, batch_len, num_req) {
