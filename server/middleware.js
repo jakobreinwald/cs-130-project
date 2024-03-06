@@ -1,6 +1,7 @@
 // Constants
 const client_id = process.env.SPOTIFY_CLIENT_ID;
 const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
+const num_top_artists = 50;
 
 // Dependencies
 const Database = require('./db');
@@ -83,16 +84,17 @@ class Middleware {
 
     // calculate genre match score
     let genre_match_score = 0;
-    let count = 0;
+    let hypotenuse = 0;
     for (const genre of user.genre_counts.keys()) {
       norm_user_genre_count = user.genre_counts.get(genre) / user_avg_genre_count;
       norm_match_genre_count = match_user.genre_counts.get(genre) / match_avg_genre_count;
+      hypotenuse += norm_user_genre_count * norm_user_genre_count;
       genre_match_score += norm_user_genre_count * norm_match_genre_count;
-      count++;
     }
-    genre_match_score /= count;
+    genre_match_score /= hypotenuse;
 
     // calculate artist match score
+
     for (const artist of user.top_artist_ids) {
       
     }
