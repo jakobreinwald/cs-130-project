@@ -24,6 +24,12 @@ const theme = createTheme({
         primary: '#ffffff',
         secondary: '#21A4B6',
       },
+      swipeButton: {
+        red: '#F66D6D',
+        redHover: '#B44B4B',
+        green: '#7AD17D',
+        greenHover: '#4F8851',
+      }
     },
     typography: {
       fontFamily: 'Poppins, Open Sans, sans-serif',
