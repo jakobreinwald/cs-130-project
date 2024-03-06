@@ -68,14 +68,11 @@ class Middleware {
     for (const pot_user_id of potential_matches) {
       // calculate match score
       match_score = this.calculateMatchScore(user, await this.db.getUser(pot_user_id));
-      // add match to database
-
+      // add potential match to database
+      this.db.addPotentialMatch(user_id, pot_user_id, match_score);
     }
-    
-    // TODO: fetch cached artist and genre data from database
-    // TODO: find users with similar top artists and genres
-    // TODO: pass data through a matching algorithm to find best matches
-    // TODO: cache list of matches
+
+    // TODO: add return promise object after adding potential matches
   }
 
   async calculateMatchScore(user, match_user) {
@@ -148,8 +145,15 @@ class Middleware {
       .then(() => rec_ids);
   }
 
+  // matches are a pair of users that have liked each others profiles
   async getMatches(user_id, offset) {
     // TODO: fetch cached list of matches, from offset index onwards
+  }
+
+  // potential matches are a list of potential matches for the user, sorted by match score
+  // sorted from greatest to least match score
+  async getPotentialMatches(user_id, offset) {
+    // TODO: fetch cached list of potential matches, from offset index onwards
   }
 
   async getRecommendations(access_token, user_id, num_req) {

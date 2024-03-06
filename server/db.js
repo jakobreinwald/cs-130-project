@@ -228,10 +228,13 @@ class Database {
     // createOrUpdateMatch(user_id, match_id)
   }
 
-   async createOrUpdateMatch(user_id, match_id)
-   {
-     // TODO: create a Match object and add to both user objects
-   }
+  async createOrUpdateMatch(user_id, match_id) {
+   // TODO: create a Match object and add to both user objects
+  }
+
+  async addPotentialMatch(user_id, match_id, match_score) {
+    
+  }
 
   async likeRecommendation(user_id, rec_id) {
     return User.updateOne(
