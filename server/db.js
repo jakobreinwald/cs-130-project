@@ -224,7 +224,14 @@ class Database {
 
   async likeMatch(user_id, match_id) {
     // TODO: adds match_id to matched_and_liked_user_ids in user document
+    // TODO: if the other user has also liked the match, then create a Match object and add to both user objects
+    // createOrUpdateMatch(user_id, match_id)
   }
+
+   async createOrUpdateMatch(user_id, match_id)
+   {
+     // TODO: create a Match object and add to both user objects
+   }
 
   async likeRecommendation(user_id, rec_id) {
     return User.updateOne(

@@ -1,6 +1,7 @@
 // Dependencies
 const Image = require('./image');
 const mongoose = require('mongoose');
+const Match = require('./match');
 
 // User schema
 const User = new mongoose.Schema(
@@ -15,9 +16,13 @@ const User = new mongoose.Schema(
       type: Map,
       of: Number,
     },
-    matched_user_ids: {
-      type: [String]
+    // we use this to lookup match data
+    matches: {
+      // maps matched_user_id to match object
+      type: Map,
+      of:  String
     },
+    // we use this to look for the first match with no outcome
     matched_user_to_outcome: {
       type: Map,
       of: {

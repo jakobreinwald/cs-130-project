@@ -69,7 +69,7 @@ class Middleware {
       // calculate match score
       match_score = this.calculateMatchScore(user, await this.db.getUser(pot_user_id));
       // add match to database
-      
+
     }
     
     // TODO: fetch cached artist and genre data from database
