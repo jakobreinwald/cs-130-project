@@ -14,31 +14,34 @@ const User = new mongoose.Schema(
     genre_counts: {
       type: Map,
       of: Number,
-      default: {}
-    },
-    matched_and_dismissed_user_ids: {
-      type: [String]
-    },
-    matched_and_liked_user_ids: {
-      type: [String]
     },
     matched_user_ids: {
       type: [String]
     },
-    recommended_and_dismissed_track_ids: {
-      type: [String]
+    matched_user_to_outcome: {
+      type: Map,
+      of: {
+        type: String,
+        enum: ['liked', 'dismissed', 'matched', 'none'],
+        default: 'none',
+      }
     },
-    recommended_and_liked_track_ids: {
-      type: [String]
-    },
-    recommended_track_ids: {
-      type: [String]
+    recommended_track_to_outcome: {
+      type: Map,
+      of: {
+        type: String,
+        enum: ['liked', 'dismissed', 'none'],
+        default: 'none',
+      }
     },
     top_artist_ids: {
       type: [String]
     },
     top_track_ids: {
       type: [String]
+    },
+    total_genre_count: {
+      type: Number
     },
     user_id: {
       type: String,

@@ -59,6 +59,17 @@ class SpotifyAPI {
     });
   }
 
+  async fetchRecommendedTracks(access_token, limit, seed_artists, seed_genres) {
+    return axios.get(`${base_url}/recommendations`, {
+      headers: SpotifyAPI.getHeaders(access_token),
+      params: {
+        limit: limit,
+        seed_artists: seed_artists,
+        seed_genres: seed_genres
+      }
+    });
+  }
+
   async fetchUserProfile(access_token) {
     return axios.get(`${base_url}/me`, {
       headers: SpotifyAPI.getHeaders(access_token)
