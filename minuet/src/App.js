@@ -50,7 +50,7 @@ const theme = createTheme({
     },
   });
 
-const isLoggedIn = false; //todo based on whether logged in or not
+const isLoggedIn = true; //todo based on whether logged in or not
 
 function App() {
   return (
