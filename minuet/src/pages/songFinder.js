@@ -12,7 +12,18 @@ function SongFinder() {
     const [slideIn, setSlideIn] = useState(true); // Used to trigger slide out animation
     const [hasMatches, setHasMatches] = useState(true);
 
-    const songs = [1, 2, 3, 4, 5]
+    const songs = [
+      {
+        image: 'https://static.independent.co.uk/2021/11/11/12/newFile.jpg', 
+        mainText: 'All Too Well (10 Minute Version)', 
+        subText: 'Taylor Swift'
+      },
+      {
+        image: 'https://static.independent.co.uk/2021/11/11/12/newFile.jpg', 
+        mainText: 'Welcome to New York', 
+        subText: 'Taylor Swift'
+      },
+    ]
     const [likedSongs, setLikedSongs] = useState([]);
     const [dislikedSongs, setDislikedSongs] = useState([]);
   
@@ -73,9 +84,10 @@ function SongFinder() {
                 <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: 500, height: 500}}>
                     {hasMatches ? songs.map((element, index) => (
                         <Slide key={index} direction={direction} in={slideIn && index === currentIndex} mountOnEnter unmountOnExit>
-                            <Box>
-                                TESTTTTTTT
-                            </Box>
+                            <FinderImage 
+                              image={element.image} 
+                              mainText={element.mainText} 
+                              subText={element.subText} />
                         </Slide>
                     )) : <Typography variant='body1'> Sorry, no more matches for now! </Typography>}
                 </Box>
