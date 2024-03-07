@@ -23,7 +23,7 @@ class Middleware {
     
     // Sum genre counts across all top tracks
     return fetched_tracks
-      .flatMap(track => track.artists.map(artist => artist.id))
+      .flatMap(track => track.artists.map(({ id }) => id))
       .flatMap(artist_id => artist_id_to_genres.get(artist_id))
       .reduce((map, genre) => {
         map.set(genre, (map.get(genre) || 0) + 1);
@@ -100,19 +100,9 @@ class Middleware {
     }
   }
 
-  async generateRecommendations(access_token, user_id, batch_len, num_req) {
-    // Fetch user document from database and extract top artists
-    const user = await this.db.getUser(user_id).catch(console.error);
-    const top_artists = user.top_artist_ids;
-
-    // Extract top genres, sorted descending by count
-    const top_genres = user.genre_counts
-      .sort((a, b) => b[1] - a[1])
-      .map(genre => genre[0]);
-
-    let processed_recs = [];
-    let rec_ids = [];
-
+  async fetchRecommendations(access_token, batch_len, top_artists, top_genres) {
+    let rec_batches = [];
+    
     // Generate recommendations in batches
     for (let artist_offset = 0; artist_offset < top_artists.length; artist_offset += 5) {
       // Select 5 (max allowed by Spotify API) artists and genres from top lists
@@ -121,22 +111,40 @@ class Middleware {
       const selected_genres = top_genres.slice(genre_offset, genre_offset + 5);
 
       // Call recommendation endpoint of Spotify API to fetch recommended tracks
-      const recs = this.api.fetchRecommendedTracks(access_token, batch_len, selected_artists, selected_genres)
-        .then(response => response.data.tracks)
-        .catch(console.error);
-
-      // Keep track of first num_req recommended track ids, immediately returned in response
-      const rem_req = num_req - rec_ids.length;
-      rec_ids.push(...recs.slice(0, rem_req).map(track => track.id));
-
-      // Cache recommendation track ids and track objects in database
-      const cached_rec_ids = recs.map(track => this.db.addRecommendation(user_id, track.id));
-      const cached_tracks = recs.map(track => this.db.createOrUpdateTrack(track));
-      processed_recs.push(...cached_rec_ids, ...cached_tracks);
+      const rec_batch = this.api.fetchRecommendedTracks(access_token, batch_len, selected_artists, selected_genres);
+      rec_batches.push(rec_batch);
     }
 
-    return Promise.all(processed_recs)
-      .then(() => rec_ids);
+    // Construct unified list of recommended tracks from all batches
+    return Promise.all(rec_batches)
+      .then(batches => batches.flatMap(batch => batch.data.tracks));
+  }
+
+  async generateRecommendations(access_token, user_id, batch_len, num_req) {
+    // Fetch user document from database and extract top artists
+    const user = await this.db.getUser(user_id).catch(console.error);
+    const top_artists = user.top_artist_ids;
+
+    // Extract top genres, sorted descending by count
+    const top_genres = [...user.genre_counts]
+      .sort((a, b) => b[1] - a[1])
+      .map(([genre, count]) => genre);
+
+    // Fetch recommendations from Spotify API
+    const recs = await this.fetchRecommendations(access_token, batch_len, top_artists, top_genres)
+      .catch(console.error);
+
+    // Keep track of first num_req recommended track ids, immediately returned in response
+    // FIXME: cannot get length of recs because it's a promise?
+    const rem_req = num_req - recs.length;
+    const req_rec_ids = recs.slice(0, rem_req).map(({ id }) => id);
+
+    // Cache recommendation track ids and track objects in database
+    const cached_rec_ids = recs.map(track => this.db.addRecommendation(user_id, track.id));
+    const cached_tracks = this.db.createOrUpdateTracks(recs);
+
+    return Promise.all([cached_rec_ids, cached_tracks, req_rec_ids])
+      .then(() => req_rec_ids);
   }
 
   async getMatches(user_id, offset) {
@@ -156,15 +164,13 @@ class Middleware {
       }
 
       if (rec_ids.length === num_req) {
-        break;
+        return;
       }
     }
 
     // If no cached recommendations available, generate new recommendations
-    if (rec_ids.length < num_req) {
-      const rem_req = num_req - rec_ids.length;
-      rec_ids = await this.generateRecommendations(access_token, user_id, 10, rem_req).catch(console.error);
-    }
+    const rem_req = num_req - rec_ids.length;
+    rec_ids = await this.generateRecommendations(access_token, user_id, 10, rem_req).catch(console.error);
 
     // Fetch track objects from database
     const recs = rec_ids.map(track_id => this.db.getTrack(track_id))
@@ -174,12 +180,12 @@ class Middleware {
   async getTopTrackAssociatedArtists(access_token, fetched_tracks, top_artist_ids) {
     const top_artist_set = new Set(top_artist_ids);
     const fetched_artists = fetched_tracks
-      .flatMap(track => track.artists.map(artist => artist.id))
+      .flatMap(track => track.artists.map(({ id }) => id))
       .filter(artist_id => !top_artist_set.has(artist_id))
       .map(artist_id => this.api.fetchArtist(access_token, artist_id))
     
     return Promise.all(fetched_artists)
-      .then(res => res.map(artist => artist.data));
+      .then(artists => artists.map(({ data }) => data));
   }
 
   async getUser(user_id) {
@@ -214,11 +220,11 @@ class Middleware {
 
     // Extract user id, top artist ids, and top track ids
     const listener_id = fetched_user.id;
-    const top_artist_ids = fetched_artists.map(artist => artist.id);
-    const top_track_ids = fetched_tracks.map(track => track.id);
-    const fetched_albums = fetched_tracks.map(track => track.album);
-
+    const top_artist_ids = fetched_artists.map(({ id }) => id);
+    const top_track_ids = fetched_tracks.map(({ id }) => id);
+    
     // Cache top artists, top tracks, and associated albums in database
+    const fetched_albums = fetched_tracks.map(({ album }) => album);
     const cached_albums = this.db.createOrUpdateAlbums(fetched_albums);
     const cached_tracks = this.db.createOrUpdateTracks(fetched_tracks);
     

@@ -69,24 +69,22 @@ class Database {
     // Convert Spotify API object to Artist model
     return {
       genres: artist_obj.genres,
+      // TODO: this line is called every time the model is updated
       images: artist_obj.images ? artist_obj.images.map(this.createImageModel) : [],
       name: artist_obj.name
     };
   }
 
-  createImageModel(image_obj) {
-    return {
-      url: image_obj.url,
-      height: image_obj.height,
-      width: image_obj.width
-    };
+  createImageModel({ url, height, width }) {
+    // Ensure API response conforms to underlying database model
+    return { url, height, width };
   }
 
   createTrackModel(track_obj) {
     // Convert Spotify API object to Track model
     return {
       album_id: track_obj.album.id,
-      artist_ids: track_obj.artists.map(artist => artist.id),
+      artist_ids: track_obj.artists.map(({ id }) => id),
       name: track_obj.name,
       preview_url: track_obj.preview_url,
     };
@@ -196,15 +194,18 @@ class Database {
     // Update existing User document, otherwise create new document
     // sum the values of the genre_counts map
     const total_genre_count = Array.from(genre_counts.values()).reduce((a, b) => a + b, 0);
+    const { id, display_name } = user_obj;
+    const images = user_obj.images.map(this.createImageModel);
+
     return User.findOneAndUpdate(
-      { user_id: user_obj.id },
+      { user_id: id },
       {
-        display_name: user_obj.display_name,
-        genre_counts: genre_counts,
-        images: user_obj.images.map(this.createImageModel),
-        top_artist_ids: top_artist_ids,
-        top_track_ids: top_track_ids,
-        total_genre_count: total_genre_count
+        display_name,
+        genre_counts,
+        images,
+        top_artist_ids,
+        top_track_ids,
+        total_genre_count
       },
       { upsert: true }
     ).exec();

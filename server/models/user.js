@@ -15,9 +15,6 @@ const User = new mongoose.Schema(
       type: Map,
       of: Number,
     },
-    matched_user_ids: {
-      type: [String]
-    },
     matched_user_to_outcome: {
       type: Map,
       of: {
@@ -32,7 +29,8 @@ const User = new mongoose.Schema(
         type: String,
         enum: ['liked', 'dismissed', 'none'],
         default: 'none',
-      }
+      },
+      default: new Map()
     },
     top_artist_ids: {
       type: [String]
