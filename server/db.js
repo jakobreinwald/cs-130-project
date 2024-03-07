@@ -223,17 +223,28 @@ class Database {
   }
 
   async likeMatch(user_id, match_id) {
-    // TODO: adds match_id to matched_and_liked_user_ids in user document
-    // TODO: if the other user has also liked the match, then create a Match object and add to both user objects
-    // createOrUpdateMatch(user_id, match_id)
+    // adds match_id to matched_and_liked_user_ids in user document
+    await User.updateOne(
+      { user_id: user_id },
+      { $set: { [`matched_user_to_outcome.${match_id}`]: 'liked' } }
+    ).exec();
   }
 
-  async createOrUpdateMatch(user_id, match_id) {
-   // TODO: create a Match object and add to both user objects
+  async createOrUpdateMatch(user_id, match_id, match_score, top_shared_artist_ids, top_shared_genres) {
+    // check if match exists
+    return Match.findOneAndUpdate(
+      { $or: [{ user_a_id: user_id, user_b_id: match_id }, { user_a_id: match_id, user_b_id: user_id }] },
+      {
+        match_score: match_score,
+        top_shared_artist_ids: top_shared_artist_ids,
+        top_shared_genres: top_shared_genres
+      },
+      { upsert: true, new: true }
+    ).exec();
   }
 
-  async addPotentialMatch(user_id, match_id, match_score) {
-    // TODO: adds match_id to potential_match_ids in user document
+  async addPotentialMatch(user_id, match_id) {
+
     return User.updateOne(
       { user_id: user_id },
       { $set: { [`matched_user_to_outcome.${match_id}`]: 'none' } }
@@ -265,6 +276,10 @@ class Database {
   
   async getUser(user_id) {
     return User.findOne({ user_id: user_id }).exec();
+  }
+
+  async getPotentialMatches(user_id) {
+    return User.findOne({ user_id: user_id }, 'matched_user_to_outcome -_id').exec();
   }
 }
 

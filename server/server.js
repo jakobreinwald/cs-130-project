@@ -40,8 +40,14 @@ app.get('/callback', (req, res) => {
 
 app.get('/users/:id/matches', (req, res) => {});
 
-app.get('/users/:id/potential_matches', (req, res) => {
+app.get('/users/:id/generate_matches', (req, res) => {
   middleware.generateMatches(req.params.id)
+    .then(matches => res.json(matches))
+    .catch(console.error);
+});
+
+app.get('/users/:id/potential_matches', (req, res) => {
+  middleware.getPotentialMatches(req.params.id)
     .then(matches => res.json(matches))
     .catch(console.error);
 });

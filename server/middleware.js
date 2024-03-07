@@ -40,7 +40,6 @@ class Middleware {
     return this.db.dismissRecommendation(user_id, rec_id);
   }
 
-  // TODO: should it return a promise object with a list of potential matches?
   async generateMatches(user_id) {
     // fetch user's top artists and genres from database
     const user_obj = await this.db.getUser(user_id).catch(console.error);
@@ -71,31 +70,33 @@ class Middleware {
       }
     }
 
-    // TODO: batch the potential matches to avoid overloading the database
-    let map = new Map();
     for (const pot_user_id of potential_matches) {
-      // if (pot_user_id === user_id) {
-      //   continue;
-      // }
-      // calculate match score
-      const pot_user_obj = await this.db.getUser(pot_user_id);
-      const match_score = await this.calculateMatchScore(user_obj, pot_user_obj);
-      if (match_score < 0) {
+      // TODO: comment the following line, it's for testing purposes
+      if (pot_user_id === user_id) {
         continue;
       }
+
+      // // calculate match score
+      // const pot_user_obj = await this.db.getUser(pot_user_id);
+      // const match_score = await this.calculateMatchScore(user_obj, pot_user_obj);
+      // if (match_score < 0) {
+      //   continue;
+      // }
       // add potential match to database
-      this.db.addPotentialMatch(user_id, pot_user_id, match_score);
-      map.set(pot_user_id, match_score);
+      await this.db.addPotentialMatch(user_id, pot_user_id);
     }
 
-    // TODO: should we return the potential matches here?
-    // return this.getPotentialMatches(user_id, 0);
-    return map;
+    return this.getPotentialMatches(user_id, 0);
   }
 
   // calculate match score between two users
   // returns -1 if either user object is null or if we don't have enough information to calculate a match score
-  async calculateMatchScore(user_obj, match_user_obj) {
+  async calculateMatchScore(user_id, match_user_id) {
+    // TODO: fetch match object from database to get match score
+    // TODO: Add last updated field to match object and update match score if last updated is older than 1 day
+
+    const user_obj = await this.db.getUser(user_id);
+    const match_user_obj = await this.db.getUser(match_user_id);
     // check if the user objects exist
     if (!user_obj || !match_user_obj) {
       return -1;
@@ -133,7 +134,6 @@ class Middleware {
       const norm_match_genre_count = (match_user_obj.genre_counts.get(genre) ?? 0) / match_avg_genre_count;
       hypotenuse += norm_user_genre_count * norm_user_genre_count;
       genre_match_score += norm_user_genre_count * norm_match_genre_count;
-      console.log("done\n");
     }
     genre_match_score /= hypotenuse;
 
@@ -196,9 +196,9 @@ class Middleware {
   }
 
   // potential matches are a list of potential matches for the user, sorted by match score
-  // sorted from greatest to least match score
   async getPotentialMatches(user_id, offset) {
-    // TODO: fetch cached list of potential matches, from offset index onwards
+    // TODO: figure out offset
+    return this.db.getPotentialMatches(user_id);
   }
 
   async getRecommendations(access_token, user_id, num_req) {
@@ -245,7 +245,18 @@ class Middleware {
   }
 
   async likeMatch(user_id, match_id) {
-    // TODO: mark profile as liked in databased
+    this.db.likeMatch(user_id, match_id);
+
+    const match_potential_matches = await this.db.getPotentialMatches(match_id);
+    if(match_potential_matches.has(user_id)) {
+      if(match_potential_matches.get(user_id) === 'liked') {
+        const match_score = await this.calculateMatchScore(user_id, match_id);
+        // TODO: get top shared artists and genres
+        top_shared_artist_ids = [];
+        top_shared_genres = [];
+        this.db.createOrUpdateMatch(user_id, match_id, match_score, top_shared_artist_ids, top_shared_genres);
+      }
+    }
   }
 
   async likeRecommendation(user_id, rec_id) {
