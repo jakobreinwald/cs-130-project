@@ -233,7 +233,11 @@ class Database {
   }
 
   async addPotentialMatch(user_id, match_id, match_score) {
-    
+    // TODO: adds match_id to potential_match_ids in user document
+    return User.updateOne(
+      { user_id: user_id },
+      { $set: { [`matched_user_to_outcome.${match_id}`]: 'none' } }
+    ).exec();
   }
 
   async likeRecommendation(user_id, rec_id) {

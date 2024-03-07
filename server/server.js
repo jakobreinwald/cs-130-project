@@ -40,6 +40,12 @@ app.get('/callback', (req, res) => {
 
 app.get('/users/:id/matches', (req, res) => {});
 
+app.get('/users/:id/potential_matches', (req, res) => {
+  middleware.generateMatches(req.params.id)
+    .then(matches => res.json(matches))
+    .catch(console.error);
+});
+
 app.get('/users/:id/profile', (req, res) => {
   middleware.getUser(req.params.id)
     .then(user => res.json(user))
