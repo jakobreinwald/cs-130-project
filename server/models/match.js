@@ -23,6 +23,10 @@ const Match = new mongoose.Schema({
     top_shared_genres : {
         type: [String],
         required: true,
+    },
+    top_shared_track_ids : {
+        type: [String],
+        required: true,
     }
 });
 

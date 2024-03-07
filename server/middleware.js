@@ -243,10 +243,13 @@ class Middleware {
     if(match_potential_matches.has(user_id)) {
       if(match_potential_matches.get(user_id) === 'liked') {
         const match_score = await this.calculateMatchScore(user_id, match_id);
-        // TODO: get top shared artists and genres
-        top_shared_artist_ids = [];
-        top_shared_genres = [];
-        this.db.createOrUpdateMatch(user_id, match_id, match_score, top_shared_artist_ids, top_shared_genres);
+        const user_obj = await this.db.getUser(user_id);
+        const match_obj = await this.db.getUser(match_id);
+        top_shared_artist_ids = user_obj.top_artist_ids.filter(artist => match_obj.top_artist_ids.includes(artist));
+        top_shared_genres = user_obj.genre_counts.filter(genre => match_obj.genre_counts.includes(genre));
+        top_shared_track_ids = user_obj.top_track_ids.filter(track => match_obj.top_track_ids.includes(track));
+        this.db.createOrUpdateMatch(user_id, match_id, match_score, top_shared_artist_ids, 
+          top_shared_genres, top_shared_track_ids);
       }
     }
   }

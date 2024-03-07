@@ -230,14 +230,15 @@ class Database {
     ).exec();
   }
 
-  async createOrUpdateMatch(user_id, match_id, match_score, top_shared_artist_ids, top_shared_genres) {
+  async createOrUpdateMatch(user_id, match_id, match_score, top_shared_artist_ids, top_shared_genres, top_shared_track_ids) {
     // check if match exists
     return Match.findOneAndUpdate(
       { $or: [{ user_a_id: user_id, user_b_id: match_id }, { user_a_id: match_id, user_b_id: user_id }] },
       {
         match_score: match_score,
         top_shared_artist_ids: top_shared_artist_ids,
-        top_shared_genres: top_shared_genres
+        top_shared_genres: top_shared_genres,
+        top_shared_track_ids: top_shared_track_ids
       },
       { upsert: true, new: true }
     ).exec();
