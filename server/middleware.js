@@ -71,18 +71,10 @@ class Middleware {
     }
 
     for (const pot_user_id of potential_matches) {
-      // TODO: comment the following line, it's for testing purposes
       if (pot_user_id === user_id) {
         continue;
       }
 
-      // // calculate match score
-      // const pot_user_obj = await this.db.getUser(pot_user_id);
-      // const match_score = await this.calculateMatchScore(user_obj, pot_user_obj);
-      // if (match_score < 0) {
-      //   continue;
-      // }
-      // add potential match to database
       await this.db.addPotentialMatch(user_id, pot_user_id);
     }
 
@@ -245,7 +237,7 @@ class Middleware {
   }
 
   async likeMatch(user_id, match_id) {
-    this.db.likeMatch(user_id, match_id);
+    await this.db.likeMatch(user_id, match_id);
 
     const match_potential_matches = await this.db.getPotentialMatches(match_id);
     if(match_potential_matches.has(user_id)) {
