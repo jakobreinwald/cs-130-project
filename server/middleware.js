@@ -74,12 +74,12 @@ class Middleware {
     // TODO: batch the potential matches to avoid overloading the database
     let map = new Map();
     for (const pot_user_id of potential_matches) {
-      if (pot_user_id === user_id) {
-        continue;
-      }
+      // if (pot_user_id === user_id) {
+      //   continue;
+      // }
       // calculate match score
       const pot_user_obj = await this.db.getUser(pot_user_id);
-      const match_score = this.calculateMatchScore(user_obj, pot_user_obj);
+      const match_score = await this.calculateMatchScore(user_obj, pot_user_obj);
       if (match_score < 0) {
         continue;
       }
@@ -90,7 +90,6 @@ class Middleware {
 
     // TODO: should we return the potential matches here?
     // return this.getPotentialMatches(user_id, 0);
-    console.log(map);
     return map;
   }
 
@@ -131,9 +130,10 @@ class Middleware {
     let hypotenuse = 0;
     for (const genre of user_obj.genre_counts.keys()) {
       const norm_user_genre_count = user_obj.genre_counts.get(genre) / user_avg_genre_count;
-      const norm_match_genre_count = match_user_obj.genre_counts.get(genre) / match_avg_genre_count;
+      const norm_match_genre_count = (match_user_obj.genre_counts.get(genre) ?? 0) / match_avg_genre_count;
       hypotenuse += norm_user_genre_count * norm_user_genre_count;
       genre_match_score += norm_user_genre_count * norm_match_genre_count;
+      console.log("done\n");
     }
     genre_match_score /= hypotenuse;
 
