@@ -20,7 +20,8 @@ const User = new mongoose.Schema(
     matches: {
       // maps matched_user_id to match object
       type: Map,
-      of:  String
+      of:  String,
+      default: new Map()
     },
     // we use this to look for the first match with no outcome
     matched_user_to_outcome: {
@@ -29,7 +30,8 @@ const User = new mongoose.Schema(
         type: String,
         enum: ['liked', 'dismissed', 'matched', 'none'],
         default: 'none',
-      }
+      },
+      default: new Map()
     },
     recommended_track_to_outcome: {
       type: Map,

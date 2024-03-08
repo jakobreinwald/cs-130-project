@@ -43,6 +43,7 @@ class Middleware {
   }
 
   // adds all possible matches to matched_user_to_outcome in user document
+  // TODO: figure out how to batch awaits
   async generateMatches(user_id) {
     // fetch user's top artists and genres from database
     const user_obj = await this.db.getUser(user_id).catch(console.error);
@@ -251,16 +252,18 @@ class Middleware {
 
   async likeMatch(user_id, match_id) {
     await this.db.likeMatch(user_id, match_id);
-
-    const match_potential_matches = await this.db.getPotentialMatches(match_id);
+    const obj = await this.db.getPotentialMatches(match_id)
+    const match_potential_matches = obj.matched_user_to_outcome;
     if (match_potential_matches.has(user_id)) {
       if (match_potential_matches.get(user_id) === 'liked') {
         const match_score = await this.calculateMatchScore(user_id, match_id);
         const user_obj = await this.db.getUser(user_id);
         const match_obj = await this.db.getUser(match_id);
-        top_shared_artist_ids = user_obj.top_artist_ids.filter(artist => match_obj.top_artist_ids.includes(artist));
-        top_shared_genres = user_obj.genre_counts.filter(genre => match_obj.genre_counts.includes(genre));
-        top_shared_track_ids = user_obj.top_track_ids.filter(track => match_obj.top_track_ids.includes(track));
+        const top_shared_artist_ids = user_obj.top_artist_ids.filter(artist => match_obj.top_artist_ids.includes(artist));
+        const top_shared_track_ids = user_obj.top_track_ids.filter(track => match_obj.top_track_ids.includes(track));
+        const user_genres = Array.from(user_obj.genre_counts.keys());
+        const match_genres = Array.from(match_obj.genre_counts.keys());
+        const top_shared_genres = user_genres.filter(genre => match_genres.includes(genre));
         this.db.createOrUpdateMatch(user_id, match_id, match_score, top_shared_artist_ids,
           top_shared_genres, top_shared_track_ids);
       }

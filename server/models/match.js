@@ -6,11 +6,11 @@ const mongoose = require('mongoose');
 const Match = new mongoose.Schema(
     {
         user_a_id: {
-            type: Number,
+            type: String,
             required: true,
         },
         user_b_id: {
-            type: Number,
+            type: String,
             required: true,
         },
         match_score: {

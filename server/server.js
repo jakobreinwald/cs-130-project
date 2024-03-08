@@ -38,6 +38,7 @@ app.get('/callback', (req, res) => {
     .catch(console.error);
 });
 
+// TODO: change to mutual matches
 app.get('/users/:id/matches', (req, res) => {});
 
 app.get('/users/:id/generate_matches', (req, res) => {

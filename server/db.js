@@ -1,5 +1,5 @@
 // Dependencies
-const { Album, Artist, Genre, Track, User } = require('./models');
+const { Album, Artist, Genre, Track, User, Match } = require('./models');
 const mongoose = require('mongoose');
 require('dotenv').config({ path: '.env.local' });
 
@@ -243,7 +243,7 @@ class Database {
         top_shared_genres: top_shared_genres,
         top_shared_track_ids: top_shared_track_ids
       },
-      { upsert: true, new: true }
+      { upsert: true }
     ).exec();
   }
 
