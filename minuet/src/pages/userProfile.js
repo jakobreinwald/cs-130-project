@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import SongCard from '../components/songCard'
 import ProfileCard from '../components/profileCard'
+import { Card, CardContent } from '@mui/material';
 import { Box, Typography, Divider, Avatar } from '@mui/material';
 
-function UserProfile() {
+function UserProfile({ temp }) {
 	// TODO replace placeholders with actual data
-	const username = "{username}";
+	const username = temp;
 	const newSongs = 5;
 	const newProfiles = 3;
 	const matchedSongInfo = [

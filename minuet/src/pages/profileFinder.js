@@ -15,7 +15,6 @@ function ProfileFinder() {
 	return (
 		<div className="Profile">
 			<p>this is the ProfileFinder page</p>
-			<h1>USER LIST FOR NOW</h1>
 			{data && data.map(user => (
 				<div key={user.user_id}>
 					<p>User ID: {user.user_id}, Display Name: {user.display_name}</p>
