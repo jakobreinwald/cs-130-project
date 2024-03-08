@@ -16,13 +16,28 @@ const api = new SpotifyAPI(client_id, client_secret, redirect_uri);
 const middleware = new Middleware(redirect_uri);
 
 // Middleware helpers
-function validateAuth(auth, res) {
+
+function validateAuth(auth) {
   if (!auth) {
-    res.status(401).send('Unauthorized');
+    return null;
   }
 
   // Extract access token ('Bearer ...') from auth header
   return auth.split(' ')[1];
+}
+
+function validateNumRecs(num_recs) {
+  if (num_recs === undefined) { // default to 10 if num_recs not provided
+    return 10;
+  }
+
+  const casted_num_recs = Number(num_recs);
+
+  if (!Number.isInteger(casted_num_recs) || casted_num_recs < 1) {
+    return null;
+  }
+
+  return casted_num_recs;
 }
 
 // GET endpoints
@@ -46,15 +61,24 @@ app.get('/users/:id/profile', (req, res) => {
     .catch(console.error);
 });
 
+// GET /users/{{user_id}}/recs?num_recs={{num_recs}}
 app.get('/users/:id/recs', (req, res) => {
-  const access_token = validateAuth(req.header('Authorization'), res);
-  const num_recs = req.query.num_recs || 10;
-  const user_id = req.params.id;
+  const access_token = validateAuth(req.header('Authorization'));
+  const num_recs = validateNumRecs(req.query.num_recs);
+  
+  if (!access_token) {
+    return res.status(401).send('Unauthorized');
+  } else if (!num_recs) {
+    return res.status(400).send('num_recs parameter must be a positive integer');
+  }
 
+  const user_id = req.params.id;
+  
   middleware.getRecommendations(access_token, user_id, num_recs)
     .then(recs => res.json({ recs: recs }))
     .catch(console.error);
 });
+
 
 // POST endpoints
 app.post('/users/:user_id/recs/:rec_id', (req, res) => {

@@ -255,6 +255,10 @@ class Database {
   async getTrack(track_id) {
     return Track.findOne({ track_id: track_id }).exec();
   }
+
+  async getTracks(track_ids) {
+    return Track.find({ track_id: { $in: track_ids } }).exec();
+  }
   
   async getUser(user_id) {
     return User.findOne({ user_id: user_id }).exec();

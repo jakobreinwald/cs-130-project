@@ -126,10 +126,9 @@ class Middleware {
       .then(batches => batches.flatMap(({ data }) => data.tracks));
   }
 
-  async generateRecommendations(access_token, user_id, batch_len, num_req) {
+  async generateRecommendations(access_token, user, batch_len, num_req) {
     // Fetch user document from database and extract top artists
-    const user = await this.db.getUser(user_id).catch(console.error);
-    const { top_artist_ids, top_track_ids } = user;
+    const { recommended_track_to_outcome, top_artist_ids, top_track_ids } = user;
 
     // Fetch recommendations from Spotify API
     const recs = await this.fetchRecommendations(access_token, batch_len, top_artist_ids, top_track_ids)
@@ -142,8 +141,18 @@ class Middleware {
     // Keep track of first num_req recommended track ids, immediately returned in response
     const rec_ids = recs.map(({ id }) => id);
     const rem_req = num_req - recs.length;
-    // FIXME: if newly-fetched recommendations already cached, user may see old recommendations
-    const req_rec_ids = recs.slice(0, rem_req);
+    let req_rec_ids = [];
+    
+    // Ensure old recommendations are not included in response
+    for (const rec_id of rec_ids) {
+      if (!recommended_track_to_outcome.has(rec_id) || recommended_track_to_outcome.get(rec_id) === 'none') {
+        req_rec_ids.push(rec_id);
+      }
+
+      if (req_rec_ids.length === rem_req) {
+        break;
+      }
+    }
 
     // Cache recommendation track ids and track objects in database
     const cached_rec_ids = this.db.addRecommendations(user_id, rec_ids);
@@ -158,19 +167,17 @@ class Middleware {
   }
 
   async getRecommendations(access_token, user_id, num_req) {
-    // Fetch user document from database
+    // Isolate first num_req recommendations that user has not yet interacted with
     const user = await this.db.getUser(user_id).catch(console.error);
-    
-    // Isolate first recommended track id that user has not yet interacted with
     let rec_ids = [];
 
     for (const [track_id, outcome] of user.recommended_track_to_outcome) {
       if (outcome === 'none') {
         rec_ids.push(track_id);
       }
-
+      
       if (rec_ids.length === num_req) {
-        return;
+        break;
       }
     }
 
@@ -178,13 +185,12 @@ class Middleware {
     const rem_req = num_req - rec_ids.length;
 
     if (rem_req > 0) {
-      rec_ids = await this.generateRecommendations(access_token, user_id, 10, rem_req).catch(console.error);
+      const rem_rec_ids = await this.generateRecommendations(access_token, user, 10, rem_req).catch(console.error);
+      rec_ids = rec_ids.concat(rem_rec_ids);
     }
 
-    // FIXME: response length doesn't match num_req
     // Fetch track objects from database
-    const recs = rec_ids.map(track_id => this.db.getTrack(track_id))
-    return Promise.all(recs);
+    return this.db.getTracks(rec_ids);
   }
 
   async getTopTrackAssociatedArtists(access_token, fetched_tracks, top_artist_ids) {
