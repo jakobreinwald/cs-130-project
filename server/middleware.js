@@ -31,6 +31,16 @@ class Middleware {
       }, new Map());
   }
 
+  async createRecommendedTracksPlaylist(access_token, playlist_id, user_id) {
+    // Call Spotify API endpoint to create Minuet Recommendations playlist, if not already created
+    if (!playlist_id) {
+      const playlist = await SpotifyAPI.createRecommendedTracksPlaylist(access_token, playlist_id, user_id);
+      playlist_id = playlist.data.id;
+    }
+
+    return Promise.resolve(playlist_id);
+  }
+
   async dismissMatch(user_id, match_id) {
     // TODO: mark profile as dismissed in database
   }
@@ -128,7 +138,7 @@ class Middleware {
 
   async generateRecommendations(access_token, user, batch_len, num_req) {
     // Fetch user document from database and extract top artists
-    const { recommended_track_to_outcome, top_artist_ids, top_track_ids } = user;
+    const { recommended_track_to_outcome, top_artist_ids, top_track_ids, user_id } = user;
 
     // Fetch recommendations from Spotify API
     const recs = await this.fetchRecommendations(access_token, batch_len, top_artist_ids, top_track_ids)
@@ -140,7 +150,6 @@ class Middleware {
 
     // Keep track of first num_req recommended track ids, immediately returned in response
     const rec_ids = recs.map(({ id }) => id);
-    const rem_req = num_req - recs.length;
     let req_rec_ids = [];
     
     // Ensure old recommendations are not included in response
@@ -149,7 +158,7 @@ class Middleware {
         req_rec_ids.push(rec_id);
       }
 
-      if (req_rec_ids.length === rem_req) {
+      if (req_rec_ids.length === num_req) {
         break;
       }
     }
@@ -215,7 +224,7 @@ class Middleware {
   async likeRecommendation(user_id, rec_id) {
     // Mark recommendation as liked in database and add to user's Spotify account
     const update_db = this.db.likeRecommendation(user_id, rec_id);
-    const add_to_spotify = this.api.addRecommendedTrack(user_id, rec_id);
+    const add_to_spotify = SpotifyAPI.addRecommendedTrack(user_id, rec_id);
     return Promise.all([update_db, add_to_spotify]);
   }
 
@@ -252,10 +261,17 @@ class Middleware {
     // Sum genre counts across top tracks and update genre documents in database
     const genre_counts = this.calcGenreCounts(fetched_artists, fetched_tracks, top_track_associated_artists);
     const cached_genres = this.db.createOrUpdateGenreCounts(genre_counts, listener_id);
-    
-    // Create or update user document in database
-    const cached_user = this.db.createOrUpdateUser(genre_counts, top_artist_ids, top_track_ids, fetched_user);
-    return Promise.all([cached_albums, cached_artists, cached_genres, cached_tracks, cached_user]);
+
+    // Create or update User document, and create Minuet Recommendations playlist if not already created
+    // FIXME: recommended_tracks_playlist_id is not being updated in database
+    const cached_user = await this.db.createOrUpdateUser(genre_counts, top_artist_ids, top_track_ids, fetched_user)
+      .catch(console.error);
+    const playlist_id = await this.createRecommendedTracksPlaylist(access_token, recommended_tracks_playlist_id, listener_id)
+      .catch(console.error);
+    console.log(playlist_id);
+    cached_user.recommended_tracks_playlist_id = playlist_id;
+    const updated_user = cached_user.save();
+    return Promise.all([cached_albums, cached_artists, cached_genres, cached_tracks, updated_user]);
   }
 }
 

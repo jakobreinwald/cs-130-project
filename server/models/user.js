@@ -21,7 +21,8 @@ const User = new mongoose.Schema(
         type: String,
         enum: ['liked', 'dismissed', 'matched', 'none'],
         default: 'none',
-      }
+      },
+      default: new Map()
     },
     recommended_track_to_outcome: {
       type: Map,
@@ -31,6 +32,9 @@ const User = new mongoose.Schema(
         default: 'none',
       },
       default: new Map()
+    },
+    recommended_tracks_playlist_id: {
+      type: String
     },
     top_artist_ids: {
       type: [String]

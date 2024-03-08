@@ -49,8 +49,23 @@ class SpotifyAPI {
     })}`;
   }
 
-  async addRecommendedTrack(access_token, track_id) {
-    // TODO: add recommended track to user's library/playlist
+  static async addRecommendedTrack(access_token, playlist_id, track_id) {
+    // Add recommended track to Minuet Recommendations playlist
+    return axios.post(`${base_url}/playlists/${playlist_id}/tracks`, {
+      headers: SpotifyAPI.getHeaders(access_token),
+      params: { uris: `spotify:track:${track_id}` }
+    });
+  }
+
+  static async createRecommendedTracksPlaylist(access_token, user_id) {
+    return axios.post(`${base_url}/users/${user_id}/playlists`, {
+      headers: SpotifyAPI.getHeaders(access_token),
+      body: {
+        name: 'Minuet Recommendations',
+        public: false,
+        description: 'Recommended tracks from Minuet'
+      }
+    });
   }
 
   async fetchArtist(access_token, artist_id) {
