@@ -37,7 +37,7 @@ function OtherUserProfile() {
     const tags = ["pop", "alternative", "r&b", "rap", "indie"]
 
     return (
-        <Box sx={{bgcolor: 'background.primary', minHeight: '100vh', p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center',}}>
+        <Box sx={{p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center',}}>
             <Box sx={{display: 'flex', flexDirection: 'row', gap: 3, maxWidth: '75%', justifyContent: 'center'}}>
                 <Avatar sx={{ bgcolor: 'grey.900', width: 250, height: 250, m: 5,}} />
                 <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: '100%', gap: 1}}>
