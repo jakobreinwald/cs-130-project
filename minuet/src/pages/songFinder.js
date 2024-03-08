@@ -17,27 +17,32 @@ function SongFinder() {
       {
         image: 'https://i.scdn.co/image/ab67616d0000b273318443aab3531a0558e79a4d', 
         mainText: 'All Too Well (10 Minute Version)', 
-        subText: 'Taylor Swift'
+        subText: 'Taylor Swift',
+        link: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&pp=ygUJcmljayByb2xs' //link to song on spotify
       },
       {
         image: 'https://i.scdn.co/image/ab67616d0000b273904445d70d04eb24d6bb79ac', 
         mainText: 'Welcome to New York', 
-        subText: 'Taylor Swift'
+        subText: 'Taylor Swift',
+        link: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&pp=ygUJcmljayByb2xs'
       },
       {
         image: 'https://i.scdn.co/image/ab67616d0000b27395f754318336a07e85ec59bc', 
         mainText: 'cardigan', 
-        subText: 'Taylor Swift'
+        subText: 'Taylor Swift',
+        link: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&pp=ygUJcmljayByb2xs'
       },
       {
         image: 'https://i.scdn.co/image/ab67616d0000b27333b8541201f1ef38941024be', 
         mainText: 'tolerate it', 
-        subText: 'Taylor Swift'
+        subText: 'Taylor Swift',
+        link: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&pp=ygUJcmljayByb2xs'
       },
       {
         image: 'https://i.scdn.co/image/ab67616d0000b273e787cffec20aa2a396a61647', 
         mainText: 'Cruel Summer', 
-        subText: 'Taylor Swift'
+        subText: 'Taylor Swift',
+        link: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&pp=ygUJcmljayByb2xs'
       },
     ]
     const [likedSongs, setLikedSongs] = useState([]);
@@ -105,10 +110,12 @@ function SongFinder() {
                                     image={element.image} 
                                     mainText={element.mainText} 
                                     subText={element.subText}
+                                    link={element.link}
                                 />
                             </Box>
                         </Slide>
                     )) : <Typography variant='h5'> Sorry, no more matches for now! </Typography>}
+                    {/* If we reach the end, we need to request more matches */}
                 </Box>
                 <IconButton variant='contained' onClick={swipeRight} sx={{backgroundColor: theme.palette.swipeButton.green, borderRadius: '100%', width: 75, height: 75, '&:hover': {backgroundColor: theme.palette.swipeButton.greenHover,}, }}>
                     <img src={heart} alt="Heart" style={{maxWidth: '75%'}}/>
