@@ -1,5 +1,5 @@
 // Dependencies
-const { Album, Artist, Genre, Image, Track, User } = require('./models');
+const { Album, Artist, Genre, Track, User } = require('./models');
 const mongoose = require('mongoose');
 require('dotenv').config({ path: '.env.local' });
 
@@ -11,12 +11,74 @@ class Database {
 			.catch(console.error);
 	}
 
+	constructAlbumUpdateOperation(album_obj) {
+		// Generate update command for Album document
+		return {
+			updateOne: {
+				filter: { album_id: album_obj.id },
+				update: { $set: this.createAlbumModel(album_obj) },
+				upsert: true
+			}
+		};
+	}
+
+	constructArtistUpdateOperation(artist_obj, listener_id = null, rank = null) {
+		// Convert Spotify API object to Artist model
+		const update_command = { $set: this.createArtistModel(artist_obj) };
+
+		if (listener_id && rank) {
+			update_command.$set[`listener_id_to_rank.${listener_id}`] = rank;
+		}
+
+		// Generate update command for Artist document
+		const update_op = {
+			updateOne: {
+				filter: { artist_id: artist_obj.id },
+				update: update_command,
+				upsert: true
+			}
+		};
+
+		return update_op;
+	}
+
+	constructTrackUpdateOperation(track_obj) {
+		// Generate update command for Track document
+		return {
+			updateOne: {
+				filter: { track_id: track_obj.id },
+				update: { $set: this.createTrackModel(track_obj) },
+				upsert: true
+			}
+		};
+	}
+
+	createAlbumModel(album_obj) {
+		// Convert Spotify API object to Album model
+		return {
+			album_type: album_obj.album_type,
+			artist_ids: album_obj.artists.map(artist => artist.id),
+			images: album_obj.images.map(this.createImageModel),
+			name: album_obj.name,
+			release_date: album_obj.release_date,
+			release_date_precision: album_obj.release_date_precision
+		};
+	}
+
 	createArtistModel(artist_obj) {
 		// Convert Spotify API object to Artist model
 		return {
 			genres: artist_obj.genres,
-			images: artist_obj.images ? artist_obj.images.map(this.saveImageObj) : [],
+			images: artist_obj.images ? artist_obj.images.map(this.createImageModel) : [],
 			name: artist_obj.name
+		};
+	}
+
+	createImageModel(image_obj) {
+		return {
+			url: image_obj.url,
+			height: image_obj.height,
+			width: image_obj.width
 		};
 	}
 
@@ -30,67 +92,40 @@ class Database {
 		};
 	}
 
-	saveImageObj(image_obj) {
-		return {
-			url: image_obj.url,
-			height: image_obj.height,
-			width: image_obj.width
-		};
+	async addRecommendation(user_id, track_id) {
+		// Add new recommended track that user has not yet acted upon
+		return User.findOneAndUpdate(
+			{ user_id: user_id },
+			{ $set: { [`recommended_track_to_outcome.${track_id}`]: 'none' } }
+		).exec();
 	}
 
 	async createOrUpdateAlbum(album_obj) {
-		// Convert album_obj to Album model
-		const album_model = {
-			album_type: album_obj.album_type,
-			artist_ids: album_obj.artists.map(artist => artist.id),
-			images: album_obj.images.map(this.saveImageObj),
-			name: album_obj.name,
-			release_date: album_obj.release_date,
-			release_date_precision: album_obj.release_date_precision
-		};
-
 		// Update existing Album document, otherwise create new document
 		return Album.findOneAndUpdate(
 			{ album_id: album_obj.id },
-			album_model,
+			this.createAlbumModel(album_obj),
 			{ upsert: true }
 		).exec();
 	}
 
-	async createArtistModel(artist_obj) {
-		// Convert Spotify API object to Artist model
-		return {
-			genres: artist_obj.genres,
-			images: artist_obj.images ? artist_obj.images.map(this.saveImageObj) : [],
-			name: artist_obj.name
-		};
+	async createOrUpdateAlbums(albums) {
+		// Update existing Album documents, otherwise create new documents
+		return Album.bulkWrite(albums.map(album => this.constructAlbumUpdateOperation(album)));
 	}
 
 	async createOrUpdateArtist(artist_obj) {
-		// Create or update genre counts for given listener
-		if (artist_obj.genres) {
-			const genres = artist_obj.genres.map(this.createOrUpdateGenre);
-		}
-
 		// Update existing Artist document, otherwise create new document
-		const artist = Artist.findOneAndUpdate(
+		return Artist.findOneAndUpdate(
 			{ artist_id: artist_obj.id },
 			this.createArtistModel(artist_obj),
 			{ upsert: true }
 		).exec();
-
-		// Return promise for all artist and genre updates
-		return Promise.all([artist, ...genres]);
 	}
 
 	async createOrUpdateArtist(artist_obj, listener_id, rank_for_listener) {
-		// Create or update genre counts for given listener
-		if (artist_obj.genres) {
-			const genres = artist_obj.genres.map(genre => this.createOrUpdateGenre(genre, listener_id));
-		}
-
 		// Update existing Artist document, otherwise create new document
-		const artist = Artist.findOneAndUpdate(
+		return Artist.findOneAndUpdate(
 			{ artist_id: artist_obj.id },
 			{
 				...(this.createArtistModel(artist_obj)),
@@ -98,65 +133,48 @@ class Database {
 			},
 			{ upsert: true }
 		).exec();
-
-		// Return promise for all artist and genre updates
-		return Promise.all([artist, genres]);
 	}
 
-	async createOrUpdateGenre(name) {
-		// Update existing Genre document, otherwise create new document
-		return Genre.findOneAndUpdate(
-			{ name: name },
-			{},
-			{ upsert: true }
-		).exec();
+	async createOrUpdateArtists(ranked_artists, unranked_artists, listener_id) {
+		// Update existing Artist documents, otherwise create new documents
+		const ranked_ops = ranked_artists.map((artist, rank) => this.constructArtistUpdateOperation(artist, listener_id, rank));
+		const unranked_ops = unranked_artists.map(artist => this.constructArtistUpdateOperation(artist));
+		const update_ops = ranked_ops.concat(unranked_ops);
+		return Artist.bulkWrite(update_ops);
 	}
 
-	async createOrUpdateGenre(name, listener_id) {
-		// Update existing Genre document, otherwise create new document
-		return Genre.findOneAndUpdate(
-			{ name: name },
-			{ $inc: { [`listener_id_to_count.${listener_id}`]: 1 } },
-			{ upsert: true }
-		).exec();
-	}
+	async createOrUpdateGenreCounts(genre_counts, listener_id) {
+		// Find all genre documents with listener_id
+		const genres = await Genre
+			.find({ [`listener_id_to_count.${listener_id}`]: { $exists: true } })
+			.exec();
 
-	async createTrackModel(track_obj) {
-		// Convert Spotify API object to Track model
-		return {
-			album_id: track_obj.album.id,
-			artist_ids: track_obj.artists.map(artist => artist.id),
-			name: track_obj.name,
-			preview_url: track_obj.preview_url,
-		};
-	}
+		// Determine genres in genre_counts that are not in database
+		const db_genres = new Set(genres.map(genre => genre.name));
+		const all_genres = [...db_genres, ...genre_counts.keys()];
 
-	async createOrUpdateGenreList(genres) {
-		// Ignore if no genres provided
-		if (!genres) {
-			return Promise.resolve();
+		// Update listener_id_to_count for each genre
+		const update_command = (genre) => {
+			if (genre_counts.has(genre)) {
+				return { $set: { [`listener_id_to_count.${listener_id}`]: genre_counts.get(genre) } };
+			} else {
+				return { $unset: { [`listener_id_to_count.${listener_id}`]: '' } };
+			}
 		}
 
-		// Create or update genre counts for given listener
-		return Promise.all(genres.map(genre => this.createOrUpdateGenre(genre)));
+		// Return promise for all genre document updates
+		return Genre.bulkWrite(all_genres.map(genre => ({
+			updateOne: {
+				filter: { name: genre },
+				update: update_command(genre),
+				upsert: true
+			}
+		})));
 	}
 
-	async createOrUpdateGenreList(genres, listener_id) {
-		// Ignore if no genres provided
-		if (!genres) {
-			return Promise.resolve();
-		}
-
-		// Create or update genre counts for given listener
-		return Promise.all(genres.map(genre => this.createOrUpdateGenre(genre, listener_id)));
-	}
-
-	async createOrUpdateTrack(track_obj, listener_id) {
-		// Create or update Album, Artist, and Genre documents
+	async createOrUpdateTrack(track_obj) {
+		// Create or update Album document
 		const album = this.createOrUpdateAlbum(track_obj.album);
-		const artists = track_obj.artists.map(artist => this.createOrUpdateArtist(artist));
-		// TODO: genres are not returned in artist object belonging to a track, so fetch artist separately
-		// const genres = track_obj.artists.genres.map(genre => this.createOrUpdateGenre(genre, listener_id));
 
 		// Update existing Track document, otherwise create new document
 		const track = Track.findOneAndUpdate(
@@ -166,27 +184,30 @@ class Database {
 		).exec();
 
 		// Return promise for all album, artist, genre, and track updates
-		return Promise.all([album, ...artists, track]);
+		return Promise.all([album, track]);
 	}
 
-	async createOrUpdateUser(top_artists, top_tracks, user_obj) {
-		// Create or update Artist and Track documents
-		const listener_id = user_obj.id;
-		const artists = top_artists.map((artist, rank) => this.createOrUpdateArtist(artist, listener_id, rank));
-		const tracks = top_tracks.map(track => this.createOrUpdateTrack(track, listener_id));
+	async createOrUpdateTracks(tracks) {
+		// Update existing Track documents, otherwise create new documents
+		return Track.bulkWrite(tracks.map(track => this.constructTrackUpdateOperation(track)));
+	}
 
+	async createOrUpdateUser(genre_counts, top_artist_ids, top_track_ids, user_obj) {
 		// Update existing User document, otherwise create new document
-		const user = User.findOneAndUpdate(
+		// sum the values of the genre_counts map
+		const total_genre_count = Array.from(genre_counts.values()).reduce((a, b) => a + b, 0);
+		return User.findOneAndUpdate(
 			{ user_id: user_obj.id },
 			{
 				display_name: user_obj.display_name,
-				images: user_obj.images.map(this.saveImageObj),
+				genre_counts: genre_counts,
+				images: user_obj.images.map(this.createImageModel),
+				top_artist_ids: top_artist_ids,
+				top_track_ids: top_track_ids,
+				total_genre_count: total_genre_count
 			},
 			{ upsert: true }
 		).exec();
-
-		// Return promise for all artist, track, and user updates
-		return Promise.all([...artists, ...tracks, user]);
 	}
 
 	async dismissMatch(user_id, match_id) {
@@ -195,7 +216,10 @@ class Database {
 	}
 
 	async dismissRecommendation(user_id, rec_id) {
-		// TODO: adds rec_id to recommended_and_dismissed_track_ids in user document
+		return User.updateOne(
+			{ user_id: user_id },
+			{ $set: { [`recommended_track_to_outcome.${rec_id}`]: 'dismissed' } }
+		).exec();
 	}
 
 	async likeMatch(user_id, match_id) {
@@ -203,7 +227,10 @@ class Database {
 	}
 
 	async likeRecommendation(user_id, rec_id) {
-		// TODO: adds rec_id to recommended_and_liked_track_ids in user document
+		return User.updateOne(
+			{ user_id: user_id },
+			{ $set: { [`recommended_track_to_outcome.${rec_id}`]: 'liked' } }
+		).exec();
 	}
 
 	async getAlbum(album_id) {
