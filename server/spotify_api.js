@@ -59,14 +59,13 @@ class SpotifyAPI {
     });
   }
 
-  async fetchRecommendedTracks(access_token, limit, seed_artists, seed_genres) {
+  async fetchRecommendedTracks(access_token, limit, top_artist_ids, top_track_ids) {
+    const seed_artists = top_artist_ids.join(',');
+    const seed_tracks = top_track_ids.join(',');
+
     return axios.get(`${base_url}/recommendations`, {
       headers: SpotifyAPI.getHeaders(access_token),
-      params: {
-        limit: limit,
-        seed_artists: seed_artists,
-        seed_genres: seed_genres
-      }
+      params: { limit, seed_artists, seed_tracks }
     });
   }
 
@@ -79,10 +78,7 @@ class SpotifyAPI {
   async fetchUserTopItems(access_token, item_type, time_range, limit) {
     return axios.get(`${base_url}/me/top/${item_type}`, {
         headers: SpotifyAPI.getHeaders(access_token),
-        params: {
-          time_range: time_range,
-          limit: limit
-        }
+        params: { time_range, limit }
       });
   }
 

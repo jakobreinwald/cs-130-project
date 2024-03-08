@@ -100,47 +100,53 @@ class Middleware {
     }
   }
 
-  async fetchRecommendations(access_token, batch_len, top_artists, top_genres) {
+  async fetchRecommendations(access_token, batch_len, top_artists, top_tracks) {
+    // At time of implementation, 50 top artists and 50 top tracks are cached
+    const num_recs_fetched = top_artists.length + top_tracks.length;
     let rec_batches = [];
     
-    // Generate recommendations in batches
-    for (let artist_offset = 0; artist_offset < top_artists.length; artist_offset += 5) {
-      // Select 5 (max allowed by Spotify API) artists and genres from top lists
-      const selected_artists = top_artists.slice(artist_offset, artist_offset + 5);
-      const genre_offset = artist_offset % top_genres.length;
-      const selected_genres = top_genres.slice(genre_offset, genre_offset + 5);
+    // Generate recommendations in batches of batch_len
+    for (let offset = 0; offset < num_recs_fetched; offset += 5) {
+      // Select 5 seeds from top lists (max allowed by Spotify API)
+      const num_artist_seeds = 2;
+      const artist_offset = offset % top_artists.length;
+      const selected_artists = top_artists.slice(artist_offset, artist_offset + num_artist_seeds);
+
+      const num_track_seeds = 3;
+      const track_offset = offset % top_tracks.length;
+      const selected_tracks = top_tracks.slice(track_offset, track_offset + num_track_seeds);
 
       // Call recommendation endpoint of Spotify API to fetch recommended tracks
-      const rec_batch = this.api.fetchRecommendedTracks(access_token, batch_len, selected_artists, selected_genres);
+      const rec_batch = this.api.fetchRecommendedTracks(access_token, batch_len, selected_artists, selected_tracks);
       rec_batches.push(rec_batch);
     }
 
-    // Construct unified list of recommended tracks from all batches
+    // Return all batches of recommended tracks
     return Promise.all(rec_batches)
-      .then(batches => batches.flatMap(batch => batch.data.tracks));
+      .then(batches => batches.flatMap(({ data }) => data.tracks));
   }
 
   async generateRecommendations(access_token, user_id, batch_len, num_req) {
     // Fetch user document from database and extract top artists
     const user = await this.db.getUser(user_id).catch(console.error);
-    const top_artists = user.top_artist_ids;
-
-    // Extract top genres, sorted descending by count
-    const top_genres = [...user.genre_counts]
-      .sort((a, b) => b[1] - a[1])
-      .map(([genre, count]) => genre);
+    const { top_artist_ids, top_track_ids } = user;
 
     // Fetch recommendations from Spotify API
-    const recs = await this.fetchRecommendations(access_token, batch_len, top_artists, top_genres)
+    const recs = await this.fetchRecommendations(access_token, batch_len, top_artist_ids, top_track_ids)
       .catch(console.error);
 
+    if (!recs) {
+      return Promise.reject('Failed to fetch recommendations');
+    }
+
     // Keep track of first num_req recommended track ids, immediately returned in response
-    // FIXME: cannot get length of recs because it's a promise?
+    const rec_ids = recs.map(({ id }) => id);
     const rem_req = num_req - recs.length;
-    const req_rec_ids = recs.slice(0, rem_req).map(({ id }) => id);
+    // FIXME: if newly-fetched recommendations already cached, user may see old recommendations
+    const req_rec_ids = recs.slice(0, rem_req);
 
     // Cache recommendation track ids and track objects in database
-    const cached_rec_ids = recs.map(track => this.db.addRecommendation(user_id, track.id));
+    const cached_rec_ids = this.db.addRecommendations(user_id, rec_ids);
     const cached_tracks = this.db.createOrUpdateTracks(recs);
 
     return Promise.all([cached_rec_ids, cached_tracks, req_rec_ids])
@@ -170,8 +176,12 @@ class Middleware {
 
     // If no cached recommendations available, generate new recommendations
     const rem_req = num_req - rec_ids.length;
-    rec_ids = await this.generateRecommendations(access_token, user_id, 10, rem_req).catch(console.error);
 
+    if (rem_req > 0) {
+      rec_ids = await this.generateRecommendations(access_token, user_id, 10, rem_req).catch(console.error);
+    }
+
+    // FIXME: response length doesn't match num_req
     // Fetch track objects from database
     const recs = rec_ids.map(track_id => this.db.getTrack(track_id))
     return Promise.all(recs);

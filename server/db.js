@@ -90,12 +90,18 @@ class Database {
     };
   }
 
-  async addRecommendation(user_id, track_id) {
-    // Add new recommended track that user has not yet acted upon
-    return User.findOneAndUpdate(
-      { user_id: user_id },
-      { $set: { [`recommended_track_to_outcome.${track_id}`]: 'none' } }
-    ).exec();
+  async addRecommendations(user_id, rec_ids) {
+    // Add new recommended tracks that user has not yet acted upon
+    const user = await User.findOne({ user_id: user_id }).exec();
+    user.recommended_track_to_outcome = rec_ids.reduce((acc, rec_id) => {
+        if (!acc.has(rec_id)) {
+          acc.set(rec_id, 'none');
+        }
+
+        return acc;
+      }, user.recommended_track_to_outcome);
+
+    return user.save();
   }
 
   async createOrUpdateAlbum(album_obj) {
