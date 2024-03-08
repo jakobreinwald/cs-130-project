@@ -212,7 +212,10 @@ class Database {
 
   async dismissMatch(user_id, match_id) {
     // TODO: increment match offset in user document
-    // TODO: adds match_id to matched_and_dismissed_user_ids in user document
+    return User.updateOne(
+      { user_id: user_id },
+      { $set: { [`matched_user_to_outcome.${match_id}`]: 'dismissed' } }
+    ).exec();
   }
 
   async dismissRecommendation(user_id, rec_id) {
@@ -281,6 +284,14 @@ class Database {
 
   async getPotentialMatches(user_id) {
     return User.findOne({ user_id: user_id }, 'matched_user_to_outcome -_id').exec();
+  }
+
+  async getMatch(user_id, match_id) {
+    return Match.findOne({ $or: [{ user_a_id: user_id, user_b_id: match_id }, { user_a_id: match_id, user_b_id: user_id }] }).exec();
+  }
+
+  async getMatches(user_id) {
+    return User.findOne({ user_id: user_id }, 'matches -_id').exec();
   }
 }
 

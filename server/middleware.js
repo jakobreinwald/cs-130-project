@@ -3,9 +3,11 @@ const client_id = process.env.SPOTIFY_CLIENT_ID;
 const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
 const num_top_artists = 50;
 const max_artist_match_score = num_top_artists * (num_top_artists + 1) * (2 * num_top_artists + 1) / 6;
+const num_mili_in_day = 86400000;
 
 // Dependencies
 const Database = require('./db');
+const match = require('./models/match');
 const SpotifyAPI = require('./spotify_api');
 require('dotenv').config({ path: '.env.local' });
 
@@ -33,13 +35,14 @@ class Middleware {
   }
 
   async dismissMatch(user_id, match_id) {
-    // TODO: mark profile as dismissed in database
+    return this.db.dismissMatch(user_id, match_id);
   }
 
   async dismissRecommendation(user_id, rec_id) {
     return this.db.dismissRecommendation(user_id, rec_id);
   }
 
+  // adds all possible matches to matched_user_to_outcome in user document
   async generateMatches(user_id) {
     // fetch user's top artists and genres from database
     const user_obj = await this.db.getUser(user_id).catch(console.error);
@@ -84,9 +87,6 @@ class Middleware {
   // calculate match score between two users
   // returns -1 if either user object is null or if we don't have enough information to calculate a match score
   async calculateMatchScore(user_id, match_user_id) {
-    // TODO: fetch match object from database to get match score
-    // TODO: Add last updated field to match object and update match score if last updated is older than 1 day
-
     const user_obj = await this.db.getUser(user_id);
     const match_user_obj = await this.db.getUser(match_user_id);
     // check if the user objects exist
@@ -94,22 +94,22 @@ class Middleware {
       return -1;
     }
     // check if the genre counts exist
-    if(!user_obj.genre_counts || !match_user_obj.genre_counts) {
-      return -1; 
+    if (!user_obj.genre_counts || !match_user_obj.genre_counts) {
+      return -1;
     }
 
     // check if the genre counts are empty
-    if((user_obj.genre_counts.size == 0) || (match_user_obj.genre_counts.size == 0)) {
+    if ((user_obj.genre_counts.size == 0) || (match_user_obj.genre_counts.size == 0)) {
       return -1;
     }
 
     // check if the top artist ids exist
-    if(!user_obj.top_artist_ids || !match_user_obj.top_artist_ids) {
+    if (!user_obj.top_artist_ids || !match_user_obj.top_artist_ids) {
       return -1;
     }
 
     // check if the top artist ids are empty
-    if((user_obj.top_artist_ids.length == 0) || (match_user_obj.top_artist_ids.length == 0)) {
+    if ((user_obj.top_artist_ids.length == 0) || (match_user_obj.top_artist_ids.length == 0)) {
       return -1;
     }
 
@@ -184,7 +184,20 @@ class Middleware {
 
   // matches are a pair of users that have liked each others profiles
   async getMatches(user_id, offset) {
-    // TODO: fetch cached list of matches, from offset index onwards
+    // TODO: figure out offset
+    // fetch cached list of matches
+    let matches = this.db.getMatches(user_id);
+
+    matches.forEach((match_user_id, match) => {
+      // if match score is older than 1 day, recalculate match score
+      if (Date.now() - match.updatedAt > num_mili_in_day) {
+        const match_score = this.calculateMatchScore(user_id, match_user_id);
+        this.db.createOrUpdateMatch(user_id, match_user_id, match_score);
+      }
+    });
+
+    // return updated matches
+    return this.db.getMatches(user_id);
   }
 
   // potential matches are a list of potential matches for the user, sorted by match score
@@ -240,15 +253,15 @@ class Middleware {
     await this.db.likeMatch(user_id, match_id);
 
     const match_potential_matches = await this.db.getPotentialMatches(match_id);
-    if(match_potential_matches.has(user_id)) {
-      if(match_potential_matches.get(user_id) === 'liked') {
+    if (match_potential_matches.has(user_id)) {
+      if (match_potential_matches.get(user_id) === 'liked') {
         const match_score = await this.calculateMatchScore(user_id, match_id);
         const user_obj = await this.db.getUser(user_id);
         const match_obj = await this.db.getUser(match_id);
         top_shared_artist_ids = user_obj.top_artist_ids.filter(artist => match_obj.top_artist_ids.includes(artist));
         top_shared_genres = user_obj.genre_counts.filter(genre => match_obj.genre_counts.includes(genre));
         top_shared_track_ids = user_obj.top_track_ids.filter(track => match_obj.top_track_ids.includes(track));
-        this.db.createOrUpdateMatch(user_id, match_id, match_score, top_shared_artist_ids, 
+        this.db.createOrUpdateMatch(user_id, match_id, match_score, top_shared_artist_ids,
           top_shared_genres, top_shared_track_ids);
       }
     }
