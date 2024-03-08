@@ -13,40 +13,40 @@ function ProfileFinder() {
     const [slideIn, setSlideIn] = useState(true); // Used to trigger slide out animation
     const [hasMatches, setHasMatches] = useState(true);
 
-    const songs = [
+    const pfs = [
       {
         image: 'https://hackspirit.com/wp-content/uploads/2021/06/Copy-of-Rustic-Female-Teen-Magazine-Cover.jpg', 
         mainText: 'Kate Spade', 
         subText: 'Their top artist: Taylor Swift',
-		id: '0'
+		id: '0' //user id from backend
       },
       {
-        image: 'https://i.scdn.co/image/ab67616d0000b273904445d70d04eb24d6bb79ac', 
-        mainText: 'Kate Spade', 
+        image: 'https://ichef.bbci.co.uk/news/976/cpsprodpb/C597/production/_131938505_ind3bc40c5f1c10d4248e6bf848ae7033c8814005e9-1.jpg', 
+        mainText: 'Tay Tay', 
         subText: 'Their top artist: Taylor Swift',
 		id: '1'
       },
       {
-        image: 'https://i.scdn.co/image/ab67616d0000b27395f754318336a07e85ec59bc', 
-        mainText: 'Kate Spade', 
+        image: 'https://www.verywellmind.com/thmb/pwEmuUJ6KO9OF8jeiQCDyKnaVQI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/GettyImages-1187609003-73c8baf32a6a46a6b84fe931e0c51e7e.jpg', 
+        mainText: 'En Pea Sea', 
         subText: 'Their top artist: Taylor Swift',
 		id: '2'
       },
       {
-        image: 'https://i.scdn.co/image/ab67616d0000b27333b8541201f1ef38941024be', 
-        mainText: 'Kate Spade', 
+        image: 'https://www.dmarge.com/wp-content/uploads/2021/01/dwayne-the-rock-.jpg', 
+        mainText: 'Pebble', 
         subText: 'Their top artist: Taylor Swift',
 		id: '0'
       },
       {
-        image: 'https://i.scdn.co/image/ab67616d0000b273e787cffec20aa2a396a61647', 
-        mainText: 'Kate Spade', 
+        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqW5lCXxflY_ZOsSs11cRIOoOwTTYHjy0_8A&usqp=CAU', 
+        mainText: 'Me', 
         subText: 'Their top artist: Taylor Swift',
 		id: '1'
       },
     ]
-    const [likedSongs, setLikedSongs] = useState([]);
-    const [dislikedSongs, setDislikedSongs] = useState([]);
+    const [likedProfiles, setLikedProfiles] = useState([]);
+    const [dislikedProfiles, setDislikedProfiles] = useState([]);
   
     const swipeLeft = () => {
         setDirection("right");
@@ -56,9 +56,9 @@ function ProfileFinder() {
             setDirection("down");
             setSlideIn(true);
             if (hasMatches) {
-                setDislikedSongs(prevDisliked => prevDisliked.concat(songs[currentIndex]))
+                setDislikedProfiles(prevDisliked => prevDisliked.concat(pfs[currentIndex]))
             }
-            if (currentIndex < songs.length-1) {
+            if (currentIndex < pfs.length-1) {
                 setCurrentIndex((prevIndex) => (prevIndex + 1)); // Update index to next element
             }
             else {
@@ -75,10 +75,10 @@ function ProfileFinder() {
             setDirection("down");
             setSlideIn(true);
             if (hasMatches) {
-                setLikedSongs(prevLiked => prevLiked.concat(songs[currentIndex]))
+                setLikedProfiles(prevLiked => prevLiked.concat(pfs[currentIndex]))
 
             }
-            if (currentIndex < songs.length-1) {
+            if (currentIndex < pfs.length-1) {
                 setCurrentIndex((prevIndex) => (prevIndex + 1)); // Update index to next element
             }
             else {
@@ -89,21 +89,21 @@ function ProfileFinder() {
 
     useEffect(() => {
         // Send data to backend
-        console.log("Disliked Songs Updated:", dislikedSongs);
-        console.log("Liked Songs Updated:", likedSongs);
-    }, [dislikedSongs, likedSongs]);   
+        console.log("Disliked Profiles Updated:", dislikedProfiles);
+        console.log("Liked Profiles Updated:", likedProfiles);
+    }, [dislikedProfiles, likedProfiles]);   
 
     return (
         <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3, gap: 3,}}>
             <Typography variant='h3'>
                 We think you'd like...
             </Typography>
-            <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, m: 3}}>
+            <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, m: 3}}>
                 <IconButton variant='contained' onClick={swipeLeft} sx={{backgroundColor: theme.palette.swipeButton.red, borderRadius: '100%', width: 75, height: 75, '&:hover': {backgroundColor: theme.palette.swipeButton.redHover,}, }}>
                     <img src={xMark} alt="X Mark" style={{maxWidth: '75%'}}/>
                 </IconButton>
-                <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: 500, height: 600,}}>
-                    {hasMatches ? songs.map((element, index) => (
+                <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'start', width: 500, height: 600,}}>
+                    {hasMatches ? pfs.map((element, index) => (
                         <Slide key={index} direction={direction} in={slideIn && index === currentIndex} mountOnEnter unmountOnExit>
                             <Box>
                                 <FinderImage 

@@ -98,11 +98,11 @@ function SongFinder() {
             <Typography variant='h3'>
                 We think you'd like...
             </Typography>
-            <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, m: 3}}>
+            <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, m: 3}}>
                 <IconButton variant='contained' onClick={swipeLeft} sx={{backgroundColor: theme.palette.swipeButton.red, borderRadius: '100%', width: 75, height: 75, '&:hover': {backgroundColor: theme.palette.swipeButton.redHover,}, }}>
                     <img src={xMark} alt="X Mark" style={{maxWidth: '75%'}}/>
                 </IconButton>
-                <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: 500, height: 600,}}>
+                <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'start', width: 500, height: 600,}}>
                     {hasMatches ? songs.map((element, index) => (
                         <Slide key={index} direction={direction} in={slideIn && index === currentIndex} mountOnEnter unmountOnExit>
                             <Box>
