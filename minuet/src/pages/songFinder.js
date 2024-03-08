@@ -16,16 +16,6 @@ function SongFinder() {
 
 	useEffect(() => { fetchData(); }, []);
 
-	return (
-		<div className="SongFinder">
-			<p>this is the SongFinder page</p>
-			{data && data.map(user => (
-				<div key={user.user_id}>
-					<p>User ID: {user.user_id}, Display Name: {user.display_name}</p>
-				</div>
-			))}
-		</div>
-	);
 	const theme = useTheme();
 	const [direction, setDirection] = useState("down");
 
