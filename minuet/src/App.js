@@ -62,7 +62,7 @@ const isLoggedIn = true; //todo based on whether logged in or not
 
 function App() {
 
-	const [token, setToken] = useState(null);
+	const [token, setToken] = useState("");
 	const [profile, setProfile] = useState(null);
 
 	async function getProfile() {
@@ -79,28 +79,12 @@ function App() {
 		return pairedProfile;
 	};
 
-	useEffect(() => {
-		function receivedToken() {
-		  const testToken = window.localStorage.getItem('access_token')
-		  if (testToken) {
-			console.log("YOOO")
-			setToken(testToken)
-		  }
-		}
-	  
-		window.addEventListener('storage', receivedToken)
-	  
-		return () => {
-		  window.removeEventListener('storage', receivedToken)
-		}
-	  }, [])
-
 	return (
 		<ThemeProvider theme={theme}>
 			{token ? <NavBar /> : null}
 			<Routes>
 				<Route path='/' element={token ? <UserProfile temp={profile} /> : <LandingPage />} />
-				<Route path='/callback' element={ <TokenCall /> } />
+				<Route path='/callback' element={token ?  null : <TokenCall passToken = {setToken}/> } />
 				<Route path='/song-finder' element={token ? <SongFinder /> : <LandingPage />} />
 				<Route path='/profile-finder' element={token ? <ProfileFinder /> : <LandingPage />} />
 				<Route path="/user/:userId" element={token ? <OtherUserProfile /> : <LandingPage />} />

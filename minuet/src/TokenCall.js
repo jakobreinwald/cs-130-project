@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import {useEffect } from 'react';
 import {useNavigate } from 'react-router-dom';
 
-function TokenCall() {
+function TokenCall(props) {
     const clientId = "77f115f4019c42de927ebab0d2ddd231"; // Replace with your client ID
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
@@ -24,17 +24,26 @@ function TokenCall() {
         const access_token = await result.json();
         return access_token;
     };
+    const handler = (data) => {props.passToken(data)}
+    
     async function setToken(clientId, code){
         const accessToken = await getAccessToken(clientId, code);
         if(!("error" in accessToken)){
             window.localStorage.setItem("access_token", accessToken.access_token);
             window.localStorage.setItem("refresh_token", accessToken.refresh_token);
             window.localStorage.setItem("timestamp", Date.now())
+            handler(accessToken.access_token)
         }
     };
-    setToken(clientId, code)
     const navigate = useNavigate();
-    useEffect(() => {navigate("/")}, []);
+    let navigated = false
+    useEffect(() => {
+        if(!navigated){
+            setToken(clientId, code);
+            navigated = true
+            navigate("/");
+        }
+    }, []);
     return null;
 }
 export default TokenCall
