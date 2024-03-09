@@ -12,47 +12,53 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { useSyncExternalStore } from "react";
 
 const theme = createTheme({
-	palette: {
-		mode: 'dark',
-		primary: {
-			main: '#21A4B6',
-			complementary: '#FFBD80'
-		},
-		background: {
-			primary: '#000000',
-			secondary: '#282828',
-		},
-		text: {
-			primary: '#ffffff',
-			secondary: '#21A4B6',
-		},
-	},
-	typography: {
-		fontFamily: 'Poppins, Open Sans, sans-serif',
-		h1: {
-			fontFamily: 'Poppins, sans-serif',
-			fontWeight: 300,
-			fontSize: '128px',
-		},
-		h3: {
-			fontFamily: 'Open Sans, sans-serif',
-		},
-		h4: {
-			fontFamily: 'Open Sans, sans-serif',
-		},
-		h5: {
-			fontFamily: 'Open Sans, sans-serif',
-		},
-		h6: {
-			fontFamily: 'Open Sans, sans-serif',
-		},
-		p: {
-			fontFamily: 'Open Sans, sans-serif',
-		},
-	},
-});
+    palette: {
+      mode: 'dark',
+      primary: {
+        main: '#21A4B6',
+        complementary: '#FFBD80'
+      },
+      background: {
+        primary: '#000000',
+        secondary: '#282828',
+      },
+      text: {
+        primary: '#ffffff',
+        secondary: '#21A4B6',
+      },
+      swipeButton: {
+        red: '#F66D6D',
+        redHover: '#B44B4B',
+        green: '#7AD17D',
+        greenHover: '#4F8851',
+      }
+    },
+    typography: {
+      fontFamily: 'Poppins, Open Sans, sans-serif',
+      h1: {
+        fontFamily: 'Poppins, sans-serif',
+        fontWeight: 300,
+        fontSize: '128px',
+      },
+      h3: {
+        fontFamily: 'Open Sans, sans-serif',
+      },
+      h4: {
+        fontFamily: 'Open Sans, sans-serif',
+      },
+      h5: {
+        fontFamily: 'Open Sans, sans-serif',
+      },
+      h6: {
+        fontFamily: 'Open Sans, sans-serif',
+      },
+      p: {
+        fontFamily: 'Open Sans, sans-serif',
+      },
+    },
+  });
 
-// const isLoggedIn = true; //todo based on whether logged in or not
+const isLoggedIn = true; //todo based on whether logged in or not
 
 function App() {
 
