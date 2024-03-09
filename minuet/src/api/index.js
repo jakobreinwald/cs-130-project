@@ -2,7 +2,17 @@ import axios from 'axios';
 
 const url = 'http://localhost:3001';
 
-export const fetchUsers = () => axios.get(`${url}/users`);
+export const updateUserProfile = (token) => axios.post(`${url}/users`, {}, {
+	headers: {
+		"Authorization": 'Bearer ' + token,
+	}
+});
+export const getUserProfile = (id) => axios.get(`${url}/users/${id}/profile`);
+export const getUserRecs = (token, id) => axios.get(`${url}/users/${id}/recs`, {
+	headers: {
+		"Authorization": 'Bearer ' + token,
+	}
+});
 // export const fetchProfile = ()
 
 // export const fetchUsers = () => axios.get(`${url}`);

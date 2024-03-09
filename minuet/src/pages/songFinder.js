@@ -1,20 +1,20 @@
-import React, { useState, useEffect }, { useState, useEffect } from 'react';
+import { React, useState, useEffect } from 'react';
 import FinderImage from '../components/finderImage'
 import { Box, Typography, IconButton, Slide } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import xMark from '../assets/x-mark.svg';
 import heart from '../assets/heart.svg';
-import { fetchUsers } from '../api';
+import { getUserRecs } from '../api';
 
-function SongFinder() {
+function SongFinder({ token, displayName }) {
 	const [data, setData] = useState('');
-	const fetchData = async () => {
-		const result = await fetchUsers();
+	const fetchData = async (token, displayName) => {
+		const result = await getUserRecs(token, displayName);
 		setData(result.data);
-		console.log(result.data);
+		console.log("RESULT: ", result.data);
 	};
 
-	useEffect(() => { fetchData(); }, []);
+	useEffect(() => { fetchData(token, displayName); }, [token, displayName]);
 
 	const theme = useTheme();
 	const [direction, setDirection] = useState("down");
@@ -101,7 +101,7 @@ function SongFinder() {
 	return (
 		<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3, gap: 3, }}>
 			<Typography variant='h3'>
-				We think you'd like...
+				{displayName}, We think you'd like...
 			</Typography>
 			<Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, m: 3 }}>
 				<IconButton variant='contained' onClick={swipeLeft} sx={{ backgroundColor: theme.palette.swipeButton.red, borderRadius: '100%', width: 75, height: 75, '&:hover': { backgroundColor: theme.palette.swipeButton.redHover, }, }}>

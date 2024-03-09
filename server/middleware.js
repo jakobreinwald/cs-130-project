@@ -150,13 +150,16 @@ class Middleware {
 		// Isolate first recommended track id that user has not yet interacted with
 		let rec_ids = [];
 
-		for (const [track_id, outcome] of user.recommended_track_to_outcome) {
-			if (outcome === 'none') {
-				rec_ids.push(track_id);
-			}
 
-			if (rec_ids.length === num_req) {
-				break;
+		if (user && user.recommended_track_to_outcome) {
+			for (const [track_id, outcome] of Object.entries(user.recommended_track_to_outcome)) {
+				if (outcome === 'none') {
+					rec_ids.push(track_id);
+				}
+
+				if (rec_ids.length === num_req) {
+					break;
+				}
 			}
 		}
 

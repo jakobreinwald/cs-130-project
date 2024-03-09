@@ -4,11 +4,11 @@ import ProfileCard from '../components/profileCard'
 import { Card, CardContent } from '@mui/material';
 import { Box, Typography, Divider, Avatar } from '@mui/material';
 
-function UserProfile({ temp }) {
+function UserProfile({ token, displayName }) {
 	// TODO replace placeholders with actual data
-	const username = temp;
 	const newSongs = 5;
 	const newProfiles = 3;
+
 	const matchedSongInfo = [
 		{ name: "Song Name", artist: "Artist Name" },
 		{ name: "Song Name", artist: "Artist Name" },
@@ -28,7 +28,7 @@ function UserProfile({ temp }) {
 				<Avatar sx={{ bgcolor: 'grey.900', width: 250, height: 250, m: 5, }} />
 				<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
 					<Typography variant="h2" sx={{ color: 'text.primary', mb: 3 }}>
-						Hi, {username}
+						Hi, {displayName}
 					</Typography>
 					<Typography variant="h4" sx={{ color: 'text.primary' }}>
 						You've discovered <b>{newSongs}</b> new songs and <b>{newProfiles}</b> new profiles! Keep on exploring :)

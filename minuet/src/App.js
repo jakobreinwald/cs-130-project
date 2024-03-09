@@ -8,6 +8,7 @@ import OtherUserProfile from './pages/otherUserProfile';
 import LandingPage from './pages/landingPage';
 import React, { useState, useEffect } from 'react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { updateUserProfile } from './api/index'
 
 const theme = createTheme({
 	palette: {
@@ -61,7 +62,7 @@ const isLoggedIn = true; //todo based on whether logged in or not
 function App() {
 
 	const [token, setToken] = useState("");
-	const [profile, setProfile] = useState(null);
+	const [displayName, setDisplayName] = useState(null);
 	const clientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID; // Replace with your client ID
 	const params = new URLSearchParams(window.location.search);
 	const code = params.get("code");
@@ -76,7 +77,6 @@ function App() {
 				window.localStorage.setItem("refresh_token", accessToken.refresh_token);
 				window.localStorage.setItem("timestamp", Date.now())
 				setToken(accessToken.access_token);
-				await getProfile();
 			}
 		}
 	}
@@ -164,38 +164,45 @@ function App() {
 			headers: { "Authorization": "Bearer " + token },
 		});
 		const pairedProfile = await result.json();
-		console.log("PAIRED PROFILE 3: ", pairedProfile);
+		console.log("PAIRED PROFILE: ", pairedProfile);
 		if (!("error" in pairedProfile)) {
-			setProfile(pairedProfile.display_name);
-			console.log("profile: ", profile);
+			setDisplayName(pairedProfile.display_name);
 		}
 		return pairedProfile;
 	};
 
+
+	let localToken = window.localStorage.getItem("access_token")
+	if (!localToken || localToken === "undefined")
+		authenticate();
+	else {
+		let timestamp = window.localStorage.getItem("timestamp")
+		let timeElapsed = Math.floor((Date.now() - timestamp) / 1000)
+		if (timeElapsed > 50) {
+			getRefreshToken();
+			localToken = window.localStorage.getItem("access_token")
+			window.localStorage.setItem("timestamp", Date.now())
+		}
+		if (token !== localToken) {
+			console.log("setting token to: ", localToken)
+			setToken(localToken);
+		}
+	}
+
 	useEffect(() => {
-		let token = window.localStorage.getItem("access_token")
-		if (token === "undefined")
-			authenticate();
-		else {
-			let timestamp = window.localStorage.getItem("timestamp")
-			let timeElapsed = Math.floor((Date.now() - timestamp) / 1000)
-			if (timeElapsed > 50) {
-				getRefreshToken();
-				token = window.localStorage.getItem("access_token")
-				window.localStorage.setItem("timestamp", Date.now())
-			}
-			setToken(token);
+		if (token) {
+			updateUserProfile(token);
 			getProfile();
 		}
-	});
+	}, [token])
 
 	return (
 		<ThemeProvider theme={theme}>
 			{token ? <NavBar /> : null}
 			<Routes>
-				<Route path='/' element={token ? <UserProfile temp={profile} /> : <LandingPage />} />
-				<Route path='/song-finder' element={token ? <SongFinder /> : <LandingPage />} />
-				<Route path='/profile-finder' element={token ? <ProfileFinder /> : <LandingPage />} />
+				<Route path='/' element={token ? <UserProfile token={token} displayName={displayName} /> : <LandingPage />} />
+				<Route path='/song-finder' element={token ? <SongFinder token={token} displayName={displayName} /> : <LandingPage />} />
+				<Route path='/profile-finder' element={token ? <ProfileFinder token={token} displayName={displayName} /> : <LandingPage />} />
 				<Route path="/user/:userId" element={isLoggedIn ? <OtherUserProfile /> : <LandingPage />} />
 			</Routes>
 		</ThemeProvider>

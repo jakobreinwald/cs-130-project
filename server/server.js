@@ -46,58 +46,52 @@ app.get('/callback', (req, res) => {
 
 app.get('/users/:id/matches', (req, res) => { });
 
-
-app.get('/users', (req, res) => {
-	middleware.getAllUsers()
-		.then(users => res.json(users))
+app.get('/users/:id/profile', (req, res) => {
+	middleware.getUser(req.params.id)
+		.then(user => res.json(user))
 		.catch(console.error);
+});
 
-	app.get('/users/:id/profile', (req, res) => {
-		middleware.getUser(req.params.id)
-			.then(user => res.json(user))
+app.get('/users/:id/recs', (req, res) => {
+	const access_token = validateAuth(req.header('Authorization'), res);
+	const num_recs = req.query.num_recs || 10;
+	const user_id = req.params.id;
+
+	middleware.getRecommendations(access_token, user_id, num_recs)
+		.then(recs => res.json({ recs: recs }))
+		.catch(console.error);
+});
+
+// POST endpoints
+app.post('/users/:user_id/recs/:rec_id', (req, res) => {
+	// Get action from query string, either 'like' or 'dismiss'
+	const action = req.query.action;
+
+	// Execute requested action for the given recommendation
+	if (action === 'dismiss') {
+		middleware.dismissRecommendation(req.params.user_id, req.params.rec_id)
+			.then(() => res.status(200).send('Dismissed recommendation'))
 			.catch(console.error);
-	});
-
-	app.get('/users/:id/recs', (req, res) => {
-		const access_token = validateAuth(req.header('Authorization'), res);
-		const num_recs = req.query.num_recs || 10;
-		const user_id = req.params.id;
-
-		middleware.getRecommendations(access_token, user_id, num_recs)
-			.then(recs => res.json({ recs: recs }))
+	} else if (action === 'like') {
+		middleware.likeRecommendation(req.params.user_id, req.params.rec_id)
+			.then(() => res.status(200).send('Liked recommendation'))
 			.catch(console.error);
-	});
+	} else {
+		res.status(400).send('Invalid action');
+	}
+});
 
-	// POST endpoints
-	app.post('/users/:user_id/recs/:rec_id', (req, res) => {
-		// Get action from query string, either 'like' or 'dismiss'
-		const action = req.query.action;
+app.post('/users', (req, res) => {
+	// Validate request authorization and extract access token
+	const access_token = validateAuth(req.header('Authorization'), res);
+	console.log("stuff");
+	// Use access token to fetch user profile and top items from Spotify API
+	middleware.updateLoggedInUser(access_token)
+		.then(updates => res.json(updates.at(-1)))
+		.catch(console.error);
+});
 
-		// Execute requested action for the given recommendation
-		if (action === 'dismiss') {
-			middleware.dismissRecommendation(req.params.user_id, req.params.rec_id)
-				.then(() => res.status(200).send('Dismissed recommendation'))
-				.catch(console.error);
-		} else if (action === 'like') {
-			middleware.likeRecommendation(req.params.user_id, req.params.rec_id)
-				.then(() => res.status(200).send('Liked recommendation'))
-				.catch(console.error);
-		} else {
-			res.status(400).send('Invalid action');
-		}
-	});
-
-	app.post('/users', (req, res) => {
-		// Validate request authorization and extract access token
-		const access_token = validateAuth(req.header('Authorization'), res);
-
-		// Use access token to fetch user profile and top items from Spotify API
-		middleware.updateLoggedInUser(access_token)
-			.then(updates => res.json(updates.at(-1)))
-			.catch(console.error);
-	});
-
-	// Start Express server
-	app.listen(port, () => {
-		console.log(`Minuet server listening on port ${port}`)
-	});
+// Start Express server
+app.listen(port, () => {
+	console.log(`Minuet server listening on port ${port}`)
+});

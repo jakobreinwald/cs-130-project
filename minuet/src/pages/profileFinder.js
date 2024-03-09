@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { fetchUsers } from '../api';
+import { getUserProfile } from '../api';
 
 
-function ProfileFinder() {
+function ProfileFinder({ displayName }) {
 	const [data, setData] = useState('');
-	const fetchData = async () => {
-		const result = await fetchUsers();
+	const fetchData = async (displayName) => {
+		const result = await getUserProfile(displayName);
 		setData(result.data);
 		console.log(result.data);
 	};
 
-	useEffect(() => { fetchData(); }, []);
+	useEffect(() => { fetchData(displayName); }, [displayName]);
 
 	return (
 		<div className="Profile">
