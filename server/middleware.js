@@ -188,7 +188,7 @@ class Middleware {
     }
 
     // Cache recommendation track ids and track objects in database
-    const cached_rec_ids = this.db.addRecommendations(user_id, rec_ids);
+    const cached_rec_ids = this.db.addRecommendations(user, rec_ids);
     const cached_tracks = this.db.createOrUpdateTracks(recs);
 
     return Promise.all([cached_rec_ids, cached_tracks, req_rec_ids])
@@ -201,7 +201,7 @@ class Middleware {
 
   async getRecommendations(access_token, user_id, num_req) {
     // Isolate first num_req recommendations that user has not yet interacted with
-    const user = await this.db.getUser(user_id).catch(console.error);
+    const user = await this.db.getUserDocument(user_id).catch(console.error);
     let rec_ids = [];
 
     for (const [track_id, outcome] of user.recommended_track_to_outcome) {
@@ -218,7 +218,8 @@ class Middleware {
     const rem_req = num_req - rec_ids.length;
 
     if (rem_req > 0) {
-      const rem_rec_ids = await this.generateRecommendations(access_token, user, 10, rem_req).catch(console.error);
+      const rem_rec_ids = await this.generateRecommendations(access_token, user, 10, rem_req)
+        .catch(console.error);
       rec_ids = rec_ids.concat(rem_rec_ids);
     }
 
@@ -237,7 +238,7 @@ class Middleware {
       .then(artists => artists.map(({ data }) => data));
   }
 
-  async getUser(user_id) {
+  async getUserProfile(user_id) {
     return this.db.getUser(user_id);
   }
 
@@ -245,11 +246,17 @@ class Middleware {
     // TODO: mark profile as liked in databased
   }
 
-  async likeRecommendation(user_id, rec_id) {
+  async likeRecommendation(access_token, user_id, rec_id) {
     // Mark recommendation as liked in database and add to user's Spotify account
-    const update_db = this.db.likeRecommendation(user_id, rec_id);
-    const add_to_spotify = SpotifyAPI.addRecommendedTrack(user_id, rec_id);
-    return Promise.all([update_db, add_to_spotify]);
+    const playlist_id = await this.db.likeRecommendation(user_id, rec_id)
+      .then(({ recommended_tracks_playlist_id }) => recommended_tracks_playlist_id)
+      .catch(console.error);
+
+    if (!playlist_id) {
+      return Promise.reject('Could not fetch recommended tracks playlist id');
+    }
+
+    return SpotifyAPI.addRecommendedTrack(access_token, playlist_id, rec_id);
   }
 
   async updateLoggedInUser(access_token) {
@@ -293,7 +300,6 @@ class Middleware {
 
     // Create Minuet Recommendations playlist if not already created, and store playlist id in User document
     const updated_user = this.createRecommendedTracksPlaylist(access_token, cached_user)
-      .catch(console.error);
     updates.push(updated_user);
     return Promise.all(updates).then(updates => updates.at(-1));
   }

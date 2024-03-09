@@ -56,7 +56,7 @@ app.get('/callback', (req, res) => {
 app.get('/users/:id/matches', (req, res) => {});
 
 app.get('/users/:id/profile', (req, res) => {
-  middleware.getUser(req.params.id)
+  middleware.getUserProfile(req.params.id)
     .then(user => res.json(user))
     .catch(console.error);
 });
@@ -82,20 +82,23 @@ app.get('/users/:id/recs', (req, res) => {
 
 // POST endpoints
 app.post('/users/:user_id/recs/:rec_id', (req, res) => {
-  // Get action from query string, either 'like' or 'dismiss'
-  const action = req.query.action;
+  // Extract access token from request auth and get action from query string
+  const access_token = validateAuth(req.header('Authorization'));
+  const action = req.query.action; // 'like' or 'dismiss'
+  const rec_id = req.params.rec_id;
+  const user_id = req.params.user_id;
 
   // Execute requested action for the given recommendation
   if (action === 'dismiss') {
-    middleware.dismissRecommendation(req.params.user_id, req.params.rec_id)
-      .then(() => res.status(200).send('Dismissed recommendation'))
+    middleware.dismissRecommendation(user_id, rec_id)
+      .then(() => res.json({ 'dismissed': rec_id }))
       .catch(console.error);
   } else if (action === 'like') {
-    middleware.likeRecommendation(req.params.user_id, req.params.rec_id)
-      .then(() => res.status(200).send('Liked recommendation'))
+    middleware.likeRecommendation(access_token, user_id, rec_id)
+      .then(() => res.json({ 'liked': rec_id }))
       .catch(console.error);
   } else {
-    res.status(400).send('Invalid action');
+    res.status(400).json({ 'error': 'Action in query must be \'like\' or \'dismiss\'' });
   }
 });
 

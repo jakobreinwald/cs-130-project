@@ -90,18 +90,37 @@ class Database {
     };
   }
 
-  async addRecommendations(user_id, rec_ids) {
+  getAlbumQuery(album_id) {
+    return Album.findOne({ album_id: album_id });
+  }
+
+  getArtistQuery(artist_id) {
+    return Artist.findOne({ artist_id: artist_id });
+  }
+
+  getGenreQuery(name) {
+    return Genre.findOne({ name: name });
+  }
+
+  getUserQuery(user_id) {
+    return User.findOne({ user_id: user_id });
+  }
+
+  getTrackQuery(track_id) {
+    return Track.findOne({ track_id: track_id });
+  }
+
+  async addRecommendations(user_doc, rec_ids) {
     // Add new recommended tracks that user has not yet acted upon
-    const user = await User.findOne({ user_id: user_id }).exec();
-    user.recommended_track_to_outcome = rec_ids.reduce((acc, rec_id) => {
+    user_doc.recommended_track_to_outcome = rec_ids.reduce((acc, rec_id) => {
         if (!acc.has(rec_id)) {
           acc.set(rec_id, 'none');
         }
 
         return acc;
-      }, user.recommended_track_to_outcome);
+      }, user_doc.recommended_track_to_outcome);
 
-    return user.save();
+    return user_doc.save();
   }
 
   async createOrUpdateAlbum(album_obj) {
@@ -109,7 +128,7 @@ class Database {
    return Album.findOneAndUpdate(
       { album_id: album_obj.id },
       this.createAlbumModel(album_obj),
-      { upsert: true }
+      { new: true, upsert: true }
     ).exec();
   }
 
@@ -123,7 +142,7 @@ class Database {
     return Artist.findOneAndUpdate(
       { artist_id: artist_obj.id },
       this.createArtistModel(artist_obj),
-      { upsert: true }
+      { new: true, upsert: true }
     ).exec();
   }
 
@@ -135,7 +154,7 @@ class Database {
         ...(this.createArtistModel(artist_obj)),
         [`listener_id_to_rank.${listener_id}`]: rank_for_listener
       },
-      { upsert: true }
+      { new: true, upsert: true }
     ).exec();
   }
 
@@ -177,18 +196,12 @@ class Database {
   }
 
   async createOrUpdateTrack(track_obj) {
-    // Create or update Album document
-    const album = this.createOrUpdateAlbum(track_obj.album);
-
     // Update existing Track document, otherwise create new document
-    const track = Track.findOneAndUpdate(
+    return Track.findOneAndUpdate(
       { track_id: track_obj.id },
       this.createTrackModel(track_obj),
-      { upsert: true }
+      { new: true, upsert: true }
     ).exec();
-
-    // Return promise for all album, artist, genre, and track updates
-    return Promise.all([album, track]);
   }
 
   async createOrUpdateTracks(tracks) {
@@ -213,7 +226,7 @@ class Database {
         top_track_ids,
         total_genre_count
       },
-      { upsert: true }
+      { new: true, upsert: true }
     ).exec();
   }
 
@@ -234,10 +247,11 @@ class Database {
   }
 
   async likeRecommendation(user_id, rec_id) {
-    return User.updateOne(
+    return User.findOneAndUpdate(
       { user_id: user_id },
-      { $set: { [`recommended_track_to_outcome.${rec_id}`]: 'liked' } }
-    ).exec();
+      { $set: { [`recommended_track_to_outcome.${rec_id}`]: 'liked' } },
+      { fields: { _id: 0, recommended_tracks_playlist_id: 1 } }
+    ).lean().exec();
   }
 
   async getAlbum(album_id) {
@@ -259,9 +273,13 @@ class Database {
   async getTracks(track_ids) {
     return Track.find({ track_id: { $in: track_ids } }).exec();
   }
-  
+
   async getUser(user_id) {
-    return User.findOne({ user_id: user_id }).exec();
+    return this.getUserQuery(user_id).lean().exec();
+  }
+  
+  async getUserDocument(user_id) {
+    return this.getUserQuery(user_id).exec();
   }
 }
 
