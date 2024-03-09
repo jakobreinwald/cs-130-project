@@ -82,7 +82,7 @@ class Middleware {
       await this.db.addPotentialMatch(user_id, pot_user_id);
     }
 
-    return this.getPotentialMatches(user_id, 0);
+    return this.getPotentialMatches(user_id);
   }
 
   // calculate match score between two users
@@ -184,8 +184,7 @@ class Middleware {
   }
 
   // matches are a pair of users that have liked each others profiles
-  async getMatches(user_id, offset) {
-    // TODO: figure out offset
+  async getMatches(user_id) {
     // fetch cached list of matches
     let matches = this.db.getMatches(user_id);
 
@@ -203,7 +202,6 @@ class Middleware {
 
   // potential matches are a list of potential matches for the user, sorted by match score
   async getPotentialMatches(user_id, offset) {
-    // TODO: figure out offset
     return this.db.getPotentialMatches(user_id);
   }
 
