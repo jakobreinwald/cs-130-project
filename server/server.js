@@ -105,7 +105,7 @@ app.post('/users', (req, res) => {
 
   // Use access token to fetch user profile and top items from Spotify API
   middleware.updateLoggedInUser(access_token)
-    .then(updates => res.json(updates.at(-1)))
+    .then(user => res.json(user))
     .catch(console.error);
 });
 

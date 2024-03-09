@@ -50,26 +50,31 @@ class SpotifyAPI {
   }
 
   static async addRecommendedTrack(access_token, playlist_id, track_id) {
-    // Add recommended track to Minuet Recommendations playlist
-    return axios.post(`${base_url}/playlists/${playlist_id}/tracks`, {
-      headers: SpotifyAPI.getHeaders(access_token),
-      params: { uris: `spotify:track:${track_id}` }
-    });
+    return axios.post(`${base_url}/playlists/${playlist_id}/tracks`, 
+      { uris: [`spotify:track:${track_id}`] }, 
+      { headers: SpotifyAPI.getHeaders(access_token) }
+    );
   }
 
   static async createRecommendedTracksPlaylist(access_token, user_id) {
-    return axios.post(`${base_url}/users/${user_id}/playlists`, {
-      headers: SpotifyAPI.getHeaders(access_token),
-      body: {
+    return axios.post(`${base_url}/users/${user_id}/playlists`, 
+      {
         name: 'Minuet Recommendations',
         public: false,
         description: 'Recommended tracks from Minuet'
-      }
-    });
+      }, 
+      { headers: SpotifyAPI.getHeaders(access_token) }
+    );
   }
 
   async fetchArtist(access_token, artist_id) {
     return axios.get(`${base_url}/artists/${artist_id}`, {
+      headers: SpotifyAPI.getHeaders(access_token)
+    });
+  }
+
+  static async fetchPlaylist(access_token, playlist_id) {
+    return axios.get(`${base_url}/playlists/${playlist_id}`, {
       headers: SpotifyAPI.getHeaders(access_token)
     });
   }
@@ -84,25 +89,25 @@ class SpotifyAPI {
     });
   }
 
-  async fetchUserProfile(access_token) {
+  static async fetchUserProfile(access_token) {
     return axios.get(`${base_url}/me`, {
       headers: SpotifyAPI.getHeaders(access_token)
     });
   }
 
-  async fetchUserTopItems(access_token, item_type, time_range, limit) {
+  static async fetchUserTopItems(access_token, item_type, time_range, limit) {
     return axios.get(`${base_url}/me/top/${item_type}`, {
         headers: SpotifyAPI.getHeaders(access_token),
         params: { time_range, limit }
       });
   }
 
-  async fetchUserTopArtists(access_token, time_range, limit) {
-    return this.fetchUserTopItems(access_token, 'artists', time_range, limit);
+  static async fetchUserTopArtists(access_token, time_range, limit) {
+    return SpotifyAPI.fetchUserTopItems(access_token, 'artists', time_range, limit);
   }
 
-  async fetchUserTopTracks(access_token, time_range, limit) {
-    return this.fetchUserTopItems(access_token, 'tracks', time_range, limit);
+  static async fetchUserTopTracks(access_token, time_range, limit) {
+    return SpotifyAPI.fetchUserTopItems(access_token, 'tracks', time_range, limit);
   }
 }
 

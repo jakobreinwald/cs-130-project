@@ -31,14 +31,38 @@ class Middleware {
       }, new Map());
   }
 
-  async createRecommendedTracksPlaylist(access_token, playlist_id, user_id) {
-    // Call Spotify API endpoint to create Minuet Recommendations playlist, if not already created
-    if (!playlist_id) {
-      const playlist = await SpotifyAPI.createRecommendedTracksPlaylist(access_token, playlist_id, user_id);
-      playlist_id = playlist.data.id;
+  async createRecommendedTracksPlaylist(access_token, user_doc) {
+    const { recommended_tracks_playlist_id, user_id } = user_doc;
+    
+    // Check if cached playlist id exists on Spotify, otherwise create new playlist
+    if (recommended_tracks_playlist_id) {
+      const playlist_exists = await SpotifyAPI.fetchPlaylist(access_token, recommended_tracks_playlist_id)
+        .then(() => true)
+        .catch(({ response }) => {
+          if (response.status != 400 && response.data.error.message != 'Invalid base62 id') {
+            console.error(response.data);
+          }
+          
+          return false;
+        });
+      
+      if (playlist_exists) {
+        return Promise.resolve(user_doc);
+      }
+    }
+    
+    // Call Spotify API endpoint to create recommendations playlist, caching playlist id in database
+    const new_playlist_id = await SpotifyAPI.createRecommendedTracksPlaylist(access_token, user_id)
+      .then(({ data }) => data.id)
+      .catch(({ response }) => console.error(response.data));
+
+    if (new_playlist_id) {
+      user_doc.recommended_tracks_playlist_id = new_playlist_id;
+      return user_doc.save();
     }
 
-    return Promise.resolve(playlist_id);
+    // Log playlist creation failure, but otherwise return unchanged user document
+    return Promise.resolve(user_doc);
   }
 
   async dismissMatch(user_id, match_id) {
@@ -230,9 +254,9 @@ class Middleware {
 
   async updateLoggedInUser(access_token) {
     // Fetch user profile, top artists, and top tracks from Spotify API
-    const artists = this.api.fetchUserTopArtists(access_token, 'medium_term', 50);
-    const tracks = this.api.fetchUserTopTracks(access_token, 'medium_term', 50);
-    const user = this.api.fetchUserProfile(access_token);
+    const artists = SpotifyAPI.fetchUserTopArtists(access_token, 'medium_term', 50);
+    const tracks = SpotifyAPI.fetchUserTopTracks(access_token, 'medium_term', 50);
+    const user = SpotifyAPI.fetchUserProfile(access_token);
     const fetched_data = Promise.all([artists, tracks, user]);
 
     const [fetched_artists, fetched_tracks, fetched_user] = await fetched_data
@@ -262,16 +286,16 @@ class Middleware {
     const genre_counts = this.calcGenreCounts(fetched_artists, fetched_tracks, top_track_associated_artists);
     const cached_genres = this.db.createOrUpdateGenreCounts(genre_counts, listener_id);
 
-    // Create or update User document, and create Minuet Recommendations playlist if not already created
-    // FIXME: recommended_tracks_playlist_id is not being updated in database
+    // Create or update existing User document
     const cached_user = await this.db.createOrUpdateUser(genre_counts, top_artist_ids, top_track_ids, fetched_user)
       .catch(console.error);
-    const playlist_id = await this.createRecommendedTracksPlaylist(access_token, recommended_tracks_playlist_id, listener_id)
+    const updates = [cached_albums, cached_artists, cached_genres, cached_tracks];
+
+    // Create Minuet Recommendations playlist if not already created, and store playlist id in User document
+    const updated_user = this.createRecommendedTracksPlaylist(access_token, cached_user)
       .catch(console.error);
-    console.log(playlist_id);
-    cached_user.recommended_tracks_playlist_id = playlist_id;
-    const updated_user = cached_user.save();
-    return Promise.all([cached_albums, cached_artists, cached_genres, cached_tracks, updated_user]);
+    updates.push(updated_user);
+    return Promise.all(updates).then(updates => updates.at(-1));
   }
 }
 
