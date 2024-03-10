@@ -1,4 +1,5 @@
 // import './App.css';
+import TokenCall from './TokenCall'
 import NavBar from './components/navbar';
 import { Routes, Route } from 'react-router-dom';
 import ProfileFinder from './pages/profileFinder';
@@ -62,102 +63,9 @@ const isLoggedIn = true; //todo based on whether logged in or not
 function App() {
 
 	const [token, setToken] = useState("");
-	const [displayName, setDisplayName] = useState(null);
-	const clientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID; // Replace with your client ID
-	const params = new URLSearchParams(window.location.search);
-	const code = params.get("code");
-
-	const authenticate = async () => {
-		if (!code) {
-			redirectToAuthCodeFlow(clientId);
-		} else {
-			const accessToken = await getAccessToken(clientId, code);
-			if (!("error" in accessToken)) {
-				window.localStorage.setItem("access_token", accessToken.access_token);
-				window.localStorage.setItem("refresh_token", accessToken.refresh_token);
-				window.localStorage.setItem("timestamp", Date.now())
-				setToken(accessToken.access_token);
-			}
-		}
-	}
-	const getRefreshToken = async () => {
-		// refresh token that has been previously stored
-		const refreshToken = window.localStorage.getItem('refresh_token');
-		const url = "https://accounts.spotify.com/api/token";
-
-		const payload = {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded'
-			},
-			body: new URLSearchParams({
-				grant_type: 'refresh_token',
-				refresh_token: refreshToken,
-				client_id: clientId
-			}),
-		}
-		const body = await fetch(url, payload);
-		const response = await body.json();
-		window.localStorage.setItem("access_token", response.access_token);
-		window.localStorage.setItem("refresh_token", response.refresh_token);
-		setToken(response.access_token);
-	};
-
-	async function redirectToAuthCodeFlow(clientId) {
-		const verifier = generateCodeVerifier(128);
-		const challenge = await generateCodeChallenge(verifier);
-
-		window.localStorage.setItem("verifier", verifier);
-		const params = new URLSearchParams();
-		params.append("client_id", clientId);
-		params.append("response_type", "code");
-		params.append("redirect_uri", "http://localhost:3000/callback");
-		params.append("scope", "user-read-private user-read-email");
-		params.append("code_challenge_method", "S256");
-		params.append("code_challenge", challenge);
-
-		document.location = `https://accounts.spotify.com/authorize?${params.toString()}`;
-	}
-
-	function generateCodeVerifier(length) {
-		let text = '';
-		let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-		for (let i = 0; i < length; i++) {
-			text += possible.charAt(Math.floor(Math.random() * possible.length));
-		}
-		return text;
-	};
-
-	async function generateCodeChallenge(codeVerifier) {
-		const data = new TextEncoder().encode(codeVerifier);
-		const digest = await window.crypto.subtle.digest('SHA-256', data);
-		return btoa(String.fromCharCode.apply(null, [...new Uint8Array(digest)]))
-			.replace(/\+/g, '-')
-			.replace(/\//g, '_')
-			.replace(/=+$/, '');
-	};
-
-
-	async function getAccessToken(clientId, code) {
-		const verifier = window.localStorage.getItem("verifier");
-
-		const params = new URLSearchParams();
-		params.append("client_id", clientId);
-		params.append("grant_type", "authorization_code");
-		params.append("code", code);
-		params.append("redirect_uri", "http://localhost:3000/callback");
-		params.append("code_verifier", verifier);
-
-		const result = await fetch("https://accounts.spotify.com/api/token", {
-			method: "POST",
-			headers: { "Content-Type": "application/x-www-form-urlencoded" },
-			body: params
-		});
-		const access_token = await result.json();
-		return access_token;
-	};
-
+	const [profile, setProfile] = useState(null);
+  const [displayName, setDisplayName] = useState(null);
+  
 	async function getProfile() {
 		const result = await fetch("https://api.spotify.com/v1/me", {
 			method: "GET",
@@ -171,39 +79,26 @@ function App() {
 		return pairedProfile;
 	};
 
-
-	let localToken = window.localStorage.getItem("access_token")
-	if (!localToken || localToken === "undefined")
-		authenticate();
-	else {
-		let timestamp = window.localStorage.getItem("timestamp")
-		let timeElapsed = Math.floor((Date.now() - timestamp) / 1000)
-		if (timeElapsed > 50) {
-			getRefreshToken();
-			localToken = window.localStorage.getItem("access_token")
-			window.localStorage.setItem("timestamp", Date.now())
-		}
-		if (token !== localToken) {
-			console.log("setting token to: ", localToken)
-			setToken(localToken);
-		}
-	}
-
+  if(!token){
+    let testToken = window.localStorage.getItem("access_token")
+    if(testToken)
+      setToken(testToken)
+  }
 	useEffect(() => {
-		if (token) {
-			updateUserProfile(token);
-			getProfile();
-		}
+      updateUserProfile(token);
+      getProfile();
 	}, [token])
+  
 
 	return (
 		<ThemeProvider theme={theme}>
-			{token ? <NavBar /> : null}
+			{token ? <NavBar removeToken = {setToken}/> : null}
 			<Routes>
 				<Route path='/' element={token ? <UserProfile token={token} displayName={displayName} /> : <LandingPage />} />
-				<Route path='/song-finder' element={token ? <SongFinder token={token} displayName={displayName} /> : <LandingPage />} />
+        <Route path='/callback' element={token ?  null : <TokenCall passToken = {setToken}/> } />
+        <Route path='/song-finder' element={token ? <SongFinder token={token} displayName={displayName} /> : <LandingPage />} />
 				<Route path='/profile-finder' element={token ? <ProfileFinder token={token} displayName={displayName} /> : <LandingPage />} />
-				<Route path="/user/:userId" element={isLoggedIn ? <OtherUserProfile /> : <LandingPage />} />
+				<Route path="/user/:userId" element={token ? <OtherUserProfile /> : <LandingPage />} />
 			</Routes>
 		</ThemeProvider>
 	);

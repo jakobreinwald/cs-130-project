@@ -1,20 +1,25 @@
 import React from 'react';
 import MinuetLogo from '../assets/logo.svg';
 import Button from '@mui/material/Button';
-import {Link} from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
 import './navbar.css'
 import { Typography } from '@mui/material';
 
-function LogOutButton () {
-    // todo: onClick to log out
-    return <Button variant="contained" sx={{ backgroundColor: 'theme.palette.primary.main', borderRadius: '30px', paddingLeft: 3.5, paddingRight: 3.5 }}>
+function LogOutButton (props) {
+    const navigate = useNavigate();
+    const logOut = () => {
+        window.localStorage.clear();
+        props.removeToken(null);
+        navigate("/");
+    }
+    return <Button onClick={logOut} variant="contained" sx={{ backgroundColor: 'theme.palette.primary.main', borderRadius: '30px', paddingLeft: 3.5, paddingRight: 3.5 }}>
             <Typography variant='p' sx={{color: 'text.primary', fontSize: '20px', fontWeight: 500 }}>
                 Log out
             </Typography>
         </Button>
 }
 
-function NavBar () {
+function NavBar (props) {
     return (
         <div className='navbar'>
             <div className='navbarContent'>
@@ -27,7 +32,7 @@ function NavBar () {
                 <div className='navbarPagesButton'>
                     <p><Link to='/song-finder' data-replace="Song Finder" className="navbarLink"><span>Song Finder</span></Link></p>
                     <p><Link to='/profile-finder' data-replace="Profile Finder" className="navbarLink"><span>Profile Finder</span></Link></p>
-                    <LogOutButton />
+                    <LogOutButton removeToken = {props.removeToken}/>
                 </div>
             </div>
         </div>
