@@ -7,7 +7,6 @@ const num_mili_in_day = 86400000;
 
 // Dependencies
 const Database = require('./db');
-const match = require('./models/match');
 const SpotifyAPI = require('./spotify_api');
 require('dotenv').config({ path: '.env.local' });
 
