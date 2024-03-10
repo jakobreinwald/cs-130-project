@@ -1,10 +1,12 @@
 import { React, useState, useEffect } from 'react';
-import FinderImage from '../components/finderImage'
+import FinderImage from '../components/finderImage';
+import AudioPlayer from '../components/audioPlayer';
 import { Box, Typography, IconButton, Slide } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import xMark from '../assets/x-mark.svg';
 import heart from '../assets/heart.svg';
 import { getUserRecs } from '../api';
+import PopularityIcon from '../components/popularityIcon';
 
 function SongFinder({ token, displayName }) {
 	const [data, setData] = useState([]);
@@ -103,6 +105,8 @@ function SongFinder({ token, displayName }) {
 									subText={`Track ${element.track_number}, ${millisecondsToMinutesAndSeconds(element.duration_ms)}`}
 									link={element.external_urls.spotify}
 								/>
+								{/* <PopularityIcon value={element.popularity}></PopularityIcon> */}
+								<AudioPlayer previewUrl={element.preview_url} />
 							</Box>
 						</Slide>
 					)) : <Typography variant='h5'> Sorry, no more matches for now! </Typography>}
