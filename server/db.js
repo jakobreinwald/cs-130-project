@@ -212,7 +212,7 @@ class Database {
   async createOrUpdateUser(genre_counts, top_artist_ids, top_track_ids, user_obj) {
     // Update existing User document, otherwise create new document
     // sum the values of the genre_counts map
-    const total_genre_count = Array.from(genre_counts.values()).reduce((a, b) => a + b, 0);
+    // const total_genre_count = Array.from(genre_counts.values()).reduce((a, b) => a + b, 0);
     const { id, display_name } = user_obj;
     const images = user_obj.images.map(this.createImageModel);
 
@@ -220,11 +220,11 @@ class Database {
       { user_id: id },
       {
         display_name,
-        genre_counts,
+        // genre_counts,
         images,
         top_artist_ids,
         top_track_ids,
-        total_genre_count
+        // total_genre_count
       },
       { new: true, upsert: true }
     ).exec();

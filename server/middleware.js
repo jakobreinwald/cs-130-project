@@ -285,18 +285,18 @@ class Middleware {
     const cached_tracks = this.db.createOrUpdateTracks(fetched_tracks);
     
     // Determine all artists associated with top tracks that are not already in top artists
-    const top_track_associated_artists = await this.getTopTrackAssociatedArtists(access_token, fetched_tracks, top_artist_ids)
-      .catch(console.error);
-    const cached_artists = this.db.createOrUpdateArtists(fetched_artists, top_track_associated_artists, listener_id);
+    // const top_track_associated_artists = await this.getTopTrackAssociatedArtists(access_token, fetched_tracks, top_artist_ids)
+      // .catch(console.error);
+    const cached_artists = this.db.createOrUpdateArtists(fetched_artists, [], listener_id);
     
     // Sum genre counts across top tracks and update genre documents in database
-    const genre_counts = this.calcGenreCounts(fetched_artists, fetched_tracks, top_track_associated_artists);
-    const cached_genres = this.db.createOrUpdateGenreCounts(genre_counts, listener_id);
+    // const genre_counts = this.calcGenreCounts(fetched_artists, fetched_tracks, top_track_associated_artists);
+    // const cached_genres = this.db.createOrUpdateGenreCounts(genre_counts, listener_id);
 
     // Create or update existing User document
-    const cached_user = await this.db.createOrUpdateUser(genre_counts, top_artist_ids, top_track_ids, fetched_user)
+    const cached_user = await this.db.createOrUpdateUser(null, top_artist_ids, top_track_ids, fetched_user)
       .catch(console.error);
-    const updates = [cached_albums, cached_artists, cached_genres, cached_tracks];
+    const updates = [cached_albums, cached_artists, cached_tracks];
 
     // Create Minuet Recommendations playlist if not already created, and store playlist id in User document
     const updated_user = this.createRecommendedTracksPlaylist(access_token, cached_user)
