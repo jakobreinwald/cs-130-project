@@ -179,10 +179,9 @@ class Middleware {
 
     // Cache recommendation track ids and track objects in database
     const cached_rec_ids = this.db.addRecommendations(rec_ids, user);
-    const cached_tracks = this.db.createOrUpdateTracks(recs);
+    const cached_tracks = this.db.createOrUpdateTracksWithAlbumAndArtists(recs);
 
-    return Promise.all([cached_rec_ids, cached_tracks, req_rec_ids])
-      .then(() => req_rec_ids);
+    return Promise.all([cached_rec_ids, cached_tracks]).then(() => req_rec_ids);
   }
 
   async getMatches(user_id, offset) {
@@ -212,8 +211,8 @@ class Middleware {
       rec_ids = rec_ids.concat(rem_rec_ids);
     }
 
-    // Fetch track objects from database
-    return this.db.getTracks(rec_ids);
+    // Fetch track objects with associated album and artist objects from database
+    return this.db.getFullTracks(rec_ids);
   }
 
   async getTopTrackAssociatedArtists(access_token, fetched_tracks, top_artist_ids) {
@@ -227,8 +226,30 @@ class Middleware {
       .then(artists => artists.map(({ data }) => data));
   }
 
-  async getUserProfile(user_id) {
-    return this.db.getUser(user_id);
+  async getUserProfile(num_top_artists, num_top_tracks, user_id) {
+    // Fetch user profile from database and extract top artist and track ids
+    const user = await this.db.getUserProfile(user_id).catch(console.error);
+
+    if (!user) {
+      return Promise.reject('Failed to fetch user profile');
+    }
+    
+    // Fetch full top artist and track info from database
+    const top_artist_ids = user.top_artist_ids.slice(0, num_top_artists);
+    const top_track_ids = user.top_track_ids.slice(0, num_top_tracks);
+    const artists_req = this.db.getArtists(top_artist_ids);
+    const tracks_req = this.db.getFullTracks(top_track_ids);
+    const [top_artists, top_tracks] = await Promise.all([artists_req, tracks_req])
+      .catch(console.error);
+
+    if (!top_artists || !top_tracks) {
+      return Promise.reject('Failed to fetch top artists and tracks for user');
+    }
+    
+    // Return user profile with full top artist and track info
+    delete user.top_artist_ids;
+    delete user.top_track_ids;
+    return { ...user, top_artists, top_tracks };
   }
 
   async likeMatch(user_id, match_id) {

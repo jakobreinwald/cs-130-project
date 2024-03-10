@@ -15,6 +15,7 @@ const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
 const api = new SpotifyAPI(client_id, client_secret, redirect_uri);
 const middleware = new Middleware(redirect_uri);
 
+
 // Middleware helpers
 
 function validateAuth(auth) {
@@ -40,7 +41,9 @@ function validateNumRecs(num_recs) {
   return casted_num_recs;
 }
 
+
 // GET endpoints
+
 app.get('/login', (req, res) => {
   res.redirect(api.getLoginRedirectURL());
 });
@@ -56,7 +59,7 @@ app.get('/callback', (req, res) => {
 app.get('/users/:id/matches', (req, res) => {});
 
 app.get('/users/:id/profile', (req, res) => {
-  middleware.getUserProfile(req.params.id)
+  middleware.getUserProfile(5, 5, req.params.id)
     .then(user => res.json(user))
     .catch(console.error);
 });
@@ -81,6 +84,7 @@ app.get('/users/:id/recs', (req, res) => {
 
 
 // POST endpoints
+
 app.post('/users/:user_id/recs/:rec_id', (req, res) => {
   // Extract access token from request auth and get action from query string
   const access_token = validateAuth(req.header('Authorization'));
