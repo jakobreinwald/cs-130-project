@@ -4,7 +4,7 @@ import ProfileCard from '../components/profileCard'
 import { Card, CardContent } from '@mui/material';
 import { Box, Typography, Divider, Avatar } from '@mui/material';
 
-function UserProfile({ token, displayName }) {
+function UserProfile({ token, displayName, profile }) {
 	// TODO replace placeholders with actual data
 	const newSongs = 5;
 	const newProfiles = 3;
@@ -25,7 +25,7 @@ function UserProfile({ token, displayName }) {
 	return (
 		<Box sx={{ bgcolor: 'background.primary', minHeight: '100vh', p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', }}>
 			<Box sx={{ display: 'flex', flexDirection: 'row', gap: 3, maxWidth: '75%', }}>
-				<Avatar sx={{ bgcolor: 'grey.900', width: 250, height: 250, m: 5, }} />
+				<Avatar sx={{ bgcolor: 'grey.900', width: 250, height: 250, m: 5, }} src={profile !== null ? profile.images[1].url : null} />
 				<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
 					<Typography variant="h2" sx={{ color: 'text.primary', mb: 3 }}>
 						Hi, {displayName}
@@ -107,7 +107,7 @@ function UserProfile({ token, displayName }) {
 					</CardContent>
 				</Card>
 			</Box>
-		</Box>
+		</Box >
 	);
 }
 

@@ -75,6 +75,7 @@ function App() {
 		console.log("PAIRED PROFILE: ", pairedProfile);
 		if (!("error" in pairedProfile)) {
 			setDisplayName(pairedProfile.display_name);
+			setProfile(pairedProfile);
 		}
 		return pairedProfile;
 	};
@@ -85,7 +86,7 @@ function App() {
 			setToken(testToken)
 	}
 	useEffect(() => {
-    	if(token)
+		if (token)
 			updateUserProfile(token);
 		getProfile();
 	}, [token])
@@ -95,7 +96,7 @@ function App() {
 		<ThemeProvider theme={theme}>
 			{token ? <NavBar removeToken={setToken} /> : null}
 			<Routes>
-				<Route path='/' element={token ? <UserProfile token={token} displayName={displayName} /> : <LandingPage />} />
+				<Route path='/' element={token ? <UserProfile token={token} displayName={displayName} profile={profile} /> : <LandingPage />} />
 				<Route path='/callback' element={token ? null : <TokenCall passToken={setToken} />} />
 				<Route path='/song-finder' element={token ? <SongFinder token={token} displayName={displayName} /> : <LandingPage />} />
 				<Route path='/profile-finder' element={token ? <ProfileFinder token={token} displayName={displayName} /> : <LandingPage />} />
