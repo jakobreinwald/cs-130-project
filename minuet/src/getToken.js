@@ -1,6 +1,6 @@
 
 function getToken() {
-  const clientId = "77f115f4019c42de927ebab0d2ddd231"; // Replace with your client ID
+  const clientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID; // Replace with your client ID
   const authenticate = async () => {redirectToAuthCodeFlow(clientId);}
 
   const getRefreshToken = async () => {

@@ -2,7 +2,7 @@ import {useEffect } from 'react';
 import {useNavigate } from 'react-router-dom';
 
 function TokenCall(props) {
-    const clientId = "77f115f4019c42de927ebab0d2ddd231"; // Replace with your client ID
+    const clientId = process.env.REACT_APP_SPOTIFY_CLIENT_ID; // Replace with your client ID
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
 

@@ -80,10 +80,15 @@ function App() {
 	};
 
 	useEffect(() => {
-		if (token) {
-			updateUserProfile(token);
-			getProfile();
-		}
+    if(!token){
+      let testToken = window.localStorage.getItem("access_token")
+      if(testToken)
+        setToken(testToken)
+    }
+    else{
+      updateUserProfile(token);
+      getProfile();
+    }
 	}, [token])
 
 	return (
@@ -94,7 +99,7 @@ function App() {
         <Route path='/callback' element={token ?  null : <TokenCall passToken = {setToken}/> } />
         <Route path='/song-finder' element={token ? <SongFinder token={token} displayName={displayName} /> : <LandingPage />} />
 				<Route path='/profile-finder' element={token ? <ProfileFinder token={token} displayName={displayName} /> : <LandingPage />} />
-				<Route path="/user/:userId" element={isLoggedIn ? <OtherUserProfile /> : <LandingPage />} />
+				<Route path="/user/:userId" element={token ? <OtherUserProfile /> : <LandingPage />} />
 			</Routes>
 		</ThemeProvider>
 	);
