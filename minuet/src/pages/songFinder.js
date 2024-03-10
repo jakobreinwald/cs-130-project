@@ -14,7 +14,11 @@ function SongFinder({ token, displayName }) {
 		console.log("RESULT: ", result.data);
 	};
 
-	useEffect(() => { fetchData(token, displayName); }, [token, displayName]);
+	useEffect(() => {
+		if (token !== null && displayName !== null) {
+			fetchData(token, displayName);
+		}
+	}, [token, displayName]);
 
 	const theme = useTheme();
 	const [direction, setDirection] = useState("down");
