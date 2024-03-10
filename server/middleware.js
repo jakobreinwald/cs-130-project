@@ -212,8 +212,11 @@ class Middleware {
 			rec_ids = rec_ids.concat(rem_rec_ids);
 		}
 
+		const tracks = await SpotifyAPI.fetchTracks(access_token, rec_ids);
+		console.log(tracks.data);
+
 		// Fetch track objects from database
-		return this.db.getTracks(rec_ids);
+		return tracks.data;
 	}
 
 	async getTopTrackAssociatedArtists(access_token, fetched_tracks, top_artist_ids) {

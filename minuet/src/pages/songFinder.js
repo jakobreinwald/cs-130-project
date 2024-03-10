@@ -7,11 +7,11 @@ import heart from '../assets/heart.svg';
 import { getUserRecs } from '../api';
 
 function SongFinder({ token, displayName }) {
-	const [data, setData] = useState('');
+	const [data, setData] = useState([]);
 	const fetchData = async (token, displayName) => {
 		const result = await getUserRecs(token, displayName);
-		setData(result.data);
-		console.log("RESULT: ", result.data);
+		setData(result.data.recs);
+		console.log("RESULT: ", result.data.recs);
 	};
 
 	useEffect(() => {
@@ -27,33 +27,6 @@ function SongFinder({ token, displayName }) {
 	const [slideIn, setSlideIn] = useState(true); // Used to trigger slide out animation
 	const [hasMatches, setHasMatches] = useState(true);
 
-	const songs = [
-		{
-			image: 'https://i.scdn.co/image/ab67616d0000b273318443aab3531a0558e79a4d',
-			mainText: 'All Too Well (10 Minute Version)',
-			subText: 'Taylor Swift'
-		},
-		{
-			image: 'https://i.scdn.co/image/ab67616d0000b273904445d70d04eb24d6bb79ac',
-			mainText: 'Welcome to New York',
-			subText: 'Taylor Swift'
-		},
-		{
-			image: 'https://i.scdn.co/image/ab67616d0000b27395f754318336a07e85ec59bc',
-			mainText: 'cardigan',
-			subText: 'Taylor Swift'
-		},
-		{
-			image: 'https://i.scdn.co/image/ab67616d0000b27333b8541201f1ef38941024be',
-			mainText: 'tolerate it',
-			subText: 'Taylor Swift'
-		},
-		{
-			image: 'https://i.scdn.co/image/ab67616d0000b273e787cffec20aa2a396a61647',
-			mainText: 'Cruel Summer',
-			subText: 'Taylor Swift'
-		},
-	]
 	const [likedSongs, setLikedSongs] = useState([]);
 	const [dislikedSongs, setDislikedSongs] = useState([]);
 
@@ -65,9 +38,9 @@ function SongFinder({ token, displayName }) {
 			setDirection("down");
 			setSlideIn(true);
 			if (hasMatches) {
-				setDislikedSongs(prevDisliked => prevDisliked.concat(songs[currentIndex]))
+				setDislikedSongs(prevDisliked => prevDisliked.concat(data[currentIndex]))
 			}
-			if (currentIndex < songs.length - 1) {
+			if (currentIndex < data.length - 1) {
 				setCurrentIndex((prevIndex) => (prevIndex + 1)); // Update index to next element
 			}
 			else {
@@ -84,10 +57,10 @@ function SongFinder({ token, displayName }) {
 			setDirection("down");
 			setSlideIn(true);
 			if (hasMatches) {
-				setLikedSongs(prevLiked => prevLiked.concat(songs[currentIndex]))
+				setLikedSongs(prevLiked => prevLiked.concat(data[currentIndex]))
 
 			}
-			if (currentIndex < songs.length - 1) {
+			if (currentIndex < data.length - 1) {
 				setCurrentIndex((prevIndex) => (prevIndex + 1)); // Update index to next element
 			}
 			else {
@@ -102,6 +75,15 @@ function SongFinder({ token, displayName }) {
 		console.log("Liked Songs Updated:", likedSongs);
 	}, [dislikedSongs, likedSongs]);
 
+	function millisecondsToMinutesAndSeconds(milliseconds) {
+		const totalSeconds = Math.floor(milliseconds / 1000);
+
+		const minutes = Math.floor(totalSeconds / 60);
+		const seconds = totalSeconds % 60;
+
+		return `${minutes}:${seconds}`;
+	}
+
 	return (
 		<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3, gap: 3, }}>
 			<Typography variant='h3'>
@@ -112,13 +94,14 @@ function SongFinder({ token, displayName }) {
 					<img src={xMark} alt="X Mark" style={{ maxWidth: '75%' }} />
 				</IconButton>
 				<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: 500, height: 600, }}>
-					{hasMatches ? songs.map((element, index) => (
+					{hasMatches ? data.map((element, index) => (
 						<Slide key={index} direction={direction} in={slideIn && index === currentIndex} mountOnEnter unmountOnExit>
 							<Box>
 								<FinderImage
-									image={element.image}
-									mainText={element.mainText}
-									subText={element.subText}
+									image={element.album.images[0].url}
+									mainText={element.name}
+									subText={`Track ${element.track_number}, ${millisecondsToMinutesAndSeconds(element.duration_ms)}`}
+									link={element.external_urls.spotify}
 								/>
 							</Box>
 						</Slide>

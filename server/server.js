@@ -81,7 +81,7 @@ app.get('/users/:id/recs', (req, res) => {
 	const user_id = req.params.id;
 
 	middleware.getRecommendations(access_token, user_id, num_recs)
-		.then(recs => res.json({ recs: recs }))
+		.then(recs => res.json({ recs: recs.tracks }))
 		.catch(console.error);
 });
 
