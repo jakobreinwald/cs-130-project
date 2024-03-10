@@ -85,7 +85,8 @@ function App() {
 			setToken(testToken)
 	}
 	useEffect(() => {
-		updateUserProfile(token);
+    	if(token)
+			updateUserProfile(token);
 		getProfile();
 	}, [token])
 

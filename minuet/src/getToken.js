@@ -31,12 +31,19 @@ function getToken() {
     const verifier = generateCodeVerifier(128);
     const challenge = await generateCodeChallenge(verifier);
 
+    const playlist_scopes = 'playlist-read-private playlist-modify-private playlist-modify-public';
+    const follow_scopes = 'user-follow-modify user-follow-read';
+    const listening_scopes = 'user-top-read user-read-recently-played';
+    const library_scopes = 'user-library-read';
+    const user_scopes = 'user-read-private user-read-email';
+    const scope = `${playlist_scopes} ${follow_scopes} ${listening_scopes} ${library_scopes} ${user_scopes}`;
+
     window.localStorage.setItem("verifier", verifier);
     const params = new URLSearchParams();
     params.append("client_id", clientId);
     params.append("response_type", "code");
     params.append("redirect_uri", "http://localhost:3000/callback");
-    params.append("scope", "user-read-private user-read-email");
+    params.append("scope", scope);
     params.append("code_challenge_method", "S256");
     params.append("code_challenge", challenge);
 
@@ -69,7 +76,7 @@ function getToken() {
   else{
     let timestamp = window.localStorage.getItem("timestamp")
     let timeElapsed = Math.floor((Date.now() - timestamp ) / 1000)
-    if(timeElapsed > 60){
+    if(timeElapsed > 1800){
       getRefreshToken();
       token = window.localStorage.getItem("access_token")
       window.localStorage.setItem("timestamp", Date.now())
