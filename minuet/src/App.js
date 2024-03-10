@@ -64,8 +64,8 @@ function App() {
 
 	const [token, setToken] = useState("");
 	const [profile, setProfile] = useState(null);
-  const [displayName, setDisplayName] = useState(null);
-  
+	const [displayName, setDisplayName] = useState(null);
+
 	async function getProfile() {
 		const result = await fetch("https://api.spotify.com/v1/me", {
 			method: "GET",
@@ -79,24 +79,24 @@ function App() {
 		return pairedProfile;
 	};
 
-  if(!token){
-    let testToken = window.localStorage.getItem("access_token")
-    if(testToken)
-      setToken(testToken)
-  }
+	if (!token) {
+		let testToken = window.localStorage.getItem("access_token")
+		if (testToken)
+			setToken(testToken)
+	}
 	useEffect(() => {
-      updateUserProfile(token);
-      getProfile();
+		updateUserProfile(token);
+		getProfile();
 	}, [token])
-  
+
 
 	return (
 		<ThemeProvider theme={theme}>
-			{token ? <NavBar removeToken = {setToken}/> : null}
+			{token ? <NavBar removeToken={setToken} /> : null}
 			<Routes>
 				<Route path='/' element={token ? <UserProfile token={token} displayName={displayName} /> : <LandingPage />} />
-        <Route path='/callback' element={token ?  null : <TokenCall passToken = {setToken}/> } />
-        <Route path='/song-finder' element={token ? <SongFinder token={token} displayName={displayName} /> : <LandingPage />} />
+				<Route path='/callback' element={token ? null : <TokenCall passToken={setToken} />} />
+				<Route path='/song-finder' element={token ? <SongFinder token={token} displayName={displayName} /> : <LandingPage />} />
 				<Route path='/profile-finder' element={token ? <ProfileFinder token={token} displayName={displayName} /> : <LandingPage />} />
 				<Route path="/user/:userId" element={token ? <OtherUserProfile /> : <LandingPage />} />
 			</Routes>
