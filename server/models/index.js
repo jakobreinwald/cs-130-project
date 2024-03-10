@@ -5,6 +5,7 @@ const Genre = require('./genre');
 const Image = require('./image');
 const Track = require('./track');
 const User = require('./user');
+const Match = require('./match');
 
 // Export models
 module.exports = {
@@ -13,5 +14,6 @@ module.exports = {
   Genre,
   Image,
   Track,
-  User
+  User,
+  Match
 };
