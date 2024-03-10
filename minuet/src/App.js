@@ -79,21 +79,20 @@ function App() {
 		return pairedProfile;
 	};
 
+  if(!token){
+    let testToken = window.localStorage.getItem("access_token")
+    if(testToken)
+      setToken(testToken)
+  }
 	useEffect(() => {
-    if(!token){
-      let testToken = window.localStorage.getItem("access_token")
-      if(testToken)
-        setToken(testToken)
-    }
-    else{
       updateUserProfile(token);
       getProfile();
-    }
 	}, [token])
+  
 
 	return (
 		<ThemeProvider theme={theme}>
-			{token ? <NavBar /> : null}
+			{token ? <NavBar removeToken = {setToken}/> : null}
 			<Routes>
 				<Route path='/' element={token ? <UserProfile token={token} displayName={displayName} /> : <LandingPage />} />
         <Route path='/callback' element={token ?  null : <TokenCall passToken = {setToken}/> } />
