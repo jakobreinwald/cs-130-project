@@ -3,9 +3,9 @@ import SongCard from '../components/songCard'
 import ProfileCard from '../components/profileCard'
 import { Box, Typography, Divider, Avatar } from '@mui/material';
 
-function UserProfile() {
+function UserProfile(props) {
   // TODO replace placeholders with actual data
-    const username = "{username}";
+    const username = props.displayName;
     const newSongs = 5;
     const newProfiles = 3;
     const matchedSongInfo = [
