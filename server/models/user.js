@@ -15,16 +15,22 @@ const User = new mongoose.Schema(
       type: Map,
       of: Number,
     },
-    matched_user_ids: {
-      type: [String]
-    },
     matched_user_to_outcome: {
       type: Map,
       of: {
         type: String,
         enum: ['liked', 'dismissed', 'matched', 'none'],
         default: 'none',
-      }
+      },
+      default: new Map()
+    },
+    recommended_and_fresh_tracks: {
+      type: Map,
+      of: {
+        type: String,
+        default: ''
+      },
+      default: new Map()
     },
     recommended_track_to_outcome: {
       type: Map,
@@ -32,7 +38,11 @@ const User = new mongoose.Schema(
         type: String,
         enum: ['liked', 'dismissed', 'none'],
         default: 'none',
-      }
+      },
+      default: new Map()
+    },
+    recommended_tracks_playlist_id: {
+      type: String
     },
     top_artist_ids: {
       type: [String]
