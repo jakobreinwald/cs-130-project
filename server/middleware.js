@@ -204,8 +204,20 @@ class Middleware {
       }
     });
 
-    // return updated matches
-    return this.db.getMatches(user_id);
+    if (!recs) {
+      return Promise.reject('Failed to fetch recommendations');
+    }
+
+    // Filter old recs and extract first num_req track ids, immediately returned in response
+    const rec_ids = recs.filter(({ id }) => !recommended_track_to_outcome.has(id))
+      .map(({ id }) => id);
+    const req_rec_ids = rec_ids.slice(0, num_req);
+
+    // Cache recommendation track ids and track objects in database
+    const cached_rec_ids = this.db.addRecommendations(rec_ids, user);
+    const cached_tracks = this.db.createOrUpdateTracksWithAlbumAndArtists(recs);
+
+    return Promise.all([cached_rec_ids, cached_tracks]).then(() => req_rec_ids);
   }
 
   // potential matches are a list of potential matches for the user, sorted by match score
@@ -236,9 +248,8 @@ class Middleware {
       rec_ids = await this.generateRecommendations(access_token, user_id, 10, rem_req).catch(console.error);
     }
 
-    // Fetch track objects from database
-    const recs = rec_ids.map(track_id => this.db.getTrack(track_id))
-    return Promise.all(recs);
+    // Fetch track objects with associated album and artist objects from database
+    return this.db.getFullTracks(rec_ids);
   }
 
   async getTopTrackAssociatedArtists(access_token, fetched_tracks, top_artist_ids) {
@@ -252,8 +263,30 @@ class Middleware {
       .then(res => res.map(artist => artist.data));
   }
 
-  async getUser(user_id) {
-    return this.db.getUser(user_id);
+  async getUserProfile(num_top_artists, num_top_tracks, user_id) {
+    // Fetch user profile from database and extract top artist and track ids
+    const user = await this.db.getUserProfile(user_id).catch(console.error);
+
+    if (!user) {
+      return Promise.reject('Failed to fetch user profile');
+    }
+    
+    // Fetch full top artist and track info from database
+    const top_artist_ids = user.top_artist_ids.slice(0, num_top_artists);
+    const top_track_ids = user.top_track_ids.slice(0, num_top_tracks);
+    const artists_req = this.db.getArtists(top_artist_ids);
+    const tracks_req = this.db.getFullTracks(top_track_ids);
+    const [top_artists, top_tracks] = await Promise.all([artists_req, tracks_req])
+      .catch(console.error);
+
+    if (!top_artists || !top_tracks) {
+      return Promise.reject('Failed to fetch top artists and tracks for user');
+    }
+    
+    // Return user profile with full top artist and track info
+    delete user.top_artist_ids;
+    delete user.top_track_ids;
+    return { ...user, top_artists, top_tracks };
   }
 
   async likeMatch(user_id, match_id) {

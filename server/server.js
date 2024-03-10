@@ -20,6 +20,7 @@ const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
 const api = new SpotifyAPI(client_id, client_secret, redirect_uri);
 const middleware = new Middleware(redirect_uri);
 
+
 // Middleware helpers
 function validateAuth(auth, res) {
   if (!auth) {
@@ -30,7 +31,23 @@ function validateAuth(auth, res) {
   return auth.split(' ')[1];
 }
 
+function validateNumRecs(num_recs) {
+  if (num_recs === undefined) { // default to 10 if num_recs not provided
+    return 10;
+  }
+
+  const casted_num_recs = Number(num_recs);
+
+  if (!Number.isInteger(casted_num_recs) || casted_num_recs < 1) {
+    return null;
+  }
+
+  return casted_num_recs;
+}
+
+
 // GET endpoints
+
 app.get('/login', (req, res) => {
   res.redirect(api.getLoginRedirectURL());
 });
@@ -58,7 +75,7 @@ app.get('/users/:id/potential_matches', (req, res) => {
 });
 
 app.get('/users/:id/profile', (req, res) => {
-  middleware.getUser(req.params.id)
+  middleware.getUserProfile(5, 5, req.params.id)
     .then(user => res.json(user))
     .catch(console.error);
 });
@@ -83,6 +100,7 @@ app.get('/users/:id/potential_matches/:match_id', (req, res) => {
 });
 
 // POST endpoints
+
 app.post('/users/:user_id/recs/:rec_id', (req, res) => {
   // Get action from query string, either 'like' or 'dismiss'
   const action = req.query.action;
