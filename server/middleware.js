@@ -102,11 +102,15 @@ class Middleware {
 
 	async generateRecommendations(access_token, user_id, batch_len, num_req) {
 		// Fetch user document from database and extract top artists
+		if (access_token === null || user_id === null || user_id === "null") {
+			console.error("No access token or user_id. ");
+		}
+		console.log("DATA: ", access_token, user_id, batch_len, num_req);
 		const user = await this.db.getUser(user_id).catch(console.error);
 		const top_artists = user.top_artist_ids;
 
 		// Extract top genres, sorted descending by count
-		const top_genres = user.genre_counts
+		const top_genres = Array.from(user.genre_counts)
 			.sort((a, b) => b[1] - a[1])
 			.map(genre => genre[0]);
 
@@ -121,9 +125,10 @@ class Middleware {
 			const selected_genres = top_genres.slice(genre_offset, genre_offset + 5);
 
 			// Call recommendation endpoint of Spotify API to fetch recommended tracks
-			const recs = this.api.fetchRecommendedTracks(access_token, batch_len, selected_artists, selected_genres)
+			const recs = await this.api.fetchRecommendedTracks(access_token, batch_len, selected_artists, selected_genres)
 				.then(response => response.data.tracks)
 				.catch(console.error);
+			console.log("RECS: ", recs)
 
 			// Keep track of first num_req recommended track ids, immediately returned in response
 			const rem_req = num_req - rec_ids.length;
