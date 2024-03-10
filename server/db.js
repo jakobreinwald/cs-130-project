@@ -83,7 +83,7 @@ class Database {
   createTrackModel(track_obj) {
     // Convert Spotify API object to Track model
     return {
-      album_id: track_obj.album.id,
+      album: track_obj.album.id,
       artist_ids: track_obj.artists.map(({ id }) => id),
       name: track_obj.name,
       preview_url: track_obj.preview_url,
@@ -283,6 +283,27 @@ class Database {
 
   async getTracks(track_ids) {
     return Track.find({ track_id: { $in: track_ids } }).lean().exec();
+  }
+
+  async getTracksWithAlbumAndArtists(track_ids) {
+    const cached_tracks = await this.getTracks(track_ids).catch(console.error);
+
+    if (!cached_tracks) {
+      return Promise.reject('Failed to fetch tracks from database');
+    }
+
+    const album_ids = cached_tracks.map(({ album_id }) => album_id);
+    const artist_ids = cached_tracks.flatMap(({ artist_ids }) => artist_ids);
+
+    const cached_albums = this.getAlbums(album_ids);
+    const cached_artists = this.getArtists(artist_ids);
+    const albums_and_artists = await Promise.all([cached_albums, cached_artists]).catch(console.error);
+
+    if (!albums_and_artists) {
+      return Promise.reject('Failed to fetch albums and artists from database');
+    }
+
+    const [albums, artists] = albums_and_artists;
   }
 
   async getUser(user_id) {
