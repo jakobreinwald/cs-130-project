@@ -135,7 +135,7 @@ class Middleware {
   }
 
   async fetchRecommendations(access_token, batch_len, top_artists, top_tracks) {
-    // At time of implementation, 50 top artists and 50 top tracks are cached
+    // At time of implementation, max of 50 top artists and 50 top tracks cached respectively
     const num_recs_fetched = top_artists.length + top_tracks.length;
     let rec_batches = [];
     
@@ -162,7 +162,7 @@ class Middleware {
 
   async generateRecommendations(access_token, user, batch_len, num_req) {
     // Fetch user document from database and extract top artists
-    const { recommended_track_to_outcome, top_artist_ids, top_track_ids, user_id } = user;
+    const { recommended_track_to_outcome, top_artist_ids, top_track_ids } = user;
 
     // Fetch recommendations from Spotify API
     const recs = await this.fetchRecommendations(access_token, batch_len, top_artist_ids, top_track_ids)
@@ -172,23 +172,13 @@ class Middleware {
       return Promise.reject('Failed to fetch recommendations');
     }
 
-    // Keep track of first num_req recommended track ids, immediately returned in response
-    const rec_ids = recs.map(({ id }) => id);
-    let req_rec_ids = [];
-    
-    // Ensure old recommendations are not included in response
-    for (const rec_id of rec_ids) {
-      if (!recommended_track_to_outcome.has(rec_id) || recommended_track_to_outcome.get(rec_id) === 'none') {
-        req_rec_ids.push(rec_id);
-      }
-
-      if (req_rec_ids.length === num_req) {
-        break;
-      }
-    }
+    // Filter old recs and extract first num_req track ids, immediately returned in response
+    const rec_ids = recs.filter(({ id }) => !recommended_track_to_outcome.has(id))
+      .map(({ id }) => id);
+    const req_rec_ids = rec_ids.slice(0, num_req);
 
     // Cache recommendation track ids and track objects in database
-    const cached_rec_ids = this.db.addRecommendations(user, rec_ids);
+    const cached_rec_ids = this.db.addRecommendations(rec_ids, user);
     const cached_tracks = this.db.createOrUpdateTracks(recs);
 
     return Promise.all([cached_rec_ids, cached_tracks, req_rec_ids])
@@ -202,13 +192,12 @@ class Middleware {
   async getRecommendations(access_token, user_id, num_req) {
     // Isolate first num_req recommendations that user has not yet interacted with
     const user = await this.db.getUserDocument(user_id).catch(console.error);
+    const fresh_recs = user.recommended_and_fresh_tracks.keys();
     let rec_ids = [];
 
-    for (const [track_id, outcome] of user.recommended_track_to_outcome) {
-      if (outcome === 'none') {
-        rec_ids.push(track_id);
-      }
-      
+    for (const rec_id of fresh_recs) {
+      rec_ids.push(rec_id);
+
       if (rec_ids.length === num_req) {
         break;
       }

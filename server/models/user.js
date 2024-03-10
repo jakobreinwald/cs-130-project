@@ -24,6 +24,14 @@ const User = new mongoose.Schema(
       },
       default: new Map()
     },
+    recommended_and_fresh_tracks: {
+      type: Map,
+      of: {
+        type: String,
+        default: ''
+      },
+      default: new Map()
+    },
     recommended_track_to_outcome: {
       type: Map,
       of: {

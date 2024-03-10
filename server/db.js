@@ -110,15 +110,12 @@ class Database {
     return Track.findOne({ track_id: track_id });
   }
 
-  async addRecommendations(user_doc, rec_ids) {
+  async addRecommendations(rec_ids, user_doc) {
     // Add new recommended tracks that user has not yet acted upon
-    user_doc.recommended_track_to_outcome = rec_ids.reduce((acc, rec_id) => {
-        if (!acc.has(rec_id)) {
-          acc.set(rec_id, 'none');
-        }
-
-        return acc;
-      }, user_doc.recommended_track_to_outcome);
+    user_doc.recommended_and_fresh_tracks = rec_ids.reduce((map, rec_id) => {
+        map.set(rec_id, '');
+        return map;
+      }, user_doc.recommended_and_fresh_tracks);
 
     return user_doc.save();
   }
@@ -238,7 +235,10 @@ class Database {
   async dismissRecommendation(user_id, rec_id) {
     return User.updateOne(
       { user_id: user_id },
-      { $set: { [`recommended_track_to_outcome.${rec_id}`]: 'dismissed' } }
+      {
+        $set: {[`recommended_track_to_outcome.${rec_id}`]: 'dismissed' },
+        $unset: {[`recommended_and_fresh_tracks.${rec_id}`]: '' }
+      }
     ).exec();
   }
 
@@ -249,7 +249,10 @@ class Database {
   async likeRecommendation(user_id, rec_id) {
     return User.findOneAndUpdate(
       { user_id: user_id },
-      { $set: { [`recommended_track_to_outcome.${rec_id}`]: 'liked' } },
+      {
+        $set: { [`recommended_track_to_outcome.${rec_id}`]: 'liked' },
+        $unset: { [`recommended_and_fresh_tracks.${rec_id}`]: '' }
+      },
       { fields: { _id: 0, recommended_tracks_playlist_id: 1 } }
     ).lean().exec();
   }
@@ -258,8 +261,16 @@ class Database {
     return Album.findOne({ album_id: album_id }).exec();
   }
 
+  async getAlbums(album_ids) {
+    return Album.find({ album_id: { $in: album_ids } }).lean().exec();
+  }
+
   async getArtist(artist_id) {
     return Artist.findOne({ artist_id: artist_id }).exec();
+  }
+
+  async getArtists(artist_ids) {
+    return Artist.find({ artist_id: { $in: artist_ids } }).lean().exec();
   }
 
   async getGenre(name) {
@@ -271,7 +282,7 @@ class Database {
   }
 
   async getTracks(track_ids) {
-    return Track.find({ track_id: { $in: track_ids } }).exec();
+    return Track.find({ track_id: { $in: track_ids } }).lean().exec();
   }
 
   async getUser(user_id) {
