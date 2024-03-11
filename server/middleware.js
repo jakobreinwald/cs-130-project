@@ -328,7 +328,7 @@ class Middleware {
 	}
 
 	async getUserProfile(num_top_artists, num_top_tracks, user_id) {
-		// Fetch user profile from database and extract top artist and track ids
+		// Fetch user profile from database
 		const user = await this.db.getUserProfile(user_id).catch(console.error);
 
 		if (!user) {
@@ -347,10 +347,28 @@ class Middleware {
 			return Promise.reject('Failed to fetch top artists and tracks for user');
 		}
 
+		const matched_users = await Promise.all(
+			Object.entries(user.matched_user_to_outcome)
+				.filter(([key, value]) => value === 'liked')
+				.map(async ([key, value]) => {
+					try {
+						return await this.db.getBasicUserProfile(key);
+					} catch (error) {
+						console.error(error);
+						return null; // Or handle the error accordingly
+					}
+				})
+		);
+
 		// Return user profile with full top artist and track info
 		delete user.top_artist_ids;
 		delete user.top_track_ids;
-		return { ...user, top_artists, top_tracks };
+		return {
+			...user,
+			top_artists,
+			top_tracks,
+			matched_users
+		};
 	}
 
 	async likeMatch(user_id, match_id) {

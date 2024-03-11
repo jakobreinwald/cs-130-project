@@ -9,7 +9,7 @@ import OtherUserProfile from './pages/otherUserProfile';
 import LandingPage from './pages/landingPage';
 import React, { useState, useEffect } from 'react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { updateUserProfile } from './api/index'
+import { getUserProfile, getRecommnededTracks, getPlaylist, updateUserProfile } from './api/index'
 
 const theme = createTheme({
 	palette: {
@@ -58,8 +58,6 @@ const theme = createTheme({
 	},
 });
 
-const isLoggedIn = true; //todo based on whether logged in or not
-
 function App() {
 	const [token, setToken] = useState("");
 	const [profile, setProfile] = useState(null);
@@ -71,10 +69,29 @@ function App() {
 			headers: { "Authorization": "Bearer " + token },
 		});
 		const pairedProfile = await result.json();
-		console.log("PAIRED PROFILE: ", pairedProfile);
 		if (!("error" in pairedProfile)) {
 			setDisplayName(pairedProfile.display_name);
 			setProfile(pairedProfile);
+			const dbProfile = await getUserProfile(pairedProfile.display_name);
+			// TODO: add recs for account
+			// const recommendedTracks = await getRecommendedTracks(
+			// 	Object.entries(dbProfile.data.recommended_track_to_outcome).filter(([key, value]) => value === 'liked').map(([key]) => key)
+			// );
+			const recommendedTracks = [];
+			const matchedUsersLinks = await Promise.all(
+				Object.entries(dbProfile.data.matched_users)
+					.filter(([key, value]) => value !== 'liked')
+					.map(async ([key, value]) => {
+						if (value.hasOwnProperty('recommended_tracks_playlist_id')) {
+							const playlistData = await getPlaylist(token, value.recommended_tracks_playlist_id);
+							return playlistData.data.external_urls.spotify;
+						}
+						return null;
+					})
+			);
+			setProfile({ ...dbProfile.data, recommendedTracks, matchedUsersLinks });
+			console.log("Profile: ", { ...dbProfile.data, recommendedTracks, matchedUsersLinks });
+			return dbProfile;
 		}
 		return pairedProfile;
 	};
@@ -85,13 +102,13 @@ function App() {
 			setToken(testToken)
 	}
 	useEffect(() => {
+		console.log("hello", token)
 		if (token) {
-			getProfile();
+			const dummyProfile = getProfile();
 			// updateUserProfile(token);
+
 		}
 	}, [token])
-
-
 
 	return (
 		<ThemeProvider theme={theme}>

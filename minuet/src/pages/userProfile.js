@@ -1,26 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import SongCard from '../components/songCard'
 import ProfileCard from '../components/profileCard'
-import { Card, CardContent } from '@mui/material';
+import { Card, CardContent, Link } from '@mui/material';
 import { Box, Typography, Divider, Avatar } from '@mui/material';
 
 function UserProfile({ token, displayName, profile }) {
 	// TODO replace placeholders with actual data
-	const newSongs = 5;
-	const newProfiles = 3;
+	const [matchedUsers, setMatchedUsers] = useState([]);
+	const [newUsers, setNewUsers] = useState(0);
+	const [matchedSongs, setMatchedSongs] = useState([]);
+	const [newSongs, setNewSongs] = useState(0);
 
-	const matchedSongInfo = [
-		{ name: "Song Name", artist: "Artist Name" },
-		{ name: "Song Name", artist: "Artist Name" },
-		{ name: "Song Name", artist: "Artist Name" },
-		{ name: "Song Name", artist: "Artist Name" },
-		{ name: "Song Name", artist: "Artist Name" }
-	]
-	const matchedProfileInfo = [
-		{ name: "Katelyn", id: 0 },
-		{ name: "Ryan", id: 1 },
-		{ name: "Matt", id: 2 },
-	]
+	useEffect(() => {
+		if (profile !== null && profile.hasOwnProperty('recommendedTracks')) {
+			setMatchedSongs(profile.recommendedTracks);
+			setNewSongs(profile.recommendedTracks.length);
+		}
+	}, [profile])
+
+	useEffect(() => {
+		if (profile !== null && profile.hasOwnProperty('matched_users') && profile.hasOwnProperty('matchedUsersLinks')) {
+			setMatchedUsers(profile.matched_users.map((object, index) => ({ ...object, link: profile.matchedUsersLinks[index] })));
+			setNewUsers(profile.matched_users.length);
+		}
+	}, [profile])
 
 	return (
 		<Box sx={{ bgcolor: 'background.primary', minHeight: '100vh', p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', }}>
@@ -31,7 +34,7 @@ function UserProfile({ token, displayName, profile }) {
 						Hi, {displayName}
 					</Typography>
 					<Typography variant="h4" sx={{ color: 'text.primary' }}>
-						You've discovered <b>{newSongs}</b> new songs and <b>{newProfiles}</b> new profiles! Keep on exploring :)
+						You've discovered <b>{newSongs}</b> new song(s) and <b>{newUsers}</b> new profile(s)! Keep on exploring :)
 					</Typography>
 				</Box>
 			</Box>
@@ -41,42 +44,14 @@ function UserProfile({ token, displayName, profile }) {
 						<Typography gutterBottom variant="h5" component="div" align='center'>
 							<b>Matched Songs</b>
 						</Typography>
-						{/* TODO: Replace with actual song data */}
-						<Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
-							<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" />
-							<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
-								<Typography variant="body1">Song Name</Typography>
-								<Typography variant="body2">Artist Name</Typography>
-							</Box>
-						</Box>
-						<Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
-							<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" />
-							<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
-								<Typography variant="body1">Song Name</Typography>
-								<Typography variant="body2">Artist Name</Typography>
-							</Box>
-						</Box>
-						<Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
-							<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" />
-							<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
-								<Typography variant="body1">Song Name</Typography>
-								<Typography variant="body2">Artist Name</Typography>
-							</Box>
-						</Box>
-						<Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
-							<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" />
-							<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
-								<Typography variant="body1">Song Name</Typography>
-								<Typography variant="body2">Artist Name</Typography>
-							</Box>
-						</Box>
-						<Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
-							<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" />
-							<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
-								<Typography variant="body1">Song Name</Typography>
-								<Typography variant="body2">Artist Name</Typography>
-							</Box>
-						</Box>
+						{matchedSongs.map((match, index) =>
+							<Box key={index} sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
+								<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" />
+								<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
+									<Typography variant="body1">Song Name</Typography>
+									<Typography variant="body2">Artist Name</Typography>
+								</Box>
+							</Box>)}
 					</CardContent>
 				</Card>
 				<Divider orientation="vertical" flexItem />
@@ -85,25 +60,16 @@ function UserProfile({ token, displayName, profile }) {
 						<Typography gutterBottom variant="h5" component="div" align='center'>
 							<b>Matched Profiles</b>
 						</Typography>
-						{/* TODO: Replace with actual profile data */}
-						<Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
-							<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" />
-							<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
-								<Typography variant="body1">Profile Name</Typography>
+						{matchedUsers.map((match, index) =>
+							<Box key={index} sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
+								<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={match.images[1].url} />
+								<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
+									<Link src={match.link}>
+										<Typography variant="body1">{match.link}</Typography>
+									</Link>
+								</Box>
 							</Box>
-						</Box>
-						<Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
-							<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" />
-							<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
-								<Typography variant="body1">Profile Name</Typography>
-							</Box>
-						</Box>
-						<Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
-							<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" />
-							<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
-								<Typography variant="body1">Profile Name</Typography>
-							</Box>
-						</Box>
+						)}
 					</CardContent>
 				</Card>
 			</Box>

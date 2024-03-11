@@ -76,7 +76,7 @@ app.get('/users/:id/potential_matches', (req, res) => {
 });
 
 app.get('/users/:id/profile', (req, res) => {
-	middleware.getUserProfile(5, 5, req.params.id)
+	return middleware.getUserProfile(5, 5, req.params.id)
 		.then(user => res.json(user))
 		.catch(console.error);
 });

@@ -394,6 +394,18 @@ class Database {
 		return this.getUserQuery(user_id).exec();
 	}
 
+	async getBasicUserProfile(user_id) {
+		return this.getUserQuery(user_id)
+			.select({
+				_id: 0,
+				display_name: 1,
+				images: 1,
+				recommended_tracks_playlist_id: 1,
+			})
+			.lean()
+			.exec();
+	}
+
 	async getUserProfile(user_id) {
 		return this.getUserQuery(user_id)
 			.select({
@@ -402,7 +414,12 @@ class Database {
 				images: 1,
 				top_artist_ids: 1,
 				top_track_ids: 1,
-				user_id: 1
+				user_id: 1,
+				matched_user_to_outcome: 1,
+				genre_counts: 1,
+				recommended_and_fresh_tracks: 1,
+				recommended_tracks_playlist_id: 1,
+				recommended_track_to_outcome: 1,
 			})
 			.lean()
 			.exec();
@@ -423,20 +440,6 @@ class Database {
 	// TODO: delete temporary fix?
 	async getAllUsers() {
 		return User.find().exec();
-	}
-
-	async getUserProfile(user_id) {
-		return this.getUserQuery(user_id)
-			.select({
-				_id: 0,
-				display_name: 1,
-				images: 1,
-				top_artist_ids: 1,
-				top_track_ids: 1,
-				user_id: 1
-			})
-			.lean()
-			.exec();
 	}
 }
 
