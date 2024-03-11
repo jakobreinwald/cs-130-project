@@ -26,7 +26,8 @@ class Database {
     // Convert Spotify API object to Artist model
     const update_command = { $set: this.createArtistModel(artist_obj) };
 
-    if (listener_id && rank) {
+
+    if (listener_id && rank !== null) {
       update_command.$set[`listener_id_to_rank.${listener_id}`] = rank;
     }
 
@@ -292,6 +293,11 @@ class Database {
 
   async getMatches(user_id) {
     return User.findOne({ user_id: user_id }, 'matches -_id').exec();
+  }
+
+  // TODO: delete temporary fix?
+  async getAllUsers() {
+    return User.find().exec();
   }
 }
 
