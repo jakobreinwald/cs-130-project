@@ -67,8 +67,10 @@ class SpotifyAPI {
     );
   }
 
-  static async fetchArtist(access_token, artist_id) {
-    return axios.get(`${base_url}/artists/${artist_id}`, {
+  static async fetchArtists(access_token, artist_ids) {
+    const ids = artist_ids.join(',');
+
+    return axios.get(`${base_url}/artists/${ids}`, {
       headers: SpotifyAPI.getHeaders(access_token)
     });
   }
