@@ -9,6 +9,7 @@ import OtherUserProfile from './pages/otherUserProfile';
 import LandingPage from './pages/landingPage';
 import React, { useState, useEffect } from 'react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import {updateUserProfile} from './api/index'
 
 const theme = createTheme({
     palette: {
@@ -84,8 +85,10 @@ function App() {
 			setToken(testToken)
 	}
 	useEffect(() => {
-		if (token)
+		if (token){
 			getProfile();
+			updateUserProfile(token);
+		}
 	}, [token])
 
 

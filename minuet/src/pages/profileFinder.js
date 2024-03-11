@@ -4,14 +4,24 @@ import { Box, Typography, IconButton, Slide } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import xMark from '../assets/x-mark.svg';
 import heart from '../assets/heart.svg';
+import {getUserMatches} from '../api/index.js'
 
-function ProfileFinder() {
+function ProfileFinder(props) {
   const theme = useTheme();
     const [direction, setDirection] = useState("down");
 
     const [currentIndex, setCurrentIndex] = useState(0); // Track the current element to slide off
     const [slideIn, setSlideIn] = useState(true); // Used to trigger slide out animation
     const [hasMatches, setHasMatches] = useState(true);
+
+	const handler = async (id) => {
+		const result = await getUserMatches(id)
+		console.log(result.data)
+	};
+
+	useEffect(() => {
+		handler(props.displayName);
+	}, []);
 
     const pfs = [
       {
