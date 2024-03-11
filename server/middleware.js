@@ -87,7 +87,7 @@ class Middleware {
 
     // get genre_counts keys and sort by descending order
     // number of genres is in the thousands, so slice to get the top num_top_artists genres
-    let tmp = Array.from(genre_counts.entries()).sort((a, b) => b[1] - a[1]).map(entry => entry[0]);
+    let tmp = Array.from(Object.entries(genre_counts)).sort((a, b) => b[1] - a[1]).map(entry => entry[0]);
     const user_genres = tmp.slice(0, num_top_artists);
     let potential_matches = new Set();
 

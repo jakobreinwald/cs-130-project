@@ -21,7 +21,7 @@ function ProfileFinder(props) {
 		const getOtherProfiles = async (users) => {
 			let promises = [];
 			for(const [userId, value] of Object.entries(users)){
-				if (value === "none"){
+				if (value === "none" && userId[0] !== '3'){
 					promises.push(getUserProfile(userId))
 				}
 			}
