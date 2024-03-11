@@ -64,8 +64,8 @@ function UserProfile({ token, displayName, profile }) {
 							<Box key={index} sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
 								<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={match.images[1].url} />
 								<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
-									<Link src={match.link}>
-										<Typography variant="body1">{match.link}</Typography>
+									<Link href={match.link} target="_blank" rel="noopener noreferrer">
+										<Typography variant="body1">{match.display_name}</Typography>
 									</Link>
 								</Box>
 							</Box>
