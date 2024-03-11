@@ -391,8 +391,13 @@ class Middleware {
         }, top_and_cached_artists_with_genres);
         return { artist_id_to_genres, uncached_artists };
       })
-      .catch(error => {
-        console.error(error);
+      .catch(({ response }) => {
+        if (response.status === 429) {
+          console.error('/artists rate limit exceeded, calculating genre counts by top artists');
+        } else {
+          console.error(response);
+        }
+
         return { artist_id_to_genres: top_artists_to_genres, uncached_artists: [] };
       });
   }
