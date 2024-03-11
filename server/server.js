@@ -8,6 +8,11 @@ const Middleware = require('./middleware');
 const SpotifyAPI = require('./spotify_api');
 const app = express();
 require('dotenv').config({ path: '.env.local' });
+const cors = require("cors");
+const corsOptions = {
+	origin: "http://localhost:3000",
+  };
+app.use(cors(corsOptions));
 
 // Setup API client
 const client_id = process.env.SPOTIFY_CLIENT_ID;
@@ -103,7 +108,6 @@ app.get('/users/:id/potential_matches/:match_id', (req, res) => {
   res.json({ profile_name: profile_name, top_artist: top_artist });
 });
 
-
 // POST endpoints
 
 app.post('/users/:user_id/recs/:rec_id', (req, res) => {
@@ -130,7 +134,7 @@ app.post('/users/:user_id/recs/:rec_id', (req, res) => {
 app.post('/users', (req, res) => {
   // Validate request authorization and extract access token
   const access_token = validateAuth(req.header('Authorization'), res);
-
+	console.log(access_token);
   // Use access token to fetch user profile and top items from Spotify API
   middleware.updateLoggedInUser(access_token)
     .then(user => res.json(user))

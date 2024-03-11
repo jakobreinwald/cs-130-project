@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import MinuetLogo from '../assets/logo.svg'
 import { Box, Button, Typography } from '@mui/material';
+import getToken from '../getToken.js'
 
 const ResizableSVG = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth * 0.4);
@@ -39,6 +40,7 @@ function LandingPage() {
               </Typography>
           </Box>
           <Button 
+            onClick = {getToken}
             variant="contained" 
             sx={{ backgroundColor: 'theme.palette.primary.main', borderRadius: '30px', width: '100%'}}>
               <Typography variant="p" sx={{ color: 'text.primary', fontSize: '28px', fontWeight: 500 }}>

@@ -98,25 +98,34 @@ class Middleware {
 
     // get genre_counts keys and sort by descending order
     // number of genres is in the thousands, so slice to get the top num_top_artists genres
-    let tmp = Array.from(genre_counts.entries()).sort((a, b) => b[1] - a[1]).map(entry => entry[0]);
+    let tmp = Array.from(Object.entries(genre_counts)).sort((a, b) => b[1] - a[1]).map(entry => entry[0]);
     const user_genres = tmp.slice(0, num_top_artists);
     let potential_matches = new Set();
 
-    // loop through all genres and find all users who listen to the genre
-    for (const genre of user_genres) {
-      const genre_obj = await this.db.getGenre(genre);
-      for (const listener_id of genre_obj.listener_id_to_count.keys()) {
-        potential_matches.add(listener_id);
+    // TODO: delete temporary fix?
+    const all_user_objs = await this.db.getAllUsers();
+    for(const pot_user_obj of all_user_objs) {
+      if (pot_user_obj.user_id === user_id) {
+        continue;
       }
+      potential_matches.add(pot_user_obj.user_id);
     }
 
-    // loop through all artists and find all users who listen to the artist
-    for (const artist of top_artists) {
-      const artist_obj = await this.db.getArtist(artist);
-      for (const listener_id of artist_obj.listener_id_to_rank.keys()) {
-        potential_matches.add(listener_id);
-      }
-    }
+    // // loop through all genres and find all users who listen to the genre
+    // for (const genre of user_genres) {
+    //   const genre_obj = await this.db.getGenre(genre);
+    //   for (const listener_id of genre_obj.listener_id_to_count.keys()) {
+    //     potential_matches.add(listener_id);
+    //   }
+    // }
+
+    // // loop through all artists and find all users who listen to the artist
+    // for (const artist of top_artists) {
+    //   const artist_obj = await this.db.getArtist(artist);
+    //   for (const listener_id of artist_obj.listener_id_to_rank.keys()) {
+    //     potential_matches.add(listener_id);
+    //   }
+    // }
 
     for (const pot_user_id of potential_matches) {
       if (pot_user_id === user_id) {
@@ -251,8 +260,20 @@ class Middleware {
       }
     });
 
-    // return updated matches
-    return this.db.getMatches(user_id);
+    if (!recs) {
+      return Promise.reject('Failed to fetch recommendations');
+    }
+
+    // Filter old recs and extract first num_req track ids, immediately returned in response
+    const rec_ids = recs.filter(({ id }) => !recommended_track_to_outcome.has(id))
+      .map(({ id }) => id);
+    const req_rec_ids = rec_ids.slice(0, num_req);
+
+    // Cache recommendation track ids and track objects in database
+    const cached_rec_ids = this.db.addRecommendations(rec_ids, user);
+    const cached_tracks = this.db.createOrUpdateTracksWithAlbumAndArtists(recs);
+
+    return Promise.all([cached_rec_ids, cached_tracks]).then(() => req_rec_ids);
   }
 
   // potential matches are a list of potential matches for the user, sorted by match score
