@@ -83,10 +83,10 @@ class SpotifyAPI {
 		const seed_artists = top_artist_ids.join(',');
 		const seed_tracks = top_track_ids.join(',');
 
-		return axios.get(`${base_url}/recommendations`, {
-			headers: SpotifyAPI.getHeaders(access_token),
-			params: { limit, seed_artists, seed_tracks }
-		});
+		// return axios.get(`${base_url}/recommendations`, {
+		// 	headers: SpotifyAPI.getHeaders(access_token),
+		// 	params: { limit, seed_artists, seed_tracks }
+		// });
 	}
 
 	static async fetchUserProfile(access_token) {
