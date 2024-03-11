@@ -87,7 +87,7 @@ function App() {
 	useEffect(() => {
 		if (token){
 			getProfile();
-			updateUserProfile(token);
+			// updateUserProfile(token);
 		}
 	}, [token])
 
