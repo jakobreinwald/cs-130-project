@@ -5,7 +5,6 @@ import { Card, CardContent, Link } from '@mui/material';
 import { Box, Typography, Divider, Avatar } from '@mui/material';
 
 function UserProfile({ token, displayName, profile }) {
-	// TODO replace placeholders with actual data
 	const [matchedUsers, setMatchedUsers] = useState([]);
 	const [newUsers, setNewUsers] = useState(0);
 	const [matchedSongs, setMatchedSongs] = useState([]);
@@ -46,10 +45,10 @@ function UserProfile({ token, displayName, profile }) {
 						</Typography>
 						{matchedSongs.map((match, index) =>
 							<Box key={index} sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
-								<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" />
+								<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={match.album.images[1].url} />
 								<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
-									<Typography variant="body1">Song Name</Typography>
-									<Typography variant="body2">Artist Name</Typography>
+									<Typography variant="body1">{match.name}</Typography>
+									<Typography variant="body2">{match.artists.map(obj => obj.name).join(', ')}</Typography>
 								</Box>
 							</Box>)}
 					</CardContent>

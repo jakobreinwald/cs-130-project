@@ -5,7 +5,7 @@ import { Box, Typography, IconButton, Slide } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import xMark from '../assets/x-mark.svg';
 import heart from '../assets/heart.svg';
-import { getUserRecs } from '../api';
+import { getUserRecs, postNewSongDecision } from '../api';
 import PopularityIcon from '../components/popularityIcon';
 
 function SongFinder({ token, displayName }) {
@@ -71,11 +71,25 @@ function SongFinder({ token, displayName }) {
 		}, 500); // Timeout duration should match the slide out animation duration
 	};
 
+	const updateSongs = (songId, action) => {
+		postNewSongDecision(token, displayName, songId, action);
+	}
+
 	useEffect(() => {
 		// Send data to backend
 		console.log("Disliked Songs Updated:", dislikedSongs);
+		if (dislikedSongs.length > 0) {
+			updateSongs(dislikedSongs[dislikedSongs.length - 1].id, 'dismiss');
+		}
+	}, [dislikedSongs]);
+
+	useEffect(() => {
+		// Send data to backend
 		console.log("Liked Songs Updated:", likedSongs);
-	}, [dislikedSongs, likedSongs]);
+		if (likedSongs.length > 0) {
+			updateSongs(likedSongs[likedSongs.length - 1].id, 'like');
+		}
+	}, [likedSongs]);
 
 	function millisecondsToMinutesAndSeconds(milliseconds) {
 		const totalSeconds = Math.floor(milliseconds / 1000);
@@ -89,7 +103,7 @@ function SongFinder({ token, displayName }) {
 	return (
 		<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3, gap: 3, }}>
 			<Typography variant='h3'>
-				{displayName}, We think you'd like...
+				{displayName}, we think you'd like...
 			</Typography>
 			<Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, m: 3 }}>
 				<IconButton variant='contained' onClick={swipeLeft} sx={{ backgroundColor: theme.palette.swipeButton.red, borderRadius: '100%', width: 75, height: 75, '&:hover': { backgroundColor: theme.palette.swipeButton.redHover, }, }}>

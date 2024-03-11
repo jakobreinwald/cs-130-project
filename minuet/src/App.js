@@ -9,7 +9,7 @@ import OtherUserProfile from './pages/otherUserProfile';
 import LandingPage from './pages/landingPage';
 import React, { useState, useEffect } from 'react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { getUserProfile, getRecommnededTracks, getPlaylist, updateUserProfile } from './api/index'
+import { getUserProfile, getRecommendedTracks, getPlaylist, updateUserProfile } from './api/index'
 
 const theme = createTheme({
 	palette: {
@@ -73,11 +73,12 @@ function App() {
 			setDisplayName(pairedProfile.display_name);
 			setProfile(pairedProfile);
 			const dbProfile = await getUserProfile(pairedProfile.display_name);
-			// TODO: add recs for account
-			// const recommendedTracks = await getRecommendedTracks(
-			// 	Object.entries(dbProfile.data.recommended_track_to_outcome).filter(([key, value]) => value === 'liked').map(([key]) => key)
-			// );
-			const recommendedTracks = [];
+			const recommendedTracks = await getRecommendedTracks(
+				token,
+				Object.entries(dbProfile.data.recommended_track_to_outcome)
+					.filter(([key, value]) => value === 'liked')
+					.map(([key]) => key)
+			);
 			const matchedUsersLinks = await Promise.all(
 				Object.entries(dbProfile.data.matched_users)
 					.filter(([key, value]) => value !== 'liked')
@@ -89,9 +90,10 @@ function App() {
 						return `https://open.spotify.com/user/${pairedProfile.display_name}`;
 					})
 			);
-			setProfile({ ...dbProfile.data, recommendedTracks, matchedUsersLinks });
-			console.log("Profile: ", { ...dbProfile.data, recommendedTracks, matchedUsersLinks });
-			return dbProfile;
+			const frontEndUser = { ...dbProfile.data, recommendedTracks: recommendedTracks.data.tracks, matchedUsersLinks };
+			setProfile(frontEndUser);
+			console.log("Profile: ", frontEndUser);
+			return frontEndUser;
 		}
 		return pairedProfile;
 	};

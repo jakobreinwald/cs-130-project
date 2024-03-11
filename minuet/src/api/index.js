@@ -15,7 +15,12 @@ export const getUserRecs = (token, id) => axios.get(`${url}/users/${id}/recs`, {
 	}
 });
 export const getUserMatches = (id) => axios.post(`${url}/users/${id}/generate_potential_matches`, {}, {});
-export const getRecommendedTracks = (token, ids) => axios.get(`${spotify_url}/tracks/${'ids=' + ids.join(',')}`, {
+export const getRecommendedTracks = (token, ids) => axios.get(`${spotify_url}/tracks?ids=${ids.join(',')}`, {
+	headers: {
+		"Authorization": 'Bearer ' + token,
+	}
+});
+export const postNewSongDecision = (token, user_id, id, action) => axios.post(`${url}/users/${user_id}/recs/${id}?action=${action}`, {}, {
 	headers: {
 		"Authorization": 'Bearer ' + token,
 	}
