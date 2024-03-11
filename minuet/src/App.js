@@ -73,6 +73,7 @@ function App() {
 			setDisplayName(pairedProfile.display_name);
 			setProfile(pairedProfile);
 			const dbProfile = await getUserProfile(pairedProfile.display_name);
+			const userPlaylist = (await getPlaylist(token, dbProfile.data.recommended_tracks_playlist_id));
 			const recommendedTracks = await getRecommendedTracks(
 				token,
 				Object.entries(dbProfile.data.recommended_track_to_outcome)
@@ -90,7 +91,7 @@ function App() {
 						return `https://open.spotify.com/user/${pairedProfile.display_name}`;
 					})
 			);
-			const frontEndUser = { ...dbProfile.data, recommendedTracks: recommendedTracks.data.tracks, matchedUsersLinks };
+			const frontEndUser = { ...dbProfile.data, userPlaylist: userPlaylist.data, recommendedTracks: recommendedTracks.data.tracks, matchedUsersLinks };
 			setProfile(frontEndUser);
 			console.log("Profile: ", frontEndUser);
 			return frontEndUser;

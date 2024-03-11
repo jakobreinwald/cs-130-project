@@ -27,7 +27,9 @@ function UserProfile({ token, displayName, profile }) {
 	return (
 		<Box sx={{ bgcolor: 'background.primary', minHeight: '100vh', p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', }}>
 			<Box sx={{ display: 'flex', flexDirection: 'row', gap: 3, maxWidth: '75%', }}>
-				<Avatar sx={{ bgcolor: 'grey.900', width: 250, height: 250, m: 5, }} src={profile !== null ? profile.images[1].url : null} />
+				<Link href={displayName !== null ? `https://open.spotify.com/user/${displayName}` : null} target="_blank" rel="noopener noreferrer">
+					<Avatar sx={{ bgcolor: 'grey.900', width: 250, height: 250, m: 5, }} src={profile !== null ? profile.images[1].url : null} />
+				</Link>
 				<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
 					<Typography variant="h2" sx={{ color: 'text.primary', mb: 3 }}>
 						Hi, {displayName}
@@ -40,15 +42,21 @@ function UserProfile({ token, displayName, profile }) {
 			<Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, justifyContent: 'center', }}>
 				<Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '90%' }}>
 					<CardContent>
-						<Typography gutterBottom variant="h5" component="div" align='center'>
-							<b>Matched Songs</b>
-						</Typography>
+						<Link href={(profile !== null && profile.hasOwnProperty('userPlaylist')) ? profile.userPlaylist.external_urls.spotify : null} target="_blank" rel="noopener noreferrer">
+							<Typography gutterBottom variant="h5" component="div" align='center'>
+								<b>{(profile !== null && profile.hasOwnProperty('userPlaylist')) ? profile.userPlaylist.name : "Matched Songs"}</b>
+							</Typography>
+						</Link>
 						{matchedSongs.map((match, index) =>
 							<Box key={index} sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
 								<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={match.album.images[1].url} />
 								<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
-									<Typography variant="body1">{match.name}</Typography>
-									<Typography variant="body2">{match.artists.map(obj => obj.name).join(', ')}</Typography>
+									<Link href={match.album.external_urls.spotify} target="_blank" rel="noopener noreferrer">
+										<Typography variant="body1">{match.name}</Typography>
+									</Link>
+									<Link href={match.artists[0].external_urls.spotify} target="_blank" rel="noopener noreferrer">
+										<Typography variant="body2">{match.artists.map(obj => obj.name).join(', ')}</Typography>
+									</Link>
 								</Box>
 							</Box>)}
 					</CardContent>
