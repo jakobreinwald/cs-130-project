@@ -9,17 +9,18 @@ const SpotifyAPI = require('./spotify_api');
 const cors = require('cors');
 const app = express();
 require('dotenv').config({ path: '.env.local' });
-
-// Allow requests from our React app
-app.use(cors({
-	origin: 'http://localhost:3000'
-}));
+const cors = require("cors");
+const corsOptions = {
+	origin: "http://localhost:3000",
+};
+app.use(cors(corsOptions));
 
 // Setup API client
 const client_id = process.env.SPOTIFY_CLIENT_ID;
 const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
 const api = new SpotifyAPI(client_id, client_secret, redirect_uri);
 const middleware = new Middleware(redirect_uri);
+
 
 // Middleware helpers
 
@@ -46,7 +47,9 @@ function validateNumRecs(num_recs) {
 	return casted_num_recs;
 }
 
+
 // GET endpoints
+
 app.get('/login', (req, res) => {
 	res.redirect(api.getLoginRedirectURL());
 });
@@ -59,10 +62,22 @@ app.get('/callback', (req, res) => {
 		.catch(console.error);
 });
 
-app.get('/users/:id/matches', (req, res) => { });
+// TODO: test this endpoint
+app.get('/users/:id/mutual_matches', (req, res) => {
+	middleware.getMatches(req.params.id)
+		.then(matches => res.json(matches))
+		.catch(console.error);
+});
+
+// Used to retrieve potential matches for a user
+app.get('/users/:id/potential_matches', (req, res) => {
+	middleware.getPotentialMatches(req.params.id)
+		.then(matches => res.json(matches))
+		.catch(console.error);
+});
 
 app.get('/users/:id/profile', (req, res) => {
-	middleware.getUserProfile(req.params.id)
+	middleware.getUserProfile(5, 5, req.params.id)
 		.then(user => res.json(user))
 		.catch(console.error);
 });
@@ -85,8 +100,17 @@ app.get('/users/:id/recs', (req, res) => {
 		.catch(console.error);
 });
 
+// TODO: test endpoint
+app.get('/users/:id/potential_matches/:match_id', (req, res) => {
+	const pot_user_obj = middleware.getUser(req.params.match_id);
+	// display_name different from user_id
+	const profile_name = pot_user_obj.display_name;
+	const top_artist = pot_user_obj.top_artist_ids[0];
+	res.json({ profile_name: profile_name, top_artist: top_artist });
+});
 
 // POST endpoints
+
 app.post('/users/:user_id/recs/:rec_id', (req, res) => {
 	// Extract access token from request auth and get action from query string
 	const access_token = validateAuth(req.header('Authorization'));
@@ -111,10 +135,17 @@ app.post('/users/:user_id/recs/:rec_id', (req, res) => {
 app.post('/users', (req, res) => {
 	// Validate request authorization and extract access token
 	const access_token = validateAuth(req.header('Authorization'), res);
-
+	console.log(access_token);
 	// Use access token to fetch user profile and top items from Spotify API
 	middleware.updateLoggedInUser(access_token)
 		.then(user => res.json(user))
+		.catch(console.error);
+});
+
+// Use to generate potential matches for a user
+app.post('/users/:id/generate_potential_matches', (req, res) => {
+	middleware.generateMatches(req.params.id)
+		.then(matches => res.json(matches))
 		.catch(console.error);
 });
 

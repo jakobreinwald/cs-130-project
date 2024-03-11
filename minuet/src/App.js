@@ -2,6 +2,7 @@
 import TokenCall from './TokenCall'
 import NavBar from './components/navbar';
 import { Routes, Route } from 'react-router-dom';
+import TokenCall from './TokenCall'
 import ProfileFinder from './pages/profileFinder';
 import SongFinder from './pages/songFinder';
 import UserProfile from './pages/userProfile';
@@ -61,7 +62,6 @@ const theme = createTheme({
 const isLoggedIn = true; //todo based on whether logged in or not
 
 function App() {
-
 	const [token, setToken] = useState("");
 	const [profile, setProfile] = useState(null);
 	const [displayName, setDisplayName] = useState(null);
@@ -86,10 +86,12 @@ function App() {
 			setToken(testToken)
 	}
 	useEffect(() => {
-		if (token)
-			updateUserProfile(token);
-		getProfile();
+		if (token) {
+			getProfile();
+			// updateUserProfile(token);
+		}
 	}, [token])
+
 
 
 	return (

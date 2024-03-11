@@ -13,6 +13,8 @@ export const getUserRecs = (token, id) => axios.get(`${url}/users/${id}/recs`, {
 		"Authorization": 'Bearer ' + token,
 	}
 });
+
+export const getUserMatches = (id) => axios.post(`${url}/users/${id}/generate_potential_matches`, {}, {});
 // export const fetchProfile = ()
 
 // export const fetchUsers = () => axios.get(`${url}`);
