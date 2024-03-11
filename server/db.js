@@ -294,6 +294,11 @@ class Database {
   async getMatches(user_id) {
     return User.findOne({ user_id: user_id }, 'matches -_id').exec();
   }
+
+  // TODO: delete temporary fix?
+  async getAllUsers() {
+    return User.find().exec();
+  }
 }
 
 module.exports = Database;

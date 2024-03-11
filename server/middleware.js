@@ -57,21 +57,30 @@ class Middleware {
     const user_genres = tmp.slice(0, num_top_artists);
     let potential_matches = new Set();
 
-    // loop through all genres and find all users who listen to the genre
-    for (const genre of user_genres) {
-      const genre_obj = await this.db.getGenre(genre);
-      for (const listener_id of genre_obj.listener_id_to_count.keys()) {
-        potential_matches.add(listener_id);
+    // TODO: delete temporary fix?
+    const all_user_objs = await this.db.getAllUsers();
+    for(const pot_user_obj of all_user_objs) {
+      if (pot_user_obj.user_id === user_id) {
+        continue;
       }
+      potential_matches.add(pot_user_obj.user_id);
     }
 
-    // loop through all artists and find all users who listen to the artist
-    for (const artist of top_artists) {
-      const artist_obj = await this.db.getArtist(artist);
-      for (const listener_id of artist_obj.listener_id_to_rank.keys()) {
-        potential_matches.add(listener_id);
-      }
-    }
+    // // loop through all genres and find all users who listen to the genre
+    // for (const genre of user_genres) {
+    //   const genre_obj = await this.db.getGenre(genre);
+    //   for (const listener_id of genre_obj.listener_id_to_count.keys()) {
+    //     potential_matches.add(listener_id);
+    //   }
+    // }
+
+    // // loop through all artists and find all users who listen to the artist
+    // for (const artist of top_artists) {
+    //   const artist_obj = await this.db.getArtist(artist);
+    //   for (const listener_id of artist_obj.listener_id_to_rank.keys()) {
+    //     potential_matches.add(listener_id);
+    //   }
+    // }
 
     for (const pot_user_id of potential_matches) {
       if (pot_user_id === user_id) {
