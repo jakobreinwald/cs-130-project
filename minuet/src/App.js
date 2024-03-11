@@ -2,7 +2,6 @@
 import TokenCall from './TokenCall'
 import NavBar from './components/navbar';
 import { Routes, Route } from 'react-router-dom';
-import TokenCall from './TokenCall'
 import ProfileFinder from './pages/profileFinder';
 import SongFinder from './pages/songFinder';
 import UserProfile from './pages/userProfile';

@@ -9,7 +9,6 @@ const SpotifyAPI = require('./spotify_api');
 const cors = require('cors');
 const app = express();
 require('dotenv').config({ path: '.env.local' });
-const cors = require("cors");
 const corsOptions = {
 	origin: "http://localhost:3000",
 };
