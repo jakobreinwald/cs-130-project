@@ -26,7 +26,8 @@ class Database {
     // Convert Spotify API object to Artist model
     const update_command = { $set: this.createArtistModel(artist_obj) };
 
-    if (listener_id && rank) {
+
+    if (listener_id && rank !== null) {
       update_command.$set[`listener_id_to_rank.${listener_id}`] = rank;
     }
 
