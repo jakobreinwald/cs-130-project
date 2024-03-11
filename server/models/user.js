@@ -1,7 +1,7 @@
 // Dependencies
 const Image = require('./image');
-const mongoose = require('mongoose');
 const Match = require('./match');
+const mongoose = require('mongoose');
 
 // User schema
 const User = new mongoose.Schema(
@@ -33,13 +33,25 @@ const User = new mongoose.Schema(
       },
       default: new Map()
     },
+    recommended_and_fresh_tracks: {
+      type: Map,
+      of: {
+        type: String,
+        default: ''
+      },
+      default: new Map()
+    },
     recommended_track_to_outcome: {
       type: Map,
       of: {
         type: String,
         enum: ['liked', 'dismissed', 'none'],
         default: 'none',
-      }
+      },
+      default: new Map()
+    },
+    recommended_tracks_playlist_id: {
+      type: String
     },
     top_artist_ids: {
       type: [String]

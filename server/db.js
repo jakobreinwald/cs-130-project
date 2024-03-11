@@ -69,35 +69,55 @@ class Database {
     // Convert Spotify API object to Artist model
     return {
       genres: artist_obj.genres,
+      // TODO: this line is called every time the model is updated
       images: artist_obj.images ? artist_obj.images.map(this.createImageModel) : [],
       name: artist_obj.name
     };
   }
 
-  createImageModel(image_obj) {
-    return {
-      url: image_obj.url,
-      height: image_obj.height,
-      width: image_obj.width
-    };
+  createImageModel({ url, height, width }) {
+    // Ensure API response conforms to underlying database model
+    return { url, height, width };
   }
 
   createTrackModel(track_obj) {
     // Convert Spotify API object to Track model
     return {
-      album_id: track_obj.album.id,
-      artist_ids: track_obj.artists.map(artist => artist.id),
+      album: track_obj.album.id,
+      artist_ids: track_obj.artists.map(({ id }) => id),
       name: track_obj.name,
       preview_url: track_obj.preview_url,
     };
   }
 
-  async addRecommendation(user_id, track_id) {
-    // Add new recommended track that user has not yet acted upon
-    return User.findOneAndUpdate(
-      { user_id: user_id },
-      { $set: { [`recommended_track_to_outcome.${track_id}`]: 'none' } }
-    ).exec();
+  getAlbumQuery(album_id) {
+    return Album.findOne({ album_id: album_id });
+  }
+
+  getArtistQuery(artist_id) {
+    return Artist.findOne({ artist_id: artist_id });
+  }
+
+  getGenreQuery(name) {
+    return Genre.findOne({ name: name });
+  }
+
+  getUserQuery(user_id) {
+    return User.findOne({ user_id: user_id });
+  }
+
+  getTrackQuery(track_id) {
+    return Track.findOne({ track_id: track_id });
+  }
+
+  async addRecommendations(rec_ids, user_doc) {
+    // Add new recommended tracks that user has not yet acted upon
+    user_doc.recommended_and_fresh_tracks = rec_ids.reduce((map, rec_id) => {
+        map.set(rec_id, '');
+        return map;
+      }, user_doc.recommended_and_fresh_tracks);
+
+    return user_doc.save();
   }
 
   async createOrUpdateAlbum(album_obj) {
@@ -105,7 +125,7 @@ class Database {
    return Album.findOneAndUpdate(
       { album_id: album_obj.id },
       this.createAlbumModel(album_obj),
-      { upsert: true }
+      { new: true, upsert: true }
     ).exec();
   }
 
@@ -119,7 +139,7 @@ class Database {
     return Artist.findOneAndUpdate(
       { artist_id: artist_obj.id },
       this.createArtistModel(artist_obj),
-      { upsert: true }
+      { new: true, upsert: true }
     ).exec();
   }
 
@@ -131,7 +151,7 @@ class Database {
         ...(this.createArtistModel(artist_obj)),
         [`listener_id_to_rank.${listener_id}`]: rank_for_listener
       },
-      { upsert: true }
+      { new: true, upsert: true }
     ).exec();
   }
 
@@ -173,18 +193,12 @@ class Database {
   }
 
   async createOrUpdateTrack(track_obj) {
-    // Create or update Album document
-    const album = this.createOrUpdateAlbum(track_obj.album);
-
     // Update existing Track document, otherwise create new document
-    const track = Track.findOneAndUpdate(
+    return Track.findOneAndUpdate(
       { track_id: track_obj.id },
       this.createTrackModel(track_obj),
-      { upsert: true }
+      { new: true, upsert: true }
     ).exec();
-
-    // Return promise for all album, artist, genre, and track updates
-    return Promise.all([album, track]);
   }
 
   async createOrUpdateTracks(tracks) {
@@ -192,21 +206,38 @@ class Database {
     return Track.bulkWrite(tracks.map(track => this.constructTrackUpdateOperation(track)));
   }
 
+  async createOrUpdateTracksWithAlbumAndArtists(tracks) {
+    // Update existing Track documents, otherwise create new documents
+    const updated_tracks = this.createOrUpdateTracks(tracks);
+
+    // Extract album_ids and artist_ids from tracks, then create/update documents
+    const album_ids = tracks.map(({ album_id }) => album_id);
+    const updated_albums = this.createOrUpdateAlbums(album_ids);
+    const artist_ids = tracks.flatMap(({ artist_ids }) => artist_ids);
+    const updated_artists = this.createOrUpdateArtists(artist_ids);
+
+    // Return promise for all album, artist, and track document updates
+    return Promise.all([updated_albums, updated_artists, updated_tracks]);
+  }
+
   async createOrUpdateUser(genre_counts, top_artist_ids, top_track_ids, user_obj) {
     // Update existing User document, otherwise create new document
     // sum the values of the genre_counts map
-    const total_genre_count = Array.from(genre_counts.values()).reduce((a, b) => a + b, 0);
+    // const total_genre_count = Array.from(genre_counts.values()).reduce((a, b) => a + b, 0);
+    const { id, display_name } = user_obj;
+    const images = user_obj.images.map(this.createImageModel);
+
     return User.findOneAndUpdate(
-      { user_id: user_obj.id },
+      { user_id: id },
       {
-        display_name: user_obj.display_name,
-        genre_counts: genre_counts,
-        images: user_obj.images.map(this.createImageModel),
-        top_artist_ids: top_artist_ids,
-        top_track_ids: top_track_ids,
-        total_genre_count: total_genre_count
+        display_name,
+        // genre_counts,
+        images,
+        top_artist_ids,
+        top_track_ids,
+        // total_genre_count
       },
-      { upsert: true }
+      { new: true, upsert: true }
     ).exec();
   }
 
@@ -221,7 +252,10 @@ class Database {
   async dismissRecommendation(user_id, rec_id) {
     return User.updateOne(
       { user_id: user_id },
-      { $set: { [`recommended_track_to_outcome.${rec_id}`]: 'dismissed' } }
+      {
+        $set: {[`recommended_track_to_outcome.${rec_id}`]: 'dismissed' },
+        $unset: {[`recommended_and_fresh_tracks.${rec_id}`]: '' }
+      }
     ).exec();
   }
 
@@ -256,18 +290,66 @@ class Database {
   }
 
   async likeRecommendation(user_id, rec_id) {
-    return User.updateOne(
+    return User.findOneAndUpdate(
       { user_id: user_id },
-      { $set: { [`recommended_track_to_outcome.${rec_id}`]: 'liked' } }
-    ).exec();
+      {
+        $set: { [`recommended_track_to_outcome.${rec_id}`]: 'liked' },
+        $unset: { [`recommended_and_fresh_tracks.${rec_id}`]: '' }
+      },
+      { fields: { _id: 0, recommended_tracks_playlist_id: 1 } }
+    ).lean().exec();
   }
 
   async getAlbum(album_id) {
     return Album.findOne({ album_id: album_id }).exec();
   }
 
+  async getAlbums(album_ids) {
+    return Album.find(
+      { album_id: { $in: album_ids } },
+      { _id: 0, __v: 0, createdAt: 0, updatedAt: 0 }
+    ).lean().exec();
+  }
+
   async getArtist(artist_id) {
     return Artist.findOne({ artist_id: artist_id }).exec();
+  }
+
+  async getArtists(artist_ids) {
+    return Artist.find(
+      { artist_id: { $in: artist_ids } },
+      { _id: 0, __v: 0, createdAt: 0, updatedAt: 0, listener_id_to_rank: 0 }
+    ).lean().exec();
+  }
+  
+  async getFullTracks(track_ids) {
+    // Fetch track objects and associated album and artist objects from database
+    const [albums, artists, tracks] = await this.getTracksWithAlbumAndArtists(track_ids)
+      .catch(console.error);
+
+    if (!albums || !artists || !tracks) {
+      return Promise.reject('Failed to fetch albums, artists, and/or tracks from database');
+    }
+    
+    // Map each track to its associated album and artists
+    const albums_by_id = albums.reduce((map, album) => {
+      map.set(album.album_id, album);
+      return map;
+    }, new Map());
+
+    const artists_by_id = artists.reduce((map, artist) => {
+      map.set(artist.artist_id, artist);
+      return map;
+    }, new Map());
+
+    tracks.forEach(track => {
+      track.album = albums_by_id.get(track.album_id);
+      track.artists = track.artist_ids.map(artist_id => artists_by_id.get(artist_id));
+      delete track.album_id;
+      delete track.artist_ids;
+    });
+
+    return tracks;
   }
 
   async getGenre(name) {
@@ -277,9 +359,52 @@ class Database {
   async getTrack(track_id) {
     return Track.findOne({ track_id: track_id }).exec();
   }
-  
+
+  async getTracks(track_ids) {
+    return Track.find(
+      { track_id: { $in: track_ids } },
+      { _id: 0, __v: 0, createdAt: 0, updatedAt: 0 }
+    ).lean().exec();
+  }
+
+  async getTracksWithAlbumAndArtists(track_ids) {
+    // Fetch track objects from database
+    const tracks = await this.getTracks(track_ids).catch(console.error);
+
+    if (!tracks) {
+      return Promise.reject('Failed to fetch tracks from database');
+    }
+
+    // Extract album and artist ids associated with each track
+    const album_ids = tracks.map(({ album_id }) => album_id);
+    const artist_ids = tracks.flatMap(({ artist_ids }) => artist_ids);
+    
+    // Fetch album and artist objects from database
+    const albums_req = this.getAlbums(album_ids);
+    const artists_req = this.getArtists(artist_ids);
+    return Promise.all([albums_req, artists_req, tracks]);
+  }
+
   async getUser(user_id) {
-    return User.findOne({ user_id: user_id }).exec();
+    return this.getUserQuery(user_id).lean().exec();
+  }
+  
+  async getUserDocument(user_id) {
+    return this.getUserQuery(user_id).exec();
+  }
+
+  async getUserProfile(user_id) {
+    return this.getUserQuery(user_id)
+      .select({
+        _id: 0,
+        display_name: 1,
+        images: 1,
+        top_artist_ids: 1,
+        top_track_ids: 1,
+        user_id: 1
+       })
+      .lean()
+      .exec();
   }
 
   async getPotentialMatches(user_id) {

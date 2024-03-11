@@ -3,9 +3,9 @@ const Album = require('./album');
 const Artist = require('./artist');
 const Genre = require('./genre');
 const Image = require('./image');
+const Match = require('./match');
 const Track = require('./track');
 const User = require('./user');
-const Match = require('./match');
 
 // Export models
 module.exports = {
@@ -13,7 +13,7 @@ module.exports = {
   Artist,
   Genre,
   Image,
+  Match,
   Track,
-  User,
-  Match
+  User
 };
