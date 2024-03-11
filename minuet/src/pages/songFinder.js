@@ -101,11 +101,14 @@ function SongFinder({ token, displayName }) {
 							<Box>
 								<FinderImage
 									image={element.album.images[0].url}
-									mainText={element.name}
-									subText={`Track ${element.track_number}, ${millisecondsToMinutesAndSeconds(element.duration_ms)}`}
-									link={element.external_urls.spotify}
+									mainText={element.name + ` (Track ${element.track_number}, ${millisecondsToMinutesAndSeconds(element.duration_ms)})`}
+									subText={
+										<>
+											{<PopularityIcon value={element.popularity} />} {element.album.release_date}
+										</>
+									}
+									link={element.album.external_urls.spotify}
 								/>
-								{/* <PopularityIcon value={element.popularity}></PopularityIcon> */}
 								<AudioPlayer previewUrl={element.preview_url} />
 							</Box>
 						</Slide>

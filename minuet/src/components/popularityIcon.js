@@ -1,26 +1,32 @@
 import React from 'react';
-import SvgIcon from '@mui/material/SvgIcon';
+import { FaStar, FaRegStar } from 'react-icons/fa'; // Import icons from react-icons
 
 const PopularityIcon = ({ value }) => {
-	const getColorForValue = (value) => {
-		const hue = (1 - value / 100) * 120; // Map value to a hue value (0-120 degrees)
-		return `hsl(${hue}, 100%, 50%)`; // Convert hue to an HSL color
+	const iconSize = 24; // Adjust the size of the icon as needed
+	const gradientColors = [
+		'#ff0000', // Red
+		'#ff4500', // OrangeRed
+		'#ffa500', // Orange
+		'#ffd700', // Gold
+		'#ffff00', // Yellow
+		'#7fff00', // Chartreuse
+		'#00ff00', // Lime
+		'#00ffff', // Cyan
+		'#0000ff', // Blue
+		'#800080'  // Purple
+	];
+
+	// Determine which icon to display based on the value
+	const renderIcon = () => {
+		for (let i = 0, limit = 90; limit >= 0; i += 1, limit -= 10) {
+			if (value >= limit) {
+				return <FaStar size={iconSize} color={gradientColors[i]} />
+			}
+		}
+
 	};
 
-	const iconStyle = {
-		width: '100px',
-		height: '100px',
-		borderRadius: '50%',
-		boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.2)',
-		transition: 'transform 0.3s',
-		backgroundColor: getColorForValue(value),
-	};
-
-	return (
-		<SvgIcon style={iconStyle}>
-			<circle cx="12" cy="12" r="10" fill="white" />
-		</SvgIcon>
-	);
+	return renderIcon();
 };
 
 export default PopularityIcon;

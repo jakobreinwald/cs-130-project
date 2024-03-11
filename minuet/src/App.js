@@ -86,7 +86,7 @@ function App() {
 							const playlistData = await getPlaylist(token, value.recommended_tracks_playlist_id);
 							return playlistData.data.external_urls.spotify;
 						}
-						return null;
+						return `https://open.spotify.com/user/${pairedProfile.display_name}`;
 					})
 			);
 			setProfile({ ...dbProfile.data, recommendedTracks, matchedUsersLinks });
