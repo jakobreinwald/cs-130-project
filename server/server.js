@@ -56,7 +56,19 @@ app.get('/callback', (req, res) => {
     .catch(console.error);
 });
 
-app.get('/users/:id/matches', (req, res) => {});
+// TODO: test this endpoint
+app.get('/users/:id/mutual_matches', (req, res) => {
+  middleware.getMatches(req.params.id)
+    .then(matches => res.json(matches))
+    .catch(console.error);
+});
+
+// Used to retrieve potential matches for a user
+app.get('/users/:id/potential_matches', (req, res) => {
+  middleware.getPotentialMatches(req.params.id)
+    .then(matches => res.json(matches))
+    .catch(console.error);
+});
 
 app.get('/users/:id/profile', (req, res) => {
   middleware.getUserProfile(5, 5, req.params.id)
@@ -80,6 +92,15 @@ app.get('/users/:id/recs', (req, res) => {
   middleware.getRecommendations(access_token, user_id, num_recs)
     .then(recs => res.json({ recs: recs }))
     .catch(console.error);
+});
+
+// TODO: test endpoint
+app.get('/users/:id/potential_matches/:match_id', (req, res) => {
+  const pot_user_obj = middleware.getUser(req.params.match_id);
+  // display_name different from user_id
+  const profile_name = pot_user_obj.display_name;
+  const top_artist = pot_user_obj.top_artist_ids[0];
+  res.json({ profile_name: profile_name, top_artist: top_artist });
 });
 
 
@@ -113,6 +134,13 @@ app.post('/users', (req, res) => {
   // Use access token to fetch user profile and top items from Spotify API
   middleware.updateLoggedInUser(access_token)
     .then(user => res.json(user))
+    .catch(console.error);
+});
+
+// Use to generate potential matches for a user
+app.post('/users/:id/generate_potential_matches', (req, res) => {
+  middleware.generateMatches(req.params.id)
+    .then(matches => res.json(matches))
     .catch(console.error);
 });
 
