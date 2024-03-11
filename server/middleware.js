@@ -16,14 +16,25 @@ class Middleware {
     this.db = new Database();
   }
 
-  calcGenreCounts(fetched_artists, fetched_tracks, top_track_associated_artists) {
-    const all_artists = fetched_artists.concat(top_track_associated_artists);
-    const artist_id_to_genres = all_artists.reduce((map, artist) => {
-      map.set(artist.id, artist.genres);
-      return map;
-    }, new Map());
+  calcGenreCounts(artist_id_to_genres, fetched_artists, fetched_tracks, sum_by_tracks) {
+    if (sum_by_tracks) {
+      return this.calcGenreCountsByTracks(artist_id_to_genres, fetched_tracks);
+    } else {
+      return this.calcGenreCountsByArtists(artist_id_to_genres, fetched_artists);
+    }
+  }
 
-    // Sum genre counts across all top tracks
+  calcGenreCountsByArtists(artist_id_to_genres, fetched_artists) {
+    return fetched_artists
+      .map(({ id }) => id)
+      .flatMap(artist_id => artist_id_to_genres.get(artist_id))
+      .reduce((map, genre) => {
+        map.set(genre, (map.get(genre) || 0) + 1);
+        return map;
+      }, new Map());
+  }
+
+  calcGenreCountsByTracks(artist_id_to_genres, fetched_tracks) {
     return fetched_tracks
       .flatMap(track => track.artists.map(({ id }) => id))
       .flatMap(artist_id => artist_id_to_genres.get(artist_id))
@@ -297,15 +308,20 @@ class Middleware {
     return this.db.getFullTracks(rec_ids);
   }
 
-  async getTopTrackAssociatedArtists(access_token, fetched_tracks, top_artist_ids) {
-    const top_artist_set = new Set(top_artist_ids);
-    const fetched_artists = fetched_tracks
-      .flatMap(track => track.artists.map(({ id }) => id))
-      .filter(artist_id => !top_artist_set.has(artist_id))
-      .map(artist_id => this.api.fetchArtist(access_token, artist_id))
-
-    return Promise.all(fetched_artists)
-      .then(artists => artists.map(({ data }) => data));
+  async getCachedArtistsAndUncachedIds(top_artists, top_tracks) {
+    // Extract artist ids from top tracks and filter out top artists previously fetched
+    const top_artist_ids = new Set(top_artists.map(({ id }) => id));
+    const top_track_artist_ids = top_tracks
+      .flatMap(({ artists }) => artists)
+      .map(({ id }) => id)
+      .filter(artist_id => !top_artist_ids.has(artist_id));
+    
+    // Return artists cached in database and uncached artist ids
+    return this.db.getArtists(top_track_artist_ids).then(cached_artists => {
+      const cached_artist_ids = new Set(cached_artists.map(({ id }) => id));
+      const uncached_artist_ids = top_track_artist_ids.filter(artist_id => !cached_artist_ids.has(artist_id));
+      return { cached_artists, uncached_artist_ids };
+    });
   }
 
   async getUserProfile(num_top_artists, num_top_tracks, user_id) {
@@ -366,6 +382,46 @@ class Middleware {
 
     return SpotifyAPI.addRecommendedTrack(access_token, playlist_id, rec_id);
   }
+    
+  async processTopArtistsAndTracks(access_token, top_artists, top_tracks) {
+    // Extract artist ids not cached in database or already fetched in top artists
+    const { cached_artists, uncached_artist_ids } = await this.getCachedArtistsAndUncachedIds(top_artists, top_tracks)
+      .catch(error => {
+        console.error(error);
+        return { cached_artists: [], uncached_artist_ids: [] };
+      });
+    const rem_artists_req = SpotifyAPI.fetchArtists(access_token, uncached_artist_ids);
+    
+    // Map top artists and cached artists to their respective genres
+    const top_artists_to_genres = top_artists.reduce((map, { id, genres }) => {
+      map.set(id, genres);
+      return map;
+    }, new Map());
+    const top_and_cached_artists_with_genres = cached_artists.reduce((map, { artist_id, genres }) => {
+      map.set(artist_id, genres);
+      return map;
+    }, top_artists_to_genres);
+    
+    // Return artists in formats for calculating genre counts and caching in database, respectively
+    return rem_artists_req
+      .then(rem_artist_res => {
+        const uncached_artists = rem_artist_res.map(({ data }) => data.artists);
+        const artist_id_to_genres = uncached_artists.reduce((map, { id, genres }) => {
+          map.set(id, genres);
+          return map;
+        }, top_and_cached_artists_with_genres);
+        return { artist_id_to_genres, uncached_artists };
+      })
+      .catch(({ response }) => {
+        if (response.status === 429) {
+          console.error('/artists rate limit exceeded, calculating genre counts by top artists');
+        } else {
+          console.error(response);
+        }
+
+        return { artist_id_to_genres: top_artists_to_genres, uncached_artists: [] };
+      });
+  }
 
   async updateLoggedInUser(access_token) {
     // Fetch user profile, top artists, and top tracks from Spotify API
@@ -391,20 +447,22 @@ class Middleware {
     const fetched_albums = fetched_tracks.map(({ album }) => album);
     const cached_albums = this.db.createOrUpdateAlbums(fetched_albums);
     const cached_tracks = this.db.createOrUpdateTracks(fetched_tracks);
-
-    // Determine all artists associated with top tracks that are not already in top artists
-    // const top_track_associated_artists = await this.getTopTrackAssociatedArtists(access_token, fetched_tracks, top_artist_ids)
-      // .catch(console.error);
-    const cached_artists = this.db.createOrUpdateArtists(fetched_artists, [], listener_id);
     
-    // Sum genre counts across top tracks and update genre documents in database
-    // const genre_counts = this.calcGenreCounts(fetched_artists, fetched_tracks, top_track_associated_artists);
-    // const cached_genres = this.db.createOrUpdateGenreCounts(genre_counts, listener_id);
+    // Fetch all artists associated with top tracks that are not cached or in top artists, then cache
+    const artist_data = await this.processTopArtistsAndTracks(access_token, fetched_artists, fetched_tracks);
+    const { artist_id_to_genres, uncached_artists } = artist_data;
+    const cached_artists = this.db.createOrUpdateArtists(fetched_artists, uncached_artists, listener_id);
+    
+    // Sum genre counts across top artists or tracks, then update genre documents in database
+    // non-empty uncached_artists implies track genres were fetched, so sum by top tracks
+    const sum_by_tracks = uncached_artists.length > 0;
+    const genre_counts = this.calcGenreCounts(artist_id_to_genres, fetched_artists, fetched_tracks, sum_by_tracks);
+    const cached_genres = this.db.createOrUpdateGenreCounts(genre_counts, listener_id);
 
     // Create or update existing User document
-    const cached_user = await this.db.createOrUpdateUser(null, top_artist_ids, top_track_ids, fetched_user)
+    const cached_user = await this.db.createOrUpdateUser(genre_counts, top_artist_ids, top_track_ids, fetched_user)
       .catch(console.error);
-    const updates = [cached_albums, cached_artists, cached_tracks];
+    const updates = [cached_albums, cached_artists, cached_genres, cached_tracks];
 
     // Create Minuet Recommendations playlist if not already created, and store playlist id in User document
     const updated_user = this.createRecommendedTracksPlaylist(access_token, cached_user)

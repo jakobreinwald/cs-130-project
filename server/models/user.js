@@ -1,7 +1,7 @@
 // Dependencies
 const Image = require('./image');
-const mongoose = require('mongoose');
 const Match = require('./match');
+const mongoose = require('mongoose');
 
 // User schema
 const User = new mongoose.Schema(
