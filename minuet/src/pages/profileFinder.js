@@ -14,10 +14,11 @@ function ProfileFinder(props) {
 	const [slideIn, setSlideIn] = useState(true); // Used to trigger slide out animation
 	const [hasMatches, setHasMatches] = useState(true);
 
+	const [pfs, setPfs] = useState([])
+
 	const generateMatches = async (id) => {
 		const result = await getUserMatches(id)
 		const matchedUsers = result.data.matched_user_to_outcome
-		console.log(matchedUsers)
 		const getOtherProfiles = async (users) => {
 			let promises = [];
 			for (const [userId, value] of Object.entries(users)) {
@@ -28,7 +29,7 @@ function ProfileFinder(props) {
 			return Promise.all(promises)
 		};
 		const otherProfiles = (await getOtherProfiles(matchedUsers)).map((p) => p.data)
-		console.log(otherProfiles)
+		setPfs(otherProfiles)
 	};
 
 	useEffect(() => {
@@ -36,38 +37,6 @@ function ProfileFinder(props) {
 			generateMatches(props.displayName);
 	}, [props.displayName]);
 
-	const pfs = [
-		{
-			image: 'https://hackspirit.com/wp-content/uploads/2021/06/Copy-of-Rustic-Female-Teen-Magazine-Cover.jpg',
-			mainText: 'Kate Spade',
-			subText: 'Their top artist: Taylor Swift',
-			id: '0' //user id from backend
-		},
-		{
-			image: 'https://ichef.bbci.co.uk/news/976/cpsprodpb/C597/production/_131938505_ind3bc40c5f1c10d4248e6bf848ae7033c8814005e9-1.jpg',
-			mainText: 'Tay Tay',
-			subText: 'Their top artist: Taylor Swift',
-			id: '1'
-		},
-		{
-			image: 'https://www.verywellmind.com/thmb/pwEmuUJ6KO9OF8jeiQCDyKnaVQI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/GettyImages-1187609003-73c8baf32a6a46a6b84fe931e0c51e7e.jpg',
-			mainText: 'En Pea Sea',
-			subText: 'Their top artist: Taylor Swift',
-			id: '2'
-		},
-		{
-			image: 'https://www.dmarge.com/wp-content/uploads/2021/01/dwayne-the-rock-.jpg',
-			mainText: 'Pebble',
-			subText: 'Their top artist: Taylor Swift',
-			id: '0'
-		},
-		{
-			image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqW5lCXxflY_ZOsSs11cRIOoOwTTYHjy0_8A&usqp=CAU',
-			mainText: 'Me',
-			subText: 'Their top artist: Taylor Swift',
-			id: '1'
-		},
-	]
 	const [likedProfiles, setLikedProfiles] = useState([]);
 	const [dislikedProfiles, setDislikedProfiles] = useState([]);
 
@@ -85,7 +54,8 @@ function ProfileFinder(props) {
 				setCurrentIndex((prevIndex) => (prevIndex + 1)); // Update index to next element
 			}
 			else {
-				setHasMatches(false)
+				// setHasMatches(false)
+				setCurrentIndex((prevIndex) => 0)
 			}
 		}, 500); // Timeout duration should match the slide out animation duration
 	};
@@ -105,15 +75,35 @@ function ProfileFinder(props) {
 				setCurrentIndex((prevIndex) => (prevIndex + 1)); // Update index to next element
 			}
 			else {
-				setHasMatches(false)
+				// setHasMatches(false)
+				setCurrentIndex((prevIndex) => 0)
 			}
 		}, 500); // Timeout duration should match the slide out animation duration
 	};
+
+	// useEffect(() => {
+	// 	// Send data to backend
+	// 	console.log("Disliked Songs Updated:", dislikedProfiles);
+	// 	if (dislikedSongs.length > 0) {
+	// 		updateSongs(dislikedSongs[dislikedSongs.length - 1].id, 'dismiss');
+	// 	}
+	// }, [dislikedSongs]);
+
+	// useEffect(() => {
+	// 	// Send data to backend
+	// 	console.log("Liked Songs Updated:", likedProfiles);
+	// 	if (likedSongs.length > 0) {
+	// 		updateSongs(likedSongs[likedSongs.length - 1].id, 'like');
+	// 	}
+	// }, [likedSongs]);
 
 	useEffect(() => {
 		// Send data to backend
 		console.log("Disliked Profiles Updated:", dislikedProfiles);
 		console.log("Liked Profiles Updated:", likedProfiles);
+		if (dislikedProfiles.length + likedProfiles.length === pfs.length)
+			if (props.displayName)
+				generateMatches(props.displayName);
 	}, [dislikedProfiles, likedProfiles]);
 
 	return (
@@ -130,10 +120,10 @@ function ProfileFinder(props) {
 						<Slide key={index} direction={direction} in={slideIn && index === currentIndex} mountOnEnter unmountOnExit>
 							<Box>
 								<FinderImage
-									image={element.image}
-									mainText={element.mainText}
-									subText={element.subText}
-									link={`/user/:${element.id}`}
+									image={element.images[1] ? element.images[1].url : null}
+									mainText={element.display_name}
+									subText={element.top_artists[0] ? element.top_artists[0].name : null}
+									link={`/user/:${element.user_id}`}
 								/>
 							</Box>
 						</Slide>

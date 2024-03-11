@@ -3,47 +3,43 @@ import SongCard from '../components/songCard'
 import ProfileCard from '../components/profileCard'
 import { Box, Typography, Divider, Avatar, Button, LinearProgress } from '@mui/material';
 import { useParams } from 'react-router-dom';
+import {getUserProfile} from '../api/index'
+import { Card, CardContent, Link } from '@mui/material';
+
+const artist_url = 'https://open.spotify.com/artist/';
+const track_url = 'https://open.spotify.com/track/';
 
 function OtherUserProfile() {
+
     const { userId } = useParams();
-/*     // TODO fetch user data
-    const [userProfile, setUserProfile] = useState(null);
-  
+    const [profile, setProfile] = useState(null);
+    const [topArtists, setArtists] = useState([]);
+    const [topTracks, setTracks] = useState([]);
+    
+    const getProfile = async (id) => {
+      const userProfile = await getUserProfile(id);
+      if(userProfile){
+        setProfile(userProfile.data);
+        setArtists(userProfile.data.top_artists)
+        setTracks(userProfile.data.top_tracks)
+      }
+    };
     useEffect(() => {
-      // Fetch user profile from an API or select from global state
-      fetchUserProfile(userId).then(data => {
-        setUserProfile(data);
-      });
+      if(userId)
+        getProfile(userId.replace(':', ''));
     }, [userId]);
-  
-    if (!userProfile) {
-      return <div>Loading...</div>;
-    } */
-  // TODO replace placeholders with actual data
-    const userProfile = {
-        id: userId
-    }
-    const matchedSongInfo = [
-        {name: "Song Name", artist: "Artist Name"},
-        {name: "Song Name", artist: "Artist Name"},
-        {name: "Song Name", artist: "Artist Name"},
-        {name: "Song Name", artist: "Artist Name"},
-        {name: "Song Name", artist: "Artist Name"}
-    ]
-    const topArtistsInfo = [
-        {name: "Taylor Swift", id: 13},
-    ]
+
     const matchPercentage = 75;
     const tags = ["pop", "alternative", "r&b", "rap", "indie"]
 
     return (
         <Box sx={{p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center',}}>
             <Box sx={{display: 'flex', flexDirection: 'row', gap: 3, maxWidth: '75%', justifyContent: 'center'}}>
-                <Avatar sx={{ bgcolor: 'grey.900', width: 250, height: 250, m: 5,}} />
+                <Avatar sx={{ bgcolor: 'grey.900', width: 250, height: 250, m: 5,}} src={profile ? profile.images[1].url : null} />
                 <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: '100%', gap: 1}}>
                     <Box sx={{display: 'flex', flexDirection: 'row', gap: 5, alignItems: 'center'}}>
                         <Typography variant="h2" sx={{ color: 'text.primary', mb: 3}}>
-                            {userProfile.id}
+                            {profile ? profile.display_name : null}
                         </Typography>
                         <Button sx={{bgcolor: 'primary.main', color:'text.primary'}}> Spotify Profile </Button>
                     </Box>
@@ -57,9 +53,40 @@ function OtherUserProfile() {
                 </Box>
             </Box>
             <Box sx={{display: 'flex', flexDirection:'row', gap: 5, justifyContent: 'center',}}>
-                <SongCard cardTitle="Top Songs" songInfo={matchedSongInfo}/>
+                <Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '90%' }}>
+                  <CardContent>
+                    {profile ? topTracks.map((match, index) =>
+                      <Box key={index} sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
+                        <Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={match.album.images[1].url} />
+                        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
+                          <Link href={track_url.concat(match.track_id)} target="_blank" rel="noopener noreferrer">
+                            <Typography variant="body1">{match.name}</Typography>
+                          </Link>
+                          <Link href={artist_url.concat(match.artists[0].artist_id)} target="_blank" rel="noopener noreferrer">
+                            <Typography variant="body2">{match.artists.map(obj => obj.name).join(', ')}</Typography>
+                          </Link>
+                        </Box>
+                      </Box>) : null}
+                  </CardContent>
+                </Card>
                 <Divider orientation="vertical" flexItem />
-                <ProfileCard cardTitle="Top Artists" profileInfo={topArtistsInfo}/>
+                <Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '90%' }}>
+                  <CardContent>
+                    <Typography gutterBottom variant="h5" component="div" align='center'>
+                      <b>Matched Profiles</b>
+                    </Typography>
+                    {topArtists ? topArtists.map((match, index) =>
+                      <Box key={index} sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
+                        <Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={match.images[0].url} />
+                        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
+                          <Link href={artist_url.concat(match.artist_id)} target="_blank" rel="noopener noreferrer">
+                            <Typography variant="body1">{match.name}</Typography>
+                          </Link>
+                        </Box>
+                      </Box>
+                    ) : null}
+                  </CardContent>
+                </Card>
             </Box>
         </Box>
     );
