@@ -33,8 +33,8 @@ function validateAuth(auth) {
 }
 
 function validateNumRecs(num_recs) {
-  if (num_recs === undefined) { // default to 10 if num_recs not provided
-    return 10;
+  if (num_recs === undefined) { // default to 5 if num_recs not provided
+    return 5;
   }
 
   const casted_num_recs = Number(num_recs);
@@ -95,7 +95,7 @@ app.get('/users/:id/recs', (req, res) => {
   const user_id = req.params.id;
 
   middleware.getRecommendations(access_token, user_id, num_recs)
-    .then(recs => res.json({ recs: recs.tracks }))
+    .then(recs => res.json({ recs: recs }))
     .catch(console.error);
 });
 
@@ -110,23 +110,21 @@ app.get('/users/:id/potential_matches/:match_id', (req, res) => {
 
 app.get('/users/:id/calculateMatchScore/:match_id', (req, res) => {
   middleware.calculateMatchScore(req.params.id, req.params.match_id)
-    .then(score => res.json({ score: score }))
-    .catch(console.error);
-});
-
-app.post('/users/:id/likeMatch/:match_id', (req, res) => {
-  middleware.likeMatch(req.params.id, req.params.match_id)
-    .then(() => res.status(200).send('Liked match'))
-    .catch(console.error);
-});
-
-app.post('/users/:id/dismissMatch/:match_id', (req, res) => {
-  middleware.dismissMatch(req.params.id, req.params.match_id)
-    .then(() => res.status(200).send('Dismissed match'))
+    .then(([score, ...rest]) => res.json({ score: score }))
     .catch(console.error);
 });
 
 // POST endpoints
+
+app.post('/users', (req, res) => {
+  // Validate request authorization and extract access token
+  const access_token = validateAuth(req.header('Authorization'), res);
+//   console.log(access_token);
+  // Use access token to fetch user profile and top items from Spotify API
+  middleware.updateLoggedInUser(access_token)
+    .then(user => res.json(user))
+    .catch(console.error);
+});
 
 app.post('/users/:user_id/recs/:rec_id', (req, res) => {
   // Extract access token from request auth and get action from query string
@@ -149,16 +147,6 @@ app.post('/users/:user_id/recs/:rec_id', (req, res) => {
   }
 });
 
-app.post('/users', (req, res) => {
-  // Validate request authorization and extract access token
-  const access_token = validateAuth(req.header('Authorization'), res);
-//   console.log(access_token);
-  // Use access token to fetch user profile and top items from Spotify API
-  middleware.updateLoggedInUser(access_token)
-    .then(user => res.json(user))
-    .catch(console.error);
-});
-
 // Use to generate potential matches for a user
 app.post('/users/:id/generate_potential_matches', (req, res) => {
   middleware.generateMatches(req.params.id)
@@ -168,13 +156,13 @@ app.post('/users/:id/generate_potential_matches', (req, res) => {
 
 app.post('/users/:id/likeMatch/:match_id', (req, res) => {
 	middleware.likeMatch(req.params.id, req.params.match_id)
-	  .then(() => res.status(200).send('Liked match'))
+	  .then(() => res.json({ 'liked': req.params.match_id }))
 	  .catch(console.error);
   });
   
   app.post('/users/:id/dismissMatch/:match_id', (req, res) => {
 	middleware.dismissMatch(req.params.id, req.params.match_id)
-	  .then(() => res.status(200).send('Dismissed match'))
+	  .then(() => res.json({ 'dismissed': req.params.match_id }))
 	  .catch(console.error);
   });
 

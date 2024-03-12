@@ -9,7 +9,7 @@ import { Card, CardContent, Link } from '@mui/material';
 const artist_url = 'https://open.spotify.com/artist/';
 const track_url = 'https://open.spotify.com/track/';
 
-function OtherUserProfile() {
+function OtherUserProfile({ loggedInUserId }) {
 
     const { userId } = useParams();
     const [profile, setProfile] = useState(null);
@@ -17,19 +17,6 @@ function OtherUserProfile() {
     const [topTracks, setTracks] = useState([]);
     const [tags, setTags] = useState([]);
     const [matchScore, setMatchScore] = useState(0);
-    const [myId, setMyId] = useState(null);
-    const [token, setToken] = useState(null);
-
-    async function getYourProfile(token) {
-      const result = await fetch("https://api.spotify.com/v1/me", {
-        method: "GET",
-        headers: { "Authorization": "Bearer " + token },
-      });
-      const pairedProfile = await result.json();
-      if (!("error" in pairedProfile)) {
-        setMyId(pairedProfile.id);
-      }
-    }
     
     const getProfile = async (id) => {
       const userProfile = await getUserProfile(id);
@@ -47,31 +34,21 @@ function OtherUserProfile() {
     };
 
     const getScore = async (myId, id) => {
-      const score = await getMatchScore(myId, id)
+      const score = await getMatchScore(myId, id);
       setMatchScore(score.data.score);
     };
 
     useEffect(() => {
-      let test_token = window.localStorage.getItem('access_token');
-      if(test_token)
-        setToken(test_token);
-    }, [])
-
-    useEffect(() => {
-      if(token)
-        getYourProfile(token);
-    }, [token])
+      if(userId && loggedInUserId){
+        console.log(loggedInUserId);
+        console.log(userId.replace(':', ''));
+        getScore(loggedInUserId, userId.replace(':', ''))
+      }
+    }, [userId, loggedInUserId])
 
     useEffect(() => {
       getProfile(userId.replace(':', ''));
     }, [userId]);
-
-    useEffect(() => {
-      console.log(myId)
-      if(userId && myId){
-        getScore(myId, userId.replace(':', ''))
-      }
-    }, [userId, myId]);
 
     return (
         <Box sx={{p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center',}}>

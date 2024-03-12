@@ -62,6 +62,7 @@ function App() {
 	const [token, setToken] = useState("");
 	const [profile, setProfile] = useState(null);
 	const [displayName, setDisplayName] = useState(null);
+	const [userId, setUserId] = useState(null);
 
 	async function getProfile() {
 		const result = await fetch("https://api.spotify.com/v1/me", {
@@ -71,29 +72,24 @@ function App() {
 		const pairedProfile = await result.json();
 		if (!("error" in pairedProfile)) {
 			setDisplayName(pairedProfile.display_name);
+			console.log("Paired Profile: ", pairedProfile.display_name)
 			setProfile(pairedProfile);
-			const dbProfile = await getUserProfile(pairedProfile.display_name);
+			setUserId(pairedProfile.id);
+			const dbProfile = await getUserProfile(pairedProfile.id);
+			console.log("DB Profile: ", dbProfile.data);
 			const userPlaylist = (await getPlaylist(token, dbProfile.data.recommended_tracks_playlist_id));
-			const recommendedTracks = await getRecommendedTracks(
-				token,
-				Object.entries(dbProfile.data.recommended_track_to_outcome)
-					.filter(([key, value]) => value === 'liked')
-					.map(([key]) => key)
-			);
-			const matchedUsersLinks = await Promise.all(
-				Object.entries(dbProfile.data.matched_users)
-					.filter(([key, value]) => value !== 'liked')
-					.map(async ([key, value]) => {
-						if (value.hasOwnProperty('recommended_tracks_playlist_id')) {
-							const playlistData = await getPlaylist(token, value.recommended_tracks_playlist_id);
-							return playlistData.data.external_urls.spotify;
-						}
-						return `https://open.spotify.com/user/${pairedProfile.display_name}`;
-					})
-			);
+			const likedTracks = Object.entries(dbProfile.data.recommended_track_to_outcome)
+				.filter(([key, value]) => value === 'liked')
+				.map(([key]) => key)
+			const recommendedTracks = likedTracks.length > 0
+				? await getRecommendedTracks(token, likedTracks)
+				: { data: { tracks: [] } };
+			const matchedUsersLinks = dbProfile.data.matched_users
+				.map(({ user_id }) => `/user/${user_id}`);
+
 			const frontEndUser = { ...dbProfile.data, userPlaylist: userPlaylist.data, recommendedTracks: recommendedTracks.data.tracks, matchedUsersLinks };
 			setProfile(frontEndUser);
-			// console.log("Profile: ", frontEndUser);
+			console.log("Profile: ", frontEndUser);
 			return frontEndUser;
 		}
 		return pairedProfile;
@@ -107,7 +103,10 @@ function App() {
 	useEffect(() => {
 		// console.log("hello", token)
 		if (token) {
-			updateUserProfile(token);
+			const handler = async (token) => {
+				await updateUserProfile(token);
+			}
+			handler(token);
 			const dummyProfile = getProfile();
 		}
 	}, [token])
@@ -116,11 +115,11 @@ function App() {
 		<ThemeProvider theme={theme}>
 			{token ? <NavBar removeToken={setToken} /> : null}
 			<Routes>
-				<Route path='/' element={token ? <UserProfile token={token} displayName={displayName} profile={profile} /> : <LandingPage />} />
+				<Route path='/' element={token ? <UserProfile token={token} profile={profile} /> : <LandingPage />} />
 				<Route path='/callback' element={token ? null : <TokenCall passToken={setToken} />} />
-				<Route path='/song-finder' element={token ? <SongFinder token={token} displayName={displayName} /> : <LandingPage />} />
-				<Route path='/profile-finder' element={token ? <ProfileFinder token={token} displayName={displayName} userId={profile ? profile.user_id : null}/> : <LandingPage />} />
-				<Route path="/user/:userId" element={token ? <OtherUserProfile/> : <LandingPage />} />
+				<Route path='/song-finder' element={token ? <SongFinder token={token} userId={userId} displayName={displayName} /> : <LandingPage />} />
+				<Route path='/profile-finder' element={token ? <ProfileFinder token={token} userId={userId}/> : <LandingPage />} />
+				<Route path="/user/:userId" element={token ? <OtherUserProfile loggedInUserId={profile ? profile.user_id : null}/> : <LandingPage />} />
 			</Routes>
 		</ThemeProvider>
 	);

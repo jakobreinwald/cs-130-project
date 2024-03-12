@@ -4,7 +4,7 @@ import ProfileCard from '../components/profileCard'
 import { Card, CardContent, Link } from '@mui/material';
 import { Box, Typography, Divider, Avatar } from '@mui/material';
 
-function UserProfile({ token, displayName, profile }) {
+function UserProfile({ token, profile }) {
 	const [matchedUsers, setMatchedUsers] = useState([]);
 	const [newUsers, setNewUsers] = useState(0);
 	const [matchedSongs, setMatchedSongs] = useState([]);
@@ -12,6 +12,7 @@ function UserProfile({ token, displayName, profile }) {
 
 	useEffect(() => {
 		if (profile !== null && profile.hasOwnProperty('recommendedTracks')) {
+			console.log(profile.recommendedTracks);
 			setMatchedSongs(profile.recommendedTracks);
 			setNewSongs(profile.recommendedTracks.length);
 		}
@@ -27,12 +28,12 @@ function UserProfile({ token, displayName, profile }) {
 	return (
 		<Box sx={{ bgcolor: 'background.primary', minHeight: '100vh', p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', }}>
 			<Box sx={{ display: 'flex', flexDirection: 'row', gap: 3, maxWidth: '75%', }}>
-				<Link href={displayName !== null ? `https://open.spotify.com/user/${displayName}` : null} target="_blank" rel="noopener noreferrer">
+				<Link href={profile !== null ? `https://open.spotify.com/user/${profile.user_id}` : null} target="_blank" rel="noopener noreferrer">
 					<Avatar sx={{ bgcolor: 'grey.900', width: 250, height: 250, m: 5, }} src={profile !== null ? profile.images[1].url : null} />
 				</Link>
 				<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
 					<Typography variant="h2" sx={{ color: 'text.primary', mb: 3 }}>
-						Hi, {displayName}
+						Hi, {profile !== null ? profile.display_name : null}
 					</Typography>
 					<Typography variant="h4" sx={{ color: 'text.primary' }}>
 						You've discovered <b>{newSongs}</b> new song(s) and <b>{newUsers}</b> new profile(s)! Keep on exploring :)
@@ -47,15 +48,15 @@ function UserProfile({ token, displayName, profile }) {
 								<b>{(profile !== null && profile.hasOwnProperty('userPlaylist')) ? profile.userPlaylist.name : "Matched Songs"}</b>
 							</Typography>
 						</Link>
-						{matchedSongs.map((match, index) =>
+						{matchedSongs.map(({ album, artists, name }, index) =>
 							<Box key={index} sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
-								<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={match.album.images[1].url} />
+								<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={album.images[1].url} />
 								<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
-									<Link href={match.album.external_urls.spotify} target="_blank" rel="noopener noreferrer">
-										<Typography variant="body1">{match.name}</Typography>
+									<Link href={album.external_urls.spotify} target="_blank" rel="noopener noreferrer">
+										<Typography variant="body1">{name}</Typography>
 									</Link>
-									<Link href={match.artists[0].external_urls.spotify} target="_blank" rel="noopener noreferrer">
-										<Typography variant="body2">{match.artists.map(obj => obj.name).join(', ')}</Typography>
+									<Link href={artists[0].external_urls.spotify} target="_blank" rel="noopener noreferrer">
+										<Typography variant="body2">{artists.map(obj => obj.name).join(', ')}</Typography>
 									</Link>
 								</Box>
 							</Box>)}
@@ -67,12 +68,12 @@ function UserProfile({ token, displayName, profile }) {
 						<Typography gutterBottom variant="h5" component="div" align='center'>
 							<b>Matched Profiles</b>
 						</Typography>
-						{matchedUsers.map((match, index) =>
+						{matchedUsers.map(({ display_name, images, link }, index) =>
 							<Box key={index} sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
-								<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={match.images[1].url} />
+								<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={images[1].url} />
 								<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
-									<Link href={match.link} target="_blank" rel="noopener noreferrer">
-										<Typography variant="body1">{match.display_name}</Typography>
+									<Link href={link} target="_blank" rel="noopener noreferrer">
+										<Typography variant="body1">{display_name}</Typography>
 									</Link>
 								</Box>
 							</Box>

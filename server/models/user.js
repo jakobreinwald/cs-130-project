@@ -33,6 +33,14 @@ const User = new mongoose.Schema(
       },
       default: new Map()
     },
+    rec_seed_artist_offset: {
+      type: Number,
+      default: 0
+    },
+    rec_seed_track_offset: {
+      type: Number,
+      default: 0
+    },
     recommended_and_fresh_tracks: {
       type: Map,
       of: {
