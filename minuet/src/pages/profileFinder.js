@@ -4,7 +4,7 @@ import { Box, Typography, IconButton, Slide } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import xMark from '../assets/x-mark.svg';
 import heart from '../assets/heart.svg';
-import { getUserMatches, getUserProfile } from '../api/index.js'
+import { getUserMatches, getUserProfile, likeMatch, dismissMatch} from '../api/index.js'
 
 function ProfileFinder(props) {
 	const theme = useTheme();
@@ -37,8 +37,7 @@ function ProfileFinder(props) {
 			generateMatches(props.displayName);
 	}, [props.displayName]);
 
-	const [likedProfiles, setLikedProfiles] = useState([]);
-	const [dislikedProfiles, setDislikedProfiles] = useState([]);
+	const [profile, setProfile] = useState(null);
 
 	const swipeLeft = () => {
 		setDirection("right");
@@ -48,15 +47,9 @@ function ProfileFinder(props) {
 			setDirection("down");
 			setSlideIn(true);
 			if (hasMatches) {
-				setDislikedProfiles(prevDisliked => prevDisliked.concat(pfs[currentIndex]))
+				setProfile({id: pfs[currentIndex].user_id, action: 'dismiss'})
 			}
-			if (currentIndex < pfs.length - 1) {
-				setCurrentIndex((prevIndex) => (prevIndex + 1)); // Update index to next element
-			}
-			else {
-				// setHasMatches(false)
-				setCurrentIndex((prevIndex) => 0)
-			}
+			setCurrentIndex((prevIndex) => (prevIndex + 1)); // Update index to next element
 		}, 500); // Timeout duration should match the slide out animation duration
 	};
 
@@ -68,43 +61,26 @@ function ProfileFinder(props) {
 			setDirection("down");
 			setSlideIn(true);
 			if (hasMatches) {
-				setLikedProfiles(prevLiked => prevLiked.concat(pfs[currentIndex]))
-
+				setProfile({id: pfs[currentIndex].user_id, action: 'like'})
 			}
-			if (currentIndex < pfs.length - 1) {
-				setCurrentIndex((prevIndex) => (prevIndex + 1)); // Update index to next element
-			}
-			else {
-				// setHasMatches(false)
-				setCurrentIndex((prevIndex) => 0)
-			}
+			setCurrentIndex((prevIndex) => (prevIndex + 1)); // Update index to next element
 		}, 500); // Timeout duration should match the slide out animation duration
 	};
 
-	// useEffect(() => {
-	// 	// Send data to backend
-	// 	console.log("Disliked Songs Updated:", dislikedProfiles);
-	// 	if (dislikedSongs.length > 0) {
-	// 		updateSongs(dislikedSongs[dislikedSongs.length - 1].id, 'dismiss');
-	// 	}
-	// }, [dislikedSongs]);
-
-	// useEffect(() => {
-	// 	// Send data to backend
-	// 	console.log("Liked Songs Updated:", likedProfiles);
-	// 	if (likedSongs.length > 0) {
-	// 		updateSongs(likedSongs[likedSongs.length - 1].id, 'like');
-	// 	}
-	// }, [likedSongs]);
-
-	useEffect(() => {
-		// Send data to backend
-		console.log("Disliked Profiles Updated:", dislikedProfiles);
-		console.log("Liked Profiles Updated:", likedProfiles);
-		if (dislikedProfiles.length + likedProfiles.length === pfs.length)
-			if (props.displayName)
-				generateMatches(props.displayName);
-	}, [dislikedProfiles, likedProfiles]);
+	useEffect(() =>{
+		console.log("Updated Profile:", profile);
+		if(profile){
+			if (profile.action === "like")
+				likeMatch(props.userId, profile.id)
+			else
+				dismissMatch(props.userId, profile.id)
+			if (currentIndex > pfs.length - 1){
+				if (props.displayName)
+					generateMatches(props.displayName);
+				setCurrentIndex(0)
+			}
+		}
+	}, [profile]);
 
 	return (
 		<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3, gap: 3, }}>
@@ -122,7 +98,7 @@ function ProfileFinder(props) {
 								<FinderImage
 									image={element.images[1] ? element.images[1].url : null}
 									mainText={element.display_name}
-									subText={element.top_artists[0] ? element.top_artists[0].name : null}
+									subText={`Their top artist: ${element.top_artists[0] ? element.top_artists[0].name : null}`}
 									link={`/user/:${element.user_id}`}
 								/>
 							</Box>

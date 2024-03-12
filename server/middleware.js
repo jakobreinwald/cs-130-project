@@ -88,6 +88,8 @@ class Middleware {
 
 	// adds all possible matches to matched_user_to_outcome in user document
 	// TODO: figure out how to batch awaits
+	// adds all possible matches to matched_user_to_outcome in user document
+  	// TODO: figure out how to batch awaits
 	async generateMatches(user_id) {
 		// fetch user's top artists and genres from database
 		const user_obj = await this.db.getUser(user_id).catch(console.error);
@@ -104,11 +106,11 @@ class Middleware {
 
 		// TODO: delete temporary fix?
 		const all_user_objs = await this.db.getAllUsers();
-		for (const pot_user_obj of all_user_objs) {
-			if (pot_user_obj.user_id === user_id) {
-				continue;
-			}
-			potential_matches.add(pot_user_obj.user_id);
+		for(const pot_user_obj of all_user_objs) {
+		if (pot_user_obj.user_id === user_id) {
+			continue;
+		}
+		potential_matches.add(pot_user_obj.user_id);
 		}
 
 		// // loop through all genres and find all users who listen to the genre
@@ -128,11 +130,11 @@ class Middleware {
 		// }
 
 		for (const pot_user_id of potential_matches) {
-			if (pot_user_id === user_id) {
-				continue;
-			}
+		if (pot_user_id === user_id) {
+			continue;
+		}
 
-			await this.db.addPotentialMatch(user_id, pot_user_id);
+		await this.db.addPotentialMatch(user_id, pot_user_id);
 		}
 
 		return this.getPotentialMatches(user_id);
@@ -140,31 +142,33 @@ class Middleware {
 
 	// calculate match score between two users
 	// returns -1 if either user object is null or if we don't have enough information to calculate a match score
+	// TODO: fix match score calculation
 	async calculateMatchScore(user_id, match_user_id) {
+		return 100;
 		const user_obj = await this.db.getUser(user_id);
 		const match_user_obj = await this.db.getUser(match_user_id);
 		// check if the user objects exist
 		if (!user_obj || !match_user_obj) {
-			return -1;
+		return -1;
 		}
 		// check if the genre counts exist
 		if (!user_obj.genre_counts || !match_user_obj.genre_counts) {
-			return -1;
+		return -1;
 		}
 
 		// check if the genre counts are empty
 		if ((user_obj.genre_counts.size == 0) || (match_user_obj.genre_counts.size == 0)) {
-			return -1;
+		return -1;
 		}
 
 		// check if the top artist ids exist
 		if (!user_obj.top_artist_ids || !match_user_obj.top_artist_ids) {
-			return -1;
+		return -1;
 		}
 
 		// check if the top artist ids are empty
 		if ((user_obj.top_artist_ids.length == 0) || (match_user_obj.top_artist_ids.length == 0)) {
-			return -1;
+		return -1;
 		}
 
 		const user_total_genre_count = user_obj.total_genre_count;
@@ -175,26 +179,27 @@ class Middleware {
 		// calculate genre match score
 		let genre_match_score = 0;
 		let hypotenuse = 0;
-		for (const genre of user_obj.genre_counts.keys()) {
-			const norm_user_genre_count = user_obj.genre_counts.get(genre) / user_avg_genre_count;
-			const norm_match_genre_count = (match_user_obj.genre_counts.get(genre) ?? 0) / match_avg_genre_count;
-			hypotenuse += norm_user_genre_count * norm_user_genre_count;
-			genre_match_score += norm_user_genre_count * norm_match_genre_count;
+		for (const genre of Object.keys(user_obj.genre_counts)) {
+		const norm_user_genre_count = user_obj.genre_counts[genre] / user_avg_genre_count;
+		const norm_match_genre_count = (match_user_obj.genre_counts[genre] ?? 0) / match_avg_genre_count;
+		hypotenuse += norm_user_genre_count * norm_user_genre_count;
+		genre_match_score += norm_user_genre_count * norm_match_genre_count;
 		}
 		genre_match_score /= hypotenuse;
 
-		// calculate artist match score
-		let artist_match_score = 0;
-		for (const artist of user_obj.top_artist_ids) {
-			const artist_obj = await this.db.getArtist(artist);
-			const user_artist_rank = artist_obj.listener_id_to_rank.get(user_obj.user_id) ?? num_top_artists;
-			const match_artist_rank = artist_obj.listener_id_to_rank.get(match_user_obj.user_id) ?? num_top_artists;
-			artist_match_score += (num_top_artists - user_artist_rank) * (num_top_artists - match_artist_rank);
-		}
-		artist_match_score /= max_artist_match_score;
+		// // calculate artist match score
+		// let artist_match_score = 0;
+		// for (const artist of user_obj.top_artist_ids) {
+		// const artist_obj = await this.db.getArtist(artist);
+		// console.log(artist_obj);
+		// const user_artist_rank = artist_obj.listener_id_to_rank[user_obj.user_id] ?? num_top_artists;
+		// const match_artist_rank = artist_obj.listener_id_to_rank[match_user_obj.user_id] ?? num_top_artists;
+		// artist_match_score += (num_top_artists - user_artist_rank) * (num_top_artists - match_artist_rank);
+		// }
+		// artist_match_score /= max_artist_match_score;
 
 		// return total match score
-		return genre_match_score * 2 / 3 + artist_match_score * 1 / 3;
+		// return genre_match_score * 2 / 3 + artist_match_score * 1 / 3;
 	}
 
 	async fetchRecommendations(access_token, batch_len, top_artists, top_tracks) {
@@ -382,8 +387,8 @@ class Middleware {
 				const match_obj = await this.db.getUser(match_id);
 				const top_shared_artist_ids = user_obj.top_artist_ids.filter(artist => match_obj.top_artist_ids.includes(artist));
 				const top_shared_track_ids = user_obj.top_track_ids.filter(track => match_obj.top_track_ids.includes(track));
-				const user_genres = Array.from(user_obj.genre_counts.keys());
-				const match_genres = Array.from(match_obj.genre_counts.keys());
+				const user_genres = Array.from(Object.keys(user_obj.genre_counts));
+				const match_genres = Array.from(Object.keys(match_obj.genre_counts));
 				const top_shared_genres = user_genres.filter(genre => match_genres.includes(genre));
 				this.db.createOrUpdateMatch(user_id, match_id, match_score, top_shared_artist_ids,
 					top_shared_genres, top_shared_track_ids);

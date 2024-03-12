@@ -120,7 +120,7 @@ function App() {
 				<Route path='/' element={token ? <UserProfile token={token} displayName={displayName} profile={profile} /> : <LandingPage />} />
 				<Route path='/callback' element={token ? null : <TokenCall passToken={setToken} />} />
 				<Route path='/song-finder' element={token ? <SongFinder token={token} displayName={displayName} /> : <LandingPage />} />
-				<Route path='/profile-finder' element={token ? <ProfileFinder token={token} displayName={displayName} /> : <LandingPage />} />
+				<Route path='/profile-finder' element={token ? <ProfileFinder token={token} displayName={displayName} userId={profile ? profile.user_id : null}/> : <LandingPage />} />
 				<Route path="/user/:userId" element={token ? <OtherUserProfile /> : <LandingPage />} />
 			</Routes>
 		</ThemeProvider>

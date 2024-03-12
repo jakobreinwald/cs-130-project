@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import SongCard from '../components/songCard'
 import ProfileCard from '../components/profileCard'
 import { Box, Typography, Divider, Avatar, Button, LinearProgress } from '@mui/material';
-import { useParams } from 'react-router-dom';
+import { useParams} from 'react-router-dom';
 import {getUserProfile} from '../api/index'
 import { Card, CardContent, Link } from '@mui/material';
 
@@ -15,6 +15,7 @@ function OtherUserProfile() {
     const [profile, setProfile] = useState(null);
     const [topArtists, setArtists] = useState([]);
     const [topTracks, setTracks] = useState([]);
+    const [tags, setTags] = useState([]);
     
     const getProfile = async (id) => {
       const userProfile = await getUserProfile(id);
@@ -22,6 +23,13 @@ function OtherUserProfile() {
         setProfile(userProfile.data);
         setArtists(userProfile.data.top_artists)
         setTracks(userProfile.data.top_tracks)
+        const genre_counts = Object.values(userProfile.data.genre_counts);
+        const topNums = genre_counts.sort((a, b) => a - b).reverse().slice(0, 5);
+        function getKeyByValue(object, value) {
+          return Object.keys(object).find(key => object[key] === value);
+        }
+        const topTags = topNums.map((value) => getKeyByValue(userProfile.data.genre_counts, value))
+        setTags(topTags)
       }
     };
     useEffect(() => {
@@ -30,7 +38,7 @@ function OtherUserProfile() {
     }, [userId]);
 
     const matchPercentage = 75;
-    const tags = ["pop", "alternative", "r&b", "rap", "indie"]
+    // const tags = ["pop", "alternative", "r&b", "rap", "indie"]
 
     return (
         <Box sx={{p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center',}}>
@@ -41,7 +49,7 @@ function OtherUserProfile() {
                         <Typography variant="h2" sx={{ color: 'text.primary', mb: 3}}>
                             {profile ? profile.display_name : null}
                         </Typography>
-                        <Button sx={{bgcolor: 'primary.main', color:'text.primary'}}> Spotify Profile </Button>
+                        <Button sx={{bgcolor: 'primary.main', color:'text.primary'}} onClick={profile ? () => window.open(`https://open.spotify.com/user/${profile.user_id}`, '_blank') : null}> Spotify Profile</Button>
                     </Box>
                     <AnimatedMatchPercentage targetValue={matchPercentage}/>
                     <Box sx={{display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'center'}}>
@@ -55,6 +63,9 @@ function OtherUserProfile() {
             <Box sx={{display: 'flex', flexDirection:'row', gap: 5, justifyContent: 'center',}}>
                 <Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '90%' }}>
                   <CardContent>
+                    <Typography gutterBottom variant="h5" component="div" align='center'>
+                      <b>Top Songs</b>
+                    </Typography>
                     {profile ? topTracks.map((match, index) =>
                       <Box key={index} sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
                         <Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={match.album.images[1].url} />
@@ -73,7 +84,7 @@ function OtherUserProfile() {
                 <Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '90%' }}>
                   <CardContent>
                     <Typography gutterBottom variant="h5" component="div" align='center'>
-                      <b>Matched Profiles</b>
+                      <b>Top Artists</b>
                     </Typography>
                     {topArtists ? topArtists.map((match, index) =>
                       <Box key={index} sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>

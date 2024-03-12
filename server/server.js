@@ -148,6 +148,18 @@ app.post('/users/:id/generate_potential_matches', (req, res) => {
 		.catch(console.error);
 });
 
+app.post('/users/:id/likeMatch/:match_id', (req, res) => {
+	middleware.likeMatch(req.params.id, req.params.match_id)
+	  .then(() => res.status(200).send('Liked match'))
+	  .catch(console.error);
+  });
+  
+  app.post('/users/:id/dismissMatch/:match_id', (req, res) => {
+	middleware.dismissMatch(req.params.id, req.params.match_id)
+	  .then(() => res.status(200).send('Dismissed match'))
+	  .catch(console.error);
+  });
+
 // Start Express server
 app.listen(port, () => {
 	console.log(`Minuet server listening on port ${port}`)
