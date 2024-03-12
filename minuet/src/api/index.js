@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const url = process.env.BACKEND_URL || 'http://localhost:3001';
+const url = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
 const spotify_url = 'https://api.spotify.com/v1';
 
 export const updateUserProfile = (token) => axios.post(`${url}/users`, {}, {
