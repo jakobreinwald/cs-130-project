@@ -10,7 +10,7 @@ const cors = require('cors');
 const app = express();
 require('dotenv').config({ path: '.env.local' });
 const corsOptions = {
-	origin: "http://localhost:3000",
+	origin: ["http://localhost:3000", "https://jakobreinwald.github.io/cs-130-project"]
 };
 app.use(cors(corsOptions));
 
