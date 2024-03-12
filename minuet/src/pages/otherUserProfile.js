@@ -38,7 +38,6 @@ function OtherUserProfile() {
     }, [userId]);
 
     const matchPercentage = 75;
-    // const tags = ["pop", "alternative", "r&b", "rap", "indie"]
 
     return (
         <Box sx={{p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center',}}>

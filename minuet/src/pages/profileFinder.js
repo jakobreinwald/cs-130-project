@@ -17,12 +17,13 @@ function ProfileFinder(props) {
 	const [pfs, setPfs] = useState([])
 
 	const generateMatches = async (id) => {
-		const result = await getUserMatches(id)
-		const matchedUsers = result.data.matched_user_to_outcome
+		const result = await getUserMatches(id);
+		const matchedUsers = result.data.matched_user_to_outcome;
+		console.log(matchedUsers);
 		const getOtherProfiles = async (users) => {
 			let promises = [];
 			for (const [userId, value] of Object.entries(users)) {
-				if (value === "none" && userId[0] !== '3') {
+				if (value === "none" && userId[0] !== '3' && userId !== 'limelego') {
 					promises.push(getUserProfile(userId))
 				}
 			}

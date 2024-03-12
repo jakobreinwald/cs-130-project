@@ -381,8 +381,8 @@ class Middleware {
         const match_obj = await this.db.getUser(match_id);
         const top_shared_artist_ids = user_obj.top_artist_ids.filter(artist => match_obj.top_artist_ids.includes(artist));
         const top_shared_track_ids = user_obj.top_track_ids.filter(track => match_obj.top_track_ids.includes(track));
-        const user_genres = Array.from(user_obj.genre_counts.keys());
-        const match_genres = Array.from(match_obj.genre_counts.keys());
+        const user_genres = Array.from(Object.keys(user_obj.genre_counts));
+        const match_genres = Array.from(Object.keys(match_obj.genre_counts));
         const top_shared_genres = user_genres.filter(genre => match_genres.includes(genre));
         this.db.createOrUpdateMatch(user_id, match_id, match_score, top_shared_artist_ids,
           top_shared_genres, top_shared_track_ids);
