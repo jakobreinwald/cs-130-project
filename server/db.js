@@ -394,6 +394,13 @@ class Database {
 		return this.getUserQuery(user_id).lean().exec();
 	}
 
+	async getUsers(user_ids) {
+		return User.find(
+			{ user_id: { $in: user_ids } },
+			{ _id: 0, __v: 0, createdAt: 0, updatedAt: 0 }
+		).lean().exec();
+	}
+
 	async getUserDocument(user_id) {
 		return this.getUserQuery(user_id).exec();
 	}

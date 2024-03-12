@@ -12,7 +12,7 @@ class Matching {
     return this.db.dismissMatch(user_id, match_id);
   }
 
- // adds all possible matches to matched_user_to_outcome in user document
+  // adds all possible matches to matched_user_to_outcome in user document
   // TODO: figure out how to batch awaits
   async generateMatches(user_id) {
     // fetch user's top artists and genres from database
@@ -24,25 +24,34 @@ class Matching {
 
     // get genre_counts keys and sort by descending order
     // number of genres is in the thousands, so slice to get the top num_top_artists genres
-    let tmp = Array.from(genre_counts.entries()).sort((a, b) => b[1] - a[1]).map(entry => entry[0]);
+    let tmp = Array.from(Object.entries(genre_counts)).sort((a, b) => b[1] - a[1]).map(entry => entry[0]);
     const user_genres = tmp.slice(0, num_top_artists);
     let potential_matches = new Set();
 
-    // loop through all genres and find all users who listen to the genre
-    for (const genre of user_genres) {
-      const genre_obj = await this.db.getGenre(genre);
-      for (const listener_id of genre_obj.listener_id_to_count.keys()) {
-        potential_matches.add(listener_id);
+    // TODO: delete temporary fix?
+    const all_user_objs = await this.db.getAllUsers();
+    for (const pot_user_obj of all_user_objs) {
+      if (pot_user_obj.user_id === user_id) {
+        continue;
       }
+      potential_matches.add(pot_user_obj.user_id);
     }
 
-    // loop through all artists and find all users who listen to the artist
-    for (const artist of top_artists) {
-      const artist_obj = await this.db.getArtist(artist);
-      for (const listener_id of artist_obj.listener_id_to_rank.keys()) {
-        potential_matches.add(listener_id);
-      }
-    }
+    // // loop through all genres and find all users who listen to the genre
+    // for (const genre of user_genres) {
+    //   const genre_obj = await this.db.getGenre(genre);
+    //   for (const listener_id of genre_obj.listener_id_to_count.keys()) {
+    //     potential_matches.add(listener_id);
+    //   }
+    // }
+
+    // // loop through all artists and find all users who listen to the artist
+    // for (const artist of top_artists) {
+    //   const artist_obj = await this.db.getArtist(artist);
+    //   for (const listener_id of artist_obj.listener_id_to_rank.keys()) {
+    //     potential_matches.add(listener_id);
+    //   }
+    // }
 
     for (const pot_user_id of potential_matches) {
       if (pot_user_id === user_id) {
@@ -58,8 +67,9 @@ class Matching {
   // calculate match score between two users
   // returns -1 if either user object is null or if we don't have enough information to calculate a match score
   async calculateMatchScore(user_id, match_user_id) {
-    const user_obj = await this.db.getUser(user_id);
-    const match_user_obj = await this.db.getUser(match_user_id);
+    // const user_obj = await this.db.getUser(user_id);
+    // const match_user_obj = await this.db.getUser(match_user_id);
+    const [user_obj, match_user_obj] = await this.db.getUsers([user_id, match_user_id]).catch(console.error);
     // check if the user objects exist
     if (!user_obj || !match_user_obj) {
       return -1;
@@ -84,23 +94,23 @@ class Matching {
       return -1;
     }
 
+    const user_genre_counts_keys = Object.keys(user_obj.genre_counts);
     const user_total_genre_count = user_obj.total_genre_count;
-    const user_avg_genre_count = user_total_genre_count / user_obj.genre_counts.size;
+    const user_avg_genre_count = user_total_genre_count / user_genre_counts_keys.length;
     const match_total_genre_count = match_user_obj.total_genre_count;
-    const match_avg_genre_count = match_total_genre_count / match_user_obj.genre_counts.size;
+    const match_avg_genre_count = match_total_genre_count / Object.keys(match_user_obj.genre_counts).length;
 
     // calculate genre match score
     let genre_match_score = 0;
     let hypotenuse = 0;
-    for (const genre of user_obj.genre_counts.keys()) {
-      const norm_user_genre_count = user_obj.genre_counts.get(genre) / user_avg_genre_count;
-      const norm_match_genre_count = (match_user_obj.genre_counts.get(genre) ?? 0) / match_avg_genre_count;
+    for (const genre of Object.keys(user_obj.genre_counts)) {
+      const norm_user_genre_count = user_obj.genre_counts[genre] / user_avg_genre_count;
+      const norm_match_genre_count = (match_user_obj.genre_counts[genre] ?? 0) / match_avg_genre_count;
       hypotenuse += norm_user_genre_count * norm_user_genre_count;
       genre_match_score += norm_user_genre_count * norm_match_genre_count;
     }
     genre_match_score /= hypotenuse;
 
-    // calculate artist match score
     let artist_match_score = 0;
     for (const artist of user_obj.top_artist_ids) {
       const artist_obj = await this.db.getArtist(artist);
@@ -127,8 +137,20 @@ class Matching {
       }
     });
 
-    // return updated matches
-    return this.db.getMatches(user_id);
+    if (!recs) {
+      return Promise.reject('Failed to fetch recommendations');
+    }
+
+    // Filter old recs and extract first num_req track ids, immediately returned in response
+    const rec_ids = recs.filter(({ id }) => !recommended_track_to_outcome.has(id))
+      .map(({ id }) => id);
+    const req_rec_ids = rec_ids.slice(0, num_req);
+
+    // Cache recommendation track ids and track objects in database
+    const cached_rec_ids = this.db.addRecommendations(rec_ids, user);
+    const cached_tracks = this.db.createOrUpdateTracksWithAlbumAndArtists(recs);
+
+    return Promise.all([cached_rec_ids, cached_tracks]).then(() => req_rec_ids);
   }
 
   // potential matches are a list of potential matches for the user, sorted by match score
@@ -147,8 +169,8 @@ class Matching {
         const match_obj = await this.db.getUser(match_id);
         const top_shared_artist_ids = user_obj.top_artist_ids.filter(artist => match_obj.top_artist_ids.includes(artist));
         const top_shared_track_ids = user_obj.top_track_ids.filter(track => match_obj.top_track_ids.includes(track));
-        const user_genres = Array.from(user_obj.genre_counts.keys());
-        const match_genres = Array.from(match_obj.genre_counts.keys());
+        const user_genres = Array.from(Object.keys(user_obj.genre_counts));
+        const match_genres = Array.from(Object.keys(match_obj.genre_counts));
         const top_shared_genres = user_genres.filter(genre => match_genres.includes(genre));
         this.db.createOrUpdateMatch(user_id, match_id, match_score, top_shared_artist_ids,
           top_shared_genres, top_shared_track_ids);
