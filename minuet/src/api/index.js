@@ -14,12 +14,14 @@ export const getUserRecs = (token, id) => axios.get(`${url}/users/${id}/recs`, {
 		"Authorization": 'Bearer ' + token,
 	}
 });
+
 export const getRecommendedTracks = (token, ids) => axios.get(`${spotify_url}/tracks?ids=${ids.join(',')}`, {
 	headers: {
 		"Authorization": 'Bearer ' + token,
 	}
 });
-export const postNewSongDecision = (token, user_id, id, action) => axios.post(`${url}/users/${user_id}/recs/${id}?action=${action}`, {}, {
+
+export const postNewSongDecision = (token, user_id, rec_id, action) => axios.post(`${url}/users/${user_id}/recs/${rec_id}?action=${action}`, {}, {
 	headers: {
 		"Authorization": 'Bearer ' + token,
 	}

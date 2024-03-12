@@ -123,8 +123,9 @@ class Matching {
     artist_match_score /= max_artist_match_score;
 
     // return total match score, user and match user objects
-    const total_match_score = genre_match_score * 2 / 3 + artist_match_score * 1 / 3;
-    return [total_match_score, user_obj, match_user_obj];
+    const total_match_score = genre_match_score * 2 / 3 + artist_match_score * 1 / 3 + .5;
+    const adjusted_match_score = total_match_score >= 1 ? 1 : total_match_score;
+    return [adjusted_match_score, user_obj, match_user_obj];
   }
 
   // matches are a pair of users that have liked each others profiles

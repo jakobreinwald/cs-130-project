@@ -10,8 +10,14 @@ const Track = new mongoose.Schema(
     artist_ids: {
       type: [String]
     },
+    duration_ms: {
+      type: Number
+    },
     name: {
       type: String
+    },
+    popularity: {
+      type: Number
     },
     preview_url: {
       type: String

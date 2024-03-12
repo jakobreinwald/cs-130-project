@@ -95,7 +95,7 @@ app.get('/users/:id/recs', (req, res) => {
   const user_id = req.params.id;
 
   middleware.getRecommendations(access_token, user_id, num_recs)
-    .then(recs => res.json({ recs: recs.tracks }))
+    .then(recs => res.json({ recs: recs }))
     .catch(console.error);
 });
 
@@ -110,7 +110,7 @@ app.get('/users/:id/potential_matches/:match_id', (req, res) => {
 
 app.get('/users/:id/calculateMatchScore/:match_id', (req, res) => {
   middleware.calculateMatchScore(req.params.id, req.params.match_id)
-    .then(score => res.json({ score: score }))
+    .then(([score, ...rest]) => res.json({ score: score }))
     .catch(console.error);
 });
 

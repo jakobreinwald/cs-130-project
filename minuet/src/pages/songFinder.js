@@ -8,19 +8,20 @@ import heart from '../assets/heart.svg';
 import { getUserRecs, postNewSongDecision } from '../api';
 import PopularityIcon from '../components/popularityIcon';
 
-function SongFinder({ token, displayName }) {
+function SongFinder({ token, userId, displayName }) {
 	const [data, setData] = useState([]);
-	const fetchData = async (token, displayName) => {
-		const result = await getUserRecs(token, displayName);
+	const fetchData = async (token, userId) => {
+		const result = await getUserRecs(token, userId);
+		console.log(result.data);
 		setData(result.data.recs);
 		console.log("RESULT: ", result.data.recs);
 	};
 
 	useEffect(() => {
-		if (token !== null && displayName !== null) {
-			fetchData(token, displayName);
+		if (token !== null && userId !== null) {
+			fetchData(token, userId);
 		}
-	}, [token, displayName]);
+	}, [token, userId]);
 
 	const theme = useTheme();
 	const [direction, setDirection] = useState("down");
@@ -72,14 +73,14 @@ function SongFinder({ token, displayName }) {
 	};
 
 	const updateSongs = (songId, action) => {
-		postNewSongDecision(token, displayName, songId, action);
+		postNewSongDecision(token, userId, songId, action);
 	}
 
 	useEffect(() => {
 		// Send data to backend
 		console.log("Disliked Songs Updated:", dislikedSongs);
 		if (dislikedSongs.length > 0) {
-			updateSongs(dislikedSongs[dislikedSongs.length - 1].id, 'dismiss');
+			updateSongs(dislikedSongs[dislikedSongs.length - 1].track_id, 'dismiss');
 		}
 	}, [dislikedSongs]);
 
@@ -87,11 +88,15 @@ function SongFinder({ token, displayName }) {
 		// Send data to backend
 		console.log("Liked Songs Updated:", likedSongs);
 		if (likedSongs.length > 0) {
-			updateSongs(likedSongs[likedSongs.length - 1].id, 'like');
+			updateSongs(likedSongs[likedSongs.length - 1].track_id, 'like');
 		}
 	}, [likedSongs]);
 
 	function millisecondsToMinutesAndSeconds(milliseconds) {
+		if (!milliseconds) {
+			return '';
+		}
+
 		const totalSeconds = Math.floor(milliseconds / 1000);
 
 		const minutes = Math.floor(totalSeconds / 60);
@@ -110,20 +115,20 @@ function SongFinder({ token, displayName }) {
 					<img src={xMark} alt="X Mark" style={{ maxWidth: '75%' }} />
 				</IconButton>
 				<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: 500, height: 600, }}>
-					{hasMatches ? data.map((element, index) => (
+					{hasMatches ? data.map(({ album, duration_ms, name, popularity, preview_url, track_id }, index) => (
 						<Slide key={index} direction={direction} in={slideIn && index === currentIndex} mountOnEnter unmountOnExit>
 							<Box>
 								<FinderImage
-									image={element.album.images[0].url}
-									mainText={element.name + ` (Track ${element.track_number}, ${millisecondsToMinutesAndSeconds(element.duration_ms)})`}
+									image={album.images[0].url}
+									mainText={name}
 									subText={
 										<>
-											{<PopularityIcon value={element.popularity} />} {element.album.release_date}
+											{<PopularityIcon value={popularity} />} • {album.release_date} • {millisecondsToMinutesAndSeconds(duration_ms)}
 										</>
 									}
-									link={element.album.external_urls.spotify}
+									link={`https://open.spotify.com/track/${track_id}`}
 								/>
-								<AudioPlayer previewUrl={element.preview_url} />
+								<AudioPlayer previewUrl={preview_url} />
 							</Box>
 						</Slide>
 					)) : <Typography variant='h5'> Sorry, no more matches for now! </Typography>}

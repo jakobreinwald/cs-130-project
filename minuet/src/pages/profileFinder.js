@@ -34,9 +34,9 @@ function ProfileFinder(props) {
 	};
 
 	useEffect(() => {
-		if (props.displayName)
-			generateMatches(props.displayName);
-	}, [props.displayName]);
+		if (props.userId)
+			generateMatches(props.userId);
+	}, [props.userId]);
 
 	const [profile, setProfile] = useState(null);
 
@@ -76,8 +76,8 @@ function ProfileFinder(props) {
 			else
 				dismissMatch(props.userId, profile.id)
 			if (currentIndex > pfs.length - 1){
-				// if (props.displayName)
-				// 	generateMatches(props.displayName);
+				// if (props.userId)
+				// 	generateMatches(props.userId);
 				// setCurrentIndex(0)
 				setHasMatches(false);
 			}

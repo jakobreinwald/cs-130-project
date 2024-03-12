@@ -1,5 +1,5 @@
 // Dependencies
-const { Album, Artist, Genre, Track, User, Match } = require('./models');
+const { Album, Artist, Genre, Match, Track, User } = require('./models');
 const mongoose = require('mongoose');
 require('dotenv').config({ path: '.env.local' });
 
@@ -80,10 +80,12 @@ class Database {
 		return { url, height, width };
 	}
 
-  createTrackModel({ album, artists, name, preview_url }) {
+  createTrackModel({ album, artists, duration_ms, name, popularity, preview_url }) {
     // Convert Spotify API object to Track model
     return {
+			duration_ms,
       name,
+			popularity,
       preview_url,
       album_id: album.id,
       artist_ids: artists.map(({ id }) => id)
@@ -415,13 +417,14 @@ class Database {
 		return this.getUserQuery(user_id).exec();
 	}
 
-	async getBasicUserProfile(user_id) {
-		return this.getUserQuery(user_id)
+	async getBasicUserProfiles(user_ids) {
+		return User.find({ user_id: { $in: user_ids } })
 			.select({
 				_id: 0,
 				display_name: 1,
 				images: 1,
 				recommended_tracks_playlist_id: 1,
+				user_id: 1
 			})
 			.lean()
 			.exec();

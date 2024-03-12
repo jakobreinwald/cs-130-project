@@ -97,30 +97,25 @@ class Middleware {
       return Promise.reject('Failed to fetch user profile');
     }
 
+    // Fetch matched users from database
+    const matched_user_ids = Object.entries(user.matched_user_to_outcome)
+      .filter(([user_id, outcome]) => outcome === 'liked')
+      .map(([user_id, outcome]) => user_id);
+    const matched_users_req = this.db.getBasicUserProfiles(matched_user_ids);
+
     // Fetch full top artist and track info from database
     const top_artist_ids = user.top_artist_ids.slice(0, num_top_artists);
     const top_track_ids = user.top_track_ids.slice(0, num_top_tracks);
     const artists_req = this.db.getArtists(top_artist_ids);
     const tracks_req = this.db.getFullTracks(top_track_ids);
-    const [top_artists, top_tracks] = await Promise.all([artists_req, tracks_req])
+
+    const all_req = Promise.all([matched_users_req, artists_req, tracks_req]);
+    const [matched_users, top_artists, top_tracks] = await all_req
       .catch(console.error);
 
-    if (!top_artists || !top_tracks) {
-      return Promise.reject('Failed to fetch top artists and tracks for user');
+    if (!matched_users || !top_artists || !top_tracks) {
+      return Promise.reject('Failed to fetch matched users, top artists and/or tracks for user');
     }
-
-    const matched_users = await Promise.all(
-      Object.entries(user.matched_user_to_outcome)
-        .filter(([key, value]) => value === 'liked')
-        .map(async ([key, value]) => {
-          try {
-            return await this.db.getBasicUserProfile(key);
-          } catch (error) {
-            console.error(error);
-            return null; // Or handle the error accordingly
-          }
-        })
-    );
 
     // Return user profile with full top artist and track info
     delete user.top_artist_ids;
