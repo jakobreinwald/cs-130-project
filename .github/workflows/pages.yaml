@@ -1,0 +1,27 @@
+name: Deploy Frontend to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Build and Deploy Frontend
+        run: |
+          cd frontend  # Navigate to your frontend directory
+          npm install  # Install dependencies (if needed)
+          npm run build  # Build your frontend
+          mv build ../public  # Move build files to temporary directory
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
