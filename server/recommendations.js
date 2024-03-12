@@ -5,7 +5,6 @@ const rec_batch_len = 5;
 
 // Dependencies
 const SpotifyAPI = require('./spotify_api');
-require('dotenv').config({ path: '.env.local' });
 
 class Recommendations {
   constructor(database) {
