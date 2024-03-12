@@ -8,13 +8,13 @@ function TokenCall(props) {
 
 	async function getAccessToken(clientId, code) {
 		const verifier = window.localStorage.getItem("verifier");
-		const url = process.env.PUBLIC_URL || "http://localhost:3000";
+		const url = process.env.REACT_APP_FRONTEND_URL;
 
 		const params = new URLSearchParams();
 		params.append("client_id", clientId);
 		params.append("grant_type", "authorization_code");
 		params.append("code", code);
-		params.append("redirect_uri", `https://jakobreinwald.github.io/cs-130-project/callback`);
+		params.append("redirect_uri", `${url}/callback`);
 		params.append("code_verifier", verifier);
 
 		const result = await fetch("https://accounts.spotify.com/api/token", {

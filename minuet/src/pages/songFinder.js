@@ -119,11 +119,11 @@ function SongFinder({ token, userId, displayName }) {
 						<Slide key={index} direction={direction} in={slideIn && index === currentIndex} mountOnEnter unmountOnExit>
 							<Box>
 								<FinderImage
-									image={album.images[0].url}
+									image={album && album.hasOwnProperty('images') ? album.images[0].url : `https://open.spotify.com/track/${track_id}`}
 									mainText={name}
 									subText={
 										<>
-											{<PopularityIcon value={popularity} />} • {album.release_date} • {millisecondsToMinutesAndSeconds(duration_ms)}
+											{<PopularityIcon value={popularity} />} • {album && album.hasOwnProperty('release_date') ? album.release_date : 'unknown release date'} • {millisecondsToMinutesAndSeconds(duration_ms)}
 										</>
 									}
 									link={`https://open.spotify.com/track/${track_id}`}
