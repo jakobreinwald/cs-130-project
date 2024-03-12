@@ -15,7 +15,7 @@ jobs:
 
       - name: Build and Deploy Frontend
         run: |
-          cd frontend  # Navigate to your frontend directory
+          cd minuet  # Navigate to your frontend directory
           npm install  # Install dependencies (if needed)
           npm run build  # Build your frontend
           mv build ../public  # Move build files to temporary directory
