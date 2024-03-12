@@ -14,7 +14,7 @@ function TokenCall(props) {
 		params.append("client_id", clientId);
 		params.append("grant_type", "authorization_code");
 		params.append("code", code);
-		params.append("redirect_uri", `${url}/callback`);
+		params.append("redirect_uri", `https://jakobreinwald.github.io/cs-130-project/callback`);
 		params.append("code_verifier", verifier);
 
 		const result = await fetch("https://accounts.spotify.com/api/token", {

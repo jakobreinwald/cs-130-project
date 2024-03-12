@@ -43,7 +43,7 @@ function getToken() {
 		const params = new URLSearchParams();
 		params.append("client_id", clientId);
 		params.append("response_type", "code");
-		params.append("redirect_uri", `${url}/callback`);
+		params.append("redirect_uri", `https://jakobreinwald.github.io/cs-130-project/callback`);
 		params.append("scope", scope);
 		params.append("code_challenge_method", "S256");
 		params.append("code_challenge", challenge);
