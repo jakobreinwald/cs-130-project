@@ -6,7 +6,6 @@ import { useTheme } from '@mui/material/styles';
 import xMark from '../assets/x-mark.svg';
 import heart from '../assets/heart.svg';
 import { getUserRecs, postNewSongDecision } from '../api';
-import PopularityIcon from '../components/popularityIcon';
 import { getTracks } from '../api/index';
 
 function SongFinder({ token, userId, displayName, profile, setProfile }) {
@@ -109,24 +108,20 @@ function SongFinder({ token, userId, displayName, profile, setProfile }) {
 	return (
 		<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3, gap: 3, }}>
 			<Typography variant='h3'>
-				{displayName}, we think you'd like...
+				We think you'd like...
 			</Typography>
 			<Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, m: 3 }}>
 				<IconButton variant='contained' onClick={swipeLeft} sx={{ backgroundColor: theme.palette.swipeButton.red, borderRadius: '100%', width: 75, height: 75, '&:hover': { backgroundColor: theme.palette.swipeButton.redHover, }, }}>
 					<img src={xMark} alt="X Mark" style={{ maxWidth: '75%' }} />
 				</IconButton>
 				<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: 500, height: 600, }}>
-					{hasMatches ? data.map(({ album, duration_ms, name, popularity, preview_url, track_id }, index) => (
+					{hasMatches ? data.map(({ album, artists, name, preview_url, track_id }, index) => (
 						<Slide key={index} direction={direction} in={slideIn && index === currentIndex} mountOnEnter unmountOnExit>
 							<Box>
 								<FinderImage
 									image={album && album.hasOwnProperty('images') ? album.images[0].url : `https://open.spotify.com/track/${track_id}`}
 									mainText={name}
-									subText={
-										<>
-											{<PopularityIcon value={popularity} />} • {album && album.hasOwnProperty('release_date') ? album.release_date : 'unknown release date'} • {millisecondsToMinutesAndSeconds(duration_ms)}
-										</>
-									}
+									subText={artists[0].name}
 									link={`https://open.spotify.com/track/${track_id}`}
 								/>
 								<AudioPlayer previewUrl={preview_url} />
