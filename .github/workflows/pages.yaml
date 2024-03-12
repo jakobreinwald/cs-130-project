@@ -18,7 +18,7 @@ jobs:
           cd minuet  # Navigate to your frontend directory
           touch .env
           echo REACT_APP_SPOTIFY_CLIENT_ID=${{ secrets.REACT_APP_SPOTIFY_CLIENT_ID }} >> .env
-          echo BACKEND_URL=${{ secrets.BACKEND_URL }} >> .env
+          echo REACT_APP_BACKEND_URL=${{ secrets.REACT_APP_BACKEND_URL }} >> .env
           npm install  # Install dependencies (if needed)
           CI=false npm run build  # Build your frontend
           mv build ../public  # Move build files to temporary directory
