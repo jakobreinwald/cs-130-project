@@ -28,8 +28,8 @@ function validateAuth(auth) {
 }
 
 function validateNumRecs(num_recs) {
-  if (num_recs === undefined) { // default to 10 if num_recs not provided
-    return 10;
+  if (num_recs === undefined) { // default to 5 if num_recs not provided
+    return 5;
   }
 
   const casted_num_recs = Number(num_recs);

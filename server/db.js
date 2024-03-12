@@ -53,25 +53,24 @@ class Database {
     };
   }
 
-  createAlbumModel(album_obj) {
+  createAlbumModel({ album_type, artists, images, name, release_date, release_date_precision }) {
     // Convert Spotify API object to Album model
     return {
-      album_type: album_obj.album_type,
-      artist_ids: album_obj.artists.map(artist => artist.id),
-      images: album_obj.images.map(this.createImageModel),
-      name: album_obj.name,
-      release_date: album_obj.release_date,
-      release_date_precision: album_obj.release_date_precision
+      album_type,
+      images,
+      name,
+      release_date,
+      release_date_precision,
+      artist_ids: artists.map(({ id }) => id)
     };
   }
 
-  createArtistModel(artist_obj) {
+  createArtistModel({ genres, images, name }) {
     // Convert Spotify API object to Artist model
     return {
-      genres: artist_obj.genres,
-      // TODO: this line is called every time the model is updated
-      images: artist_obj.images ? artist_obj.images.map(this.createImageModel) : [],
-      name: artist_obj.name
+      genres,
+      images,
+      name
     };
   }
 
@@ -80,13 +79,13 @@ class Database {
     return { url, height, width };
   }
 
-  createTrackModel(track_obj) {
+  createTrackModel({ album, artists, name, preview_url }) {
     // Convert Spotify API object to Track model
     return {
-      album: track_obj.album.id,
-      artist_ids: track_obj.artists.map(({ id }) => id),
-      name: track_obj.name,
-      preview_url: track_obj.preview_url,
+      name,
+      preview_url,
+      album_id: album.id,
+      artist_ids: artists.map(({ id }) => id)
     };
   }
 
@@ -210,32 +209,31 @@ class Database {
     // Update existing Track documents, otherwise create new documents
     const updated_tracks = this.createOrUpdateTracks(tracks);
 
-    // Extract album_ids and artist_ids from tracks, then create/update documents
-    const album_ids = tracks.map(({ album_id }) => album_id);
-    const updated_albums = this.createOrUpdateAlbums(album_ids);
-    const artist_ids = tracks.flatMap(({ artist_ids }) => artist_ids);
-    const updated_artists = this.createOrUpdateArtists(artist_ids);
+    // Extract albums and artists from tracks, then create/update respective documents
+    const albums = tracks.map(({ album }) => album);
+    const updated_albums = this.createOrUpdateAlbums(albums);
+    const artists = tracks.flatMap(({ artists }) => artists);
+    const updated_artists = this.createOrUpdateArtists([], artists, null);
 
-    // Return promise for all album, artist, and track document updates
     return Promise.all([updated_albums, updated_artists, updated_tracks]);
   }
 
   async createOrUpdateUser(genre_counts, top_artist_ids, top_track_ids, user_obj) {
     // Update existing User document, otherwise create new document
     // sum the values of the genre_counts map
-    // const total_genre_count = Array.from(genre_counts.values()).reduce((a, b) => a + b, 0);
+    const total_genre_count = Array.from(genre_counts.values()).reduce((a, b) => a + b, 0);
     const { id, display_name } = user_obj;
-    const images = user_obj.images.map(this.createImageModel);
+    const images = user_obj.images ? user_obj.images.map(this.createImageModel) : [];
 
     return User.findOneAndUpdate(
       { user_id: id },
       {
         display_name,
-        // genre_counts,
+        genre_counts,
         images,
         top_artist_ids,
         top_track_ids,
-        // total_genre_count
+        total_genre_count
       },
       { new: true, upsert: true }
     ).exec();
