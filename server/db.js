@@ -109,7 +109,11 @@ class Database {
     return Track.findOne({ track_id: track_id });
   }
 
-  async addRecommendations(rec_ids, user_doc) {
+  async addRecommendations(artist_offset, track_offset, rec_ids, user_doc) {
+    // Update seed-determining offsets
+    user_doc.rec_seed_artist_offset = artist_offset;
+    user_doc.rec_seed_track_offset = track_offset;
+
     // Add new recommended tracks that user has not yet acted upon
     user_doc.recommended_and_fresh_tracks = rec_ids.reduce((map, rec_id) => {
         map.set(rec_id, '');

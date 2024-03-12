@@ -45,51 +45,60 @@ class Recommendations {
     return Promise.resolve(user_doc);
   }
   
-  static async updateRecommendationSeedOffsets(artist_offset, track_offset, user_doc) {
-    const { top_artist_ids, top_track_ids } = user_doc;
+  static updateRecommendationSeedOffsets(artist_offset, track_offset, num_top_artists, num_top_tracks) {
     artist_offset += num_artist_seeds;
     track_offset += num_track_seeds;
-    user_doc.rec_seed_artist_offset = (artist_offset >= top_artist_ids.length) ? 0 : artist_offset;
-    user_doc.rec_seed_track_offset = (track_offset >= top_track_ids.length) ? 0 : track_offset;
-    return user_doc.save();
+
+    if (artist_offset >= num_top_artists) {
+      artist_offset = 0;
+    }
+
+    if (track_offset >= num_top_tracks) {
+      track_offset = 0;
+    }
+
+    return [artist_offset, track_offset];
   }
 
   async dismissRecommendation(user_id, rec_id) {
     return this.db.dismissRecommendation(user_id, rec_id);
   }
 
-  async fetchRecommendations(access_token, user, batch_len) {
+  async fetchRecommendations(access_token, user, artist_offset, track_offset, batch_len) {
     // Extract top artists, tracks, and seed-determining offsets from user document
-    const { rec_seed_artist_offset, rec_seed_track_offset, top_artist_ids, top_track_ids } = user;
+    const { top_artist_ids, top_track_ids } = user;
 
     // Select 5 seeds from top lists (max allowed by Spotify API)
-    const artist_offset = rec_seed_artist_offset;
-    const track_offset = rec_seed_track_offset;
     const selected_artists = top_artist_ids.slice(artist_offset, artist_offset + num_artist_seeds);
     const selected_tracks = top_track_ids.slice(track_offset, track_offset + num_track_seeds);
 
     // Call recommendation endpoint of Spotify API and update seed-determining offsets
-    const recs = await SpotifyAPI.fetchRecommendedTracks(access_token, batch_len, selected_artists, selected_tracks)
+    return SpotifyAPI.fetchRecommendedTracks(access_token, batch_len, selected_artists, selected_tracks)
       .then(({ data }) => data.tracks)
       .catch(console.error);
-
-    if (!recs) {
-      return Promise.reject('Failed to fetch recommendations from Spotify API');
-    }
-
-    return Recommendations.updateRecommendationSeedOffsets(artist_offset, track_offset, user)
-      .then(() => recs);
   }
 
   async generateRecommendations(access_token, user, batch_len, num_req) {
-    // Fetch recommendations from Spotify API, ensuring at least num_req recommendations fetched
-    const { recommended_track_to_outcome } = user;
+    // Extract previous recommendations, seed-determining offsets, top artist and track ids from user document
+    const {
+      rec_seed_artist_offset,
+      rec_seed_track_offset,
+      recommended_track_to_outcome,
+      top_artist_ids,
+      top_track_ids
+    } = user;
+    
+    const num_top_artists = top_artist_ids.length;
+    const num_top_tracks = top_track_ids.length;
     const recs = [];
     const rec_ids = [];
-
+    let artist_offset = rec_seed_artist_offset;
+    let track_offset = rec_seed_track_offset;
+    
+    // Fetch recommendations from Spotify API, ensuring at least num_req recommendations fetched
     while (rec_ids.length < num_req) {
       // Filter out previously recommended and liked/dismissed tracks in fetched batch
-      const batch = await this.fetchRecommendations(access_token, user, batch_len)
+      const batch = await this.fetchRecommendations(access_token, user, artist_offset, track_offset, batch_len)
         .then(recs => recs.filter(({ id }) => !recommended_track_to_outcome.has(id)))
         .catch(console.error);
 
@@ -100,14 +109,15 @@ class Recommendations {
       const batch_ids = batch.map(({ id }) => id);
       rec_ids.push(...batch_ids);
       recs.push(...batch);
+      [artist_offset, track_offset] = Recommendations.updateRecommendationSeedOffsets(artist_offset, track_offset, num_top_artists, num_top_tracks);
     }
 
     if (!rec_ids) {
-      return Promise.reject('Failed to generate recommendations');
+      return Promise.reject('Failed to fetch recommendations from Spotify API');
     }
 
     // Cache recommendation track ids and track objects in database, then return first num_req track ids
-    const cached_rec_ids = this.db.addRecommendations(rec_ids, user);
+    const cached_rec_ids = this.db.addRecommendations(artist_offset, track_offset, rec_ids, user);
     const cached_tracks = this.db.createOrUpdateTracksWithAlbumAndArtists(recs);
     const req_rec_ids = rec_ids.slice(0, num_req);
     return Promise.all([cached_rec_ids, cached_tracks]).then(() => req_rec_ids);
