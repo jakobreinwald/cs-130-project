@@ -71,6 +71,7 @@ function App() {
 		const pairedProfile = await result.json();
 		if (!("error" in pairedProfile)) {
 			setDisplayName(pairedProfile.display_name);
+			console.log("Paired Profile: ", pairedProfile.displayName)
 			setProfile(pairedProfile);
 			const dbProfile = await getUserProfile(pairedProfile.display_name);
 			const userPlaylist = (await getPlaylist(token, dbProfile.data.recommended_tracks_playlist_id));
@@ -93,7 +94,7 @@ function App() {
 			);
 			const frontEndUser = { ...dbProfile.data, userPlaylist: userPlaylist.data, recommendedTracks: recommendedTracks.data.tracks, matchedUsersLinks };
 			setProfile(frontEndUser);
-			// console.log("Profile: ", frontEndUser);
+			console.log("Profile: ", frontEndUser);
 			return frontEndUser;
 		}
 		return pairedProfile;
@@ -107,7 +108,10 @@ function App() {
 	useEffect(() => {
 		// console.log("hello", token)
 		if (token) {
-			updateUserProfile(token);
+			const handler = async (token) => {
+				await updateUserProfile(token);
+			}
+			//handler(token);
 			const dummyProfile = getProfile();
 		}
 	}, [token])

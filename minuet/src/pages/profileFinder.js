@@ -18,7 +18,7 @@ function ProfileFinder(props) {
 
 	const generateMatches = async (id) => {
 		const result = await getUserMatches(id);
-		const matchedUsers = result.data.matched_user_to_outcome;
+		const matchedUsers = result.data;
 		console.log(matchedUsers);
 		const getOtherProfiles = async (users) => {
 			let promises = [];
