@@ -4,7 +4,7 @@ import { Box, Typography, IconButton, Slide } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import xMark from '../assets/x-mark.svg';
 import heart from '../assets/heart.svg';
-import { getUserMatches, getUserProfile } from '../api/index.js'
+import { getUserMatches, getUserProfile, likeMatch, dismissMatch} from '../api/index.js'
 
 function ProfileFinder(props) {
 	const theme = useTheme();
@@ -14,21 +14,23 @@ function ProfileFinder(props) {
 	const [slideIn, setSlideIn] = useState(true); // Used to trigger slide out animation
 	const [hasMatches, setHasMatches] = useState(true);
 
+	const [pfs, setPfs] = useState([])
+
 	const generateMatches = async (id) => {
-		const result = await getUserMatches(id)
-		const matchedUsers = result.data.matched_user_to_outcome
-		console.log(matchedUsers)
+		const result = await getUserMatches(id);
+		const matchedUsers = result.data.matched_user_to_outcome;
+		console.log(matchedUsers);
 		const getOtherProfiles = async (users) => {
 			let promises = [];
 			for (const [userId, value] of Object.entries(users)) {
-				if (value === "none" && userId[0] !== '3') {
+				if (value === "none" && userId[0] !== '3' && userId !== 'limelego') {
 					promises.push(getUserProfile(userId))
 				}
 			}
 			return Promise.all(promises)
 		};
 		const otherProfiles = (await getOtherProfiles(matchedUsers)).map((p) => p.data)
-		console.log(otherProfiles)
+		setPfs(otherProfiles)
 	};
 
 	useEffect(() => {
@@ -36,40 +38,7 @@ function ProfileFinder(props) {
 			generateMatches(props.displayName);
 	}, [props.displayName]);
 
-	const pfs = [
-		{
-			image: 'https://hackspirit.com/wp-content/uploads/2021/06/Copy-of-Rustic-Female-Teen-Magazine-Cover.jpg',
-			mainText: 'Kate Spade',
-			subText: 'Their top artist: Taylor Swift',
-			id: '0' //user id from backend
-		},
-		{
-			image: 'https://ichef.bbci.co.uk/news/976/cpsprodpb/C597/production/_131938505_ind3bc40c5f1c10d4248e6bf848ae7033c8814005e9-1.jpg',
-			mainText: 'Tay Tay',
-			subText: 'Their top artist: Taylor Swift',
-			id: '1'
-		},
-		{
-			image: 'https://www.verywellmind.com/thmb/pwEmuUJ6KO9OF8jeiQCDyKnaVQI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/GettyImages-1187609003-73c8baf32a6a46a6b84fe931e0c51e7e.jpg',
-			mainText: 'En Pea Sea',
-			subText: 'Their top artist: Taylor Swift',
-			id: '2'
-		},
-		{
-			image: 'https://www.dmarge.com/wp-content/uploads/2021/01/dwayne-the-rock-.jpg',
-			mainText: 'Pebble',
-			subText: 'Their top artist: Taylor Swift',
-			id: '0'
-		},
-		{
-			image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqW5lCXxflY_ZOsSs11cRIOoOwTTYHjy0_8A&usqp=CAU',
-			mainText: 'Me',
-			subText: 'Their top artist: Taylor Swift',
-			id: '1'
-		},
-	]
-	const [likedProfiles, setLikedProfiles] = useState([]);
-	const [dislikedProfiles, setDislikedProfiles] = useState([]);
+	const [profile, setProfile] = useState(null);
 
 	const swipeLeft = () => {
 		setDirection("right");
@@ -79,14 +48,9 @@ function ProfileFinder(props) {
 			setDirection("down");
 			setSlideIn(true);
 			if (hasMatches) {
-				setDislikedProfiles(prevDisliked => prevDisliked.concat(pfs[currentIndex]))
+				setProfile({id: pfs[currentIndex].user_id, action: 'dismiss'})
 			}
-			if (currentIndex < pfs.length - 1) {
-				setCurrentIndex((prevIndex) => (prevIndex + 1)); // Update index to next element
-			}
-			else {
-				setHasMatches(false)
-			}
+			setCurrentIndex((prevIndex) => (prevIndex + 1)); // Update index to next element
 		}, 500); // Timeout duration should match the slide out animation duration
 	};
 
@@ -98,23 +62,27 @@ function ProfileFinder(props) {
 			setDirection("down");
 			setSlideIn(true);
 			if (hasMatches) {
-				setLikedProfiles(prevLiked => prevLiked.concat(pfs[currentIndex]))
-
+				setProfile({id: pfs[currentIndex].user_id, action: 'like'})
 			}
-			if (currentIndex < pfs.length - 1) {
-				setCurrentIndex((prevIndex) => (prevIndex + 1)); // Update index to next element
-			}
-			else {
-				setHasMatches(false)
-			}
+			setCurrentIndex((prevIndex) => (prevIndex + 1)); // Update index to next element
 		}, 500); // Timeout duration should match the slide out animation duration
 	};
 
-	useEffect(() => {
-		// Send data to backend
-		console.log("Disliked Profiles Updated:", dislikedProfiles);
-		console.log("Liked Profiles Updated:", likedProfiles);
-	}, [dislikedProfiles, likedProfiles]);
+	useEffect(() =>{
+		console.log("Updated Profile:", profile);
+		if(profile){
+			if (profile.action === "like")
+				likeMatch(props.userId, profile.id)
+			else
+				dismissMatch(props.userId, profile.id)
+			if (currentIndex > pfs.length - 1){
+				// if (props.displayName)
+				// 	generateMatches(props.displayName);
+				// setCurrentIndex(0)
+				setHasMatches(false);
+			}
+		}
+	}, [profile]);
 
 	return (
 		<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3, gap: 3, }}>
@@ -130,10 +98,10 @@ function ProfileFinder(props) {
 						<Slide key={index} direction={direction} in={slideIn && index === currentIndex} mountOnEnter unmountOnExit>
 							<Box>
 								<FinderImage
-									image={element.image}
-									mainText={element.mainText}
-									subText={element.subText}
-									link={`/user/:${element.id}`}
+									image={element.images[1] ? element.images[1].url : null}
+									mainText={element.display_name}
+									subText={`Their top artist: ${element.top_artists[0] ? element.top_artists[0].name : null}`}
+									link={`/user/:${element.user_id}`}
 								/>
 							</Box>
 						</Slide>
