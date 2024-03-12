@@ -4,7 +4,7 @@ import { Box, Typography, IconButton, Slide } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import xMark from '../assets/x-mark.svg';
 import heart from '../assets/heart.svg';
-import { getUserMatches, getUserProfile, likeMatch, dismissMatch} from '../api/index.js'
+import { getUserMatches, getUserProfile, likeMatch, dismissMatch } from '../api/index.js'
 
 function ProfileFinder(props) {
 	const theme = useTheme();
@@ -48,7 +48,7 @@ function ProfileFinder(props) {
 			setDirection("down");
 			setSlideIn(true);
 			if (hasMatches) {
-				setProfile({id: pfs[currentIndex].user_id, action: 'dismiss'})
+				setProfile({ id: pfs[currentIndex].user_id, action: 'dismiss' })
 			}
 			setCurrentIndex((prevIndex) => (prevIndex + 1)); // Update index to next element
 		}, 500); // Timeout duration should match the slide out animation duration
@@ -62,20 +62,22 @@ function ProfileFinder(props) {
 			setDirection("down");
 			setSlideIn(true);
 			if (hasMatches) {
-				setProfile({id: pfs[currentIndex].user_id, action: 'like'})
+				setProfile({ id: pfs[currentIndex].user_id, action: 'like' })
 			}
 			setCurrentIndex((prevIndex) => (prevIndex + 1)); // Update index to next element
 		}, 500); // Timeout duration should match the slide out animation duration
 	};
 
-	useEffect(() =>{
+	useEffect(() => {
 		console.log("Updated Profile:", profile);
-		if(profile){
-			if (profile.action === "like")
-				likeMatch(props.userId, profile.id)
+		if (profile) {
+			if (profile.action === "like") {
+				likeMatch(props.userId, profile.id);
+				getUserProfile(profile.id).then(newMatch => props.setProfile({ ...props.profile, matched_users: [...props.profile.matched_users, newMatch.data], matchedUsersLinks: [...props.profile.matchedUsersLinks, `/cs-130-project/user/${profile.id}`] }))
+			}
 			else
 				dismissMatch(props.userId, profile.id)
-			if (currentIndex > pfs.length - 1){
+			if (currentIndex > pfs.length - 1) {
 				// if (props.userId)
 				// 	generateMatches(props.userId);
 				// setCurrentIndex(0)

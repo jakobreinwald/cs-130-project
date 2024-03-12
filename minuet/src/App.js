@@ -9,7 +9,7 @@ import OtherUserProfile from './pages/otherUserProfile';
 import LandingPage from './pages/landingPage';
 import React, { useState, useEffect } from 'react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { getUserProfile, getRecommendedTracks, getPlaylist, updateUserProfile } from './api/index'
+import { getUserProfile, getTracks, getPlaylist, updateUserProfile } from './api/index'
 
 const theme = createTheme({
 	palette: {
@@ -64,6 +64,7 @@ function App() {
 	const [displayName, setDisplayName] = useState(null);
 	const [userId, setUserId] = useState(null);
 
+
 	async function getProfile() {
 		const result = await fetch("https://api.spotify.com/v1/me", {
 			method: "GET",
@@ -82,10 +83,10 @@ function App() {
 				.filter(([key, value]) => value === 'liked')
 				.map(([key]) => key)
 			const recommendedTracks = likedTracks.length > 0
-				? await getRecommendedTracks(token, likedTracks)
+				? await getTracks(token, likedTracks)
 				: { data: { tracks: [] } };
 			const matchedUsersLinks = dbProfile.data.matched_users
-				.map(({ user_id }) => `/user/${user_id}`);
+				.map(({ user_id }) => `/cs-130-project/user/${user_id}`);
 
 			const frontEndUser = { ...dbProfile.data, userPlaylist: userPlaylist.data, recommendedTracks: recommendedTracks.data.tracks, matchedUsersLinks };
 			setProfile(frontEndUser);
@@ -117,9 +118,9 @@ function App() {
 			<Routes>
 				<Route path='/' element={token ? <UserProfile token={token} profile={profile} /> : <LandingPage />} />
 				<Route path='/callback' element={token ? null : <TokenCall passToken={setToken} />} />
-				<Route path='/song-finder' element={token ? <SongFinder token={token} userId={userId} displayName={displayName} /> : <LandingPage />} />
-				<Route path='/profile-finder' element={token ? <ProfileFinder token={token} userId={userId}/> : <LandingPage />} />
-				<Route path="/user/:userId" element={token ? <OtherUserProfile loggedInUserId={profile ? profile.user_id : null}/> : <LandingPage />} />
+				<Route path='/song-finder' element={token ? <SongFinder token={token} userId={userId} displayName={displayName} profile={profile} setProfile={setProfile} /> : <LandingPage />} />
+				<Route path='/profile-finder' element={token ? <ProfileFinder token={token} userId={userId} profile={profile} setProfile={setProfile} /> : <LandingPage />} />
+				<Route path="/user/:userId" element={token ? <OtherUserProfile loggedInUserId={profile ? profile.user_id : null} /> : <LandingPage />} />
 			</Routes>
 		</ThemeProvider>
 	);

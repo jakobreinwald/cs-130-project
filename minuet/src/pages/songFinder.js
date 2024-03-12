@@ -7,8 +7,9 @@ import xMark from '../assets/x-mark.svg';
 import heart from '../assets/heart.svg';
 import { getUserRecs, postNewSongDecision } from '../api';
 import PopularityIcon from '../components/popularityIcon';
+import { getTracks } from '../api/index';
 
-function SongFinder({ token, userId, displayName }) {
+function SongFinder({ token, userId, displayName, profile, setProfile }) {
 	const [data, setData] = useState([]);
 	const fetchData = async (token, userId) => {
 		const result = await getUserRecs(token, userId);
@@ -61,7 +62,7 @@ function SongFinder({ token, userId, displayName }) {
 			setSlideIn(true);
 			if (hasMatches) {
 				setLikedSongs(prevLiked => prevLiked.concat(data[currentIndex]))
-
+				getTracks(token, [data[currentIndex].track_id]).then(song => setProfile({ ...profile, recommendedTracks: [...profile.recommendedTracks, song.data.tracks[0]] }))
 			}
 			if (currentIndex < data.length - 1) {
 				setCurrentIndex((prevIndex) => (prevIndex + 1)); // Update index to next element

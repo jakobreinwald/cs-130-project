@@ -15,7 +15,7 @@ export const getUserRecs = (token, id) => axios.get(`${url}/users/${id}/recs`, {
 	}
 });
 
-export const getRecommendedTracks = (token, ids) => axios.get(`${spotify_url}/tracks?ids=${ids.join(',')}`, {
+export const getTracks = (token, ids) => axios.get(`${spotify_url}/tracks?ids=${ids.join(',')}`, {
 	headers: {
 		"Authorization": 'Bearer ' + token,
 	}
