@@ -45,6 +45,10 @@ class Middleware {
       }, new Map());
   }
 
+  async calculateMatchScore(user_id, match_id) {
+    return this.matching.calculateMatchScore(user_id, match_id);
+  }
+
   async dismissMatch(user_id, match_id) {
     return this.matching.dismissMatch(user_id, match_id);
   }

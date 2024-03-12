@@ -282,7 +282,7 @@ class Database {
 				top_shared_genres: top_shared_genres,
 				top_shared_track_ids: top_shared_track_ids
 			},
-			{ upsert: true }
+			{ new: true, upsert: true }
 		).exec();
 	}
 
@@ -292,6 +292,16 @@ class Database {
 			{ user_id: user_id },
 			{ $set: { [`matched_user_to_outcome.${match_id}`]: 'none' } }
 		).exec();
+	}
+
+	async addPotentialMatches(match_ids, user_doc) {
+		// Add new potential matches that user has not yet acted upon
+		user_doc.matched_user_to_outcome = match_ids.reduce((map, match_id) => {
+			map.set(match_id, 'none');
+			return map;
+		}, user_doc.matched_user_to_outcome);
+
+		return user_doc.save();
 	}
 
 	async likeRecommendation(user_id, rec_id) {
