@@ -108,6 +108,12 @@ app.get('/users/:id/potential_matches/:match_id', (req, res) => {
 	res.json({ profile_name: profile_name, top_artist: top_artist });
 });
 
+app.get('/users/:id/calculateMatchScore/:match_id', (req, res) => {
+  middleware.calculateMatchScore(req.params.id, req.params.match_id)
+    .then(score => res.json({ score: score }))
+    .catch(console.error);
+});
+
 // POST endpoints
 
 app.post('/users/:user_id/recs/:rec_id', (req, res) => {
