@@ -152,7 +152,7 @@ app.post('/users/:user_id/recs/:rec_id', (req, res) => {
 app.post('/users', (req, res) => {
   // Validate request authorization and extract access token
   const access_token = validateAuth(req.header('Authorization'), res);
-  console.log(access_token);
+//   console.log(access_token);
   // Use access token to fetch user profile and top items from Spotify API
   middleware.updateLoggedInUser(access_token)
     .then(user => res.json(user))

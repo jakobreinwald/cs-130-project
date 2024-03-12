@@ -76,9 +76,10 @@ function ProfileFinder(props) {
 			else
 				dismissMatch(props.userId, profile.id)
 			if (currentIndex > pfs.length - 1){
-				if (props.displayName)
-					generateMatches(props.displayName);
-				setCurrentIndex(0)
+				// if (props.displayName)
+				// 	generateMatches(props.displayName);
+				// setCurrentIndex(0)
+				setHasMatches(false);
 			}
 		}
 	}, [profile]);

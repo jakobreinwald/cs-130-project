@@ -3,7 +3,7 @@ import SongCard from '../components/songCard'
 import ProfileCard from '../components/profileCard'
 import { Box, Typography, Divider, Avatar, Button, LinearProgress } from '@mui/material';
 import { useParams} from 'react-router-dom';
-import {getUserProfile} from '../api/index'
+import {getUserProfile, getMatchScore} from '../api/index'
 import { Card, CardContent, Link } from '@mui/material';
 
 const artist_url = 'https://open.spotify.com/artist/';
@@ -16,6 +16,20 @@ function OtherUserProfile() {
     const [topArtists, setArtists] = useState([]);
     const [topTracks, setTracks] = useState([]);
     const [tags, setTags] = useState([]);
+    const [matchScore, setMatchScore] = useState(0);
+    const [myId, setMyId] = useState(null);
+    const [token, setToken] = useState(null);
+
+    async function getYourProfile(token) {
+      const result = await fetch("https://api.spotify.com/v1/me", {
+        method: "GET",
+        headers: { "Authorization": "Bearer " + token },
+      });
+      const pairedProfile = await result.json();
+      if (!("error" in pairedProfile)) {
+        setMyId(pairedProfile.id);
+      }
+    }
     
     const getProfile = async (id) => {
       const userProfile = await getUserProfile(id);
@@ -23,21 +37,41 @@ function OtherUserProfile() {
         setProfile(userProfile.data);
         setArtists(userProfile.data.top_artists)
         setTracks(userProfile.data.top_tracks)
-        const genre_counts = Object.values(userProfile.data.genre_counts);
-        const topNums = genre_counts.sort((a, b) => a - b).reverse().slice(0, 5);
-        function getKeyByValue(object, value) {
-          return Object.keys(object).find(key => object[key] === value);
+        let sortable = []
+        for (let genre in userProfile.data.genre_counts){
+          sortable.push([genre, userProfile.data.genre_counts[genre]]);
         }
-        const topTags = topNums.map((value) => getKeyByValue(userProfile.data.genre_counts, value))
-        setTags(topTags)
+        const topGenres = sortable.sort((a, b) => a[1] - b[1]).reverse().slice(0, 5);
+        setTags(topGenres.map((a) => a[0]));
       }
     };
+
+    const getScore = async (myId, id) => {
+      const score = await getMatchScore(myId, id)
+      setMatchScore(score.data.score);
+    };
+
     useEffect(() => {
-      if(userId)
-        getProfile(userId.replace(':', ''));
+      let test_token = window.localStorage.getItem('access_token');
+      if(test_token)
+        setToken(test_token);
+    }, [])
+
+    useEffect(() => {
+      if(token)
+        getYourProfile(token);
+    }, [token])
+
+    useEffect(() => {
+      getProfile(userId.replace(':', ''));
     }, [userId]);
 
-    const matchPercentage = 75;
+    useEffect(() => {
+      console.log(myId)
+      if(userId && myId){
+        getScore(myId, userId.replace(':', ''))
+      }
+    }, [userId, myId]);
 
     return (
         <Box sx={{p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center',}}>
@@ -50,7 +84,7 @@ function OtherUserProfile() {
                         </Typography>
                         <Button sx={{bgcolor: 'primary.main', color:'text.primary'}} onClick={profile ? () => window.open(`https://open.spotify.com/user/${profile.user_id}`, '_blank') : null}> Spotify Profile</Button>
                     </Box>
-                    <AnimatedMatchPercentage targetValue={matchPercentage}/>
+                    <AnimatedMatchPercentage targetValue={matchScore*100}/>
                     <Box sx={{display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'center'}}>
                         <Typography variant="h5" sx={{ color: 'text.primary'}}>
                             Tags

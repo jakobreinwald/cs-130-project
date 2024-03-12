@@ -93,7 +93,7 @@ function App() {
 			);
 			const frontEndUser = { ...dbProfile.data, userPlaylist: userPlaylist.data, recommendedTracks: recommendedTracks.data.tracks, matchedUsersLinks };
 			setProfile(frontEndUser);
-			console.log("Profile: ", frontEndUser);
+			// console.log("Profile: ", frontEndUser);
 			return frontEndUser;
 		}
 		return pairedProfile;
@@ -105,11 +105,10 @@ function App() {
 			setToken(testToken)
 	}
 	useEffect(() => {
-		console.log("hello", token)
+		// console.log("hello", token)
 		if (token) {
+			updateUserProfile(token);
 			const dummyProfile = getProfile();
-			// updateUserProfile(token);
-
 		}
 	}, [token])
 
@@ -121,7 +120,7 @@ function App() {
 				<Route path='/callback' element={token ? null : <TokenCall passToken={setToken} />} />
 				<Route path='/song-finder' element={token ? <SongFinder token={token} displayName={displayName} /> : <LandingPage />} />
 				<Route path='/profile-finder' element={token ? <ProfileFinder token={token} displayName={displayName} userId={profile ? profile.user_id : null}/> : <LandingPage />} />
-				<Route path="/user/:userId" element={token ? <OtherUserProfile /> : <LandingPage />} />
+				<Route path="/user/:userId" element={token ? <OtherUserProfile/> : <LandingPage />} />
 			</Routes>
 		</ThemeProvider>
 	);

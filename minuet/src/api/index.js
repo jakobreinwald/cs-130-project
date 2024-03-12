@@ -33,3 +33,4 @@ export const getPlaylist = (token, id) => axios.get(`${spotify_url}/playlists/${
 export const getUserMatches = (id) => axios.post(`${url}/users/${id}/generate_potential_matches`, {}, {});
 export const likeMatch = (id, match_id) => axios.post(`${url}/users/${id}/likeMatch/${match_id}`, {}, {});
 export const dismissMatch = (id, match_id) => axios.post(`${url}/users/${id}/dismissMatch/${match_id}`, {}, {});
+export const getMatchScore = (id, match_id) => axios.get(`${url}/users/${id}/calculateMatchScore/${match_id}`, {}, {})
