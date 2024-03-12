@@ -1,6 +1,4 @@
 import React, {useState, useEffect} from 'react';
-import SongCard from '../components/songCard'
-import ProfileCard from '../components/profileCard'
 import { Box, Typography, Divider, Avatar, Button, LinearProgress } from '@mui/material';
 import { useParams} from 'react-router-dom';
 import {getUserProfile, getMatchScore} from '../api/index'
@@ -59,7 +57,7 @@ function OtherUserProfile({ loggedInUserId }) {
                         <Typography variant="h2" sx={{ color: 'text.primary', mb: 3}}>
                             {profile ? profile.display_name : null}
                         </Typography>
-                        <Button sx={{bgcolor: 'primary.main', color:'text.primary'}} onClick={profile ? () => window.open(`https://open.spotify.com/user/${profile.user_id}`, '_blank') : null}> Spotify Profile</Button>
+                        <Button sx={{bgcolor: 'primary.main', color:'text.primary', borderRadius: 5, padding: 1}} onClick={profile ? () => window.open(`https://open.spotify.com/user/${profile.user_id}`, '_blank') : null}> Spotify Profile</Button>
                     </Box>
                     <AnimatedMatchPercentage targetValue={matchScore*100}/>
                     <Box sx={{display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'center'}}>
@@ -71,41 +69,47 @@ function OtherUserProfile({ loggedInUserId }) {
                 </Box>
             </Box>
             <Box sx={{display: 'flex', flexDirection:'row', gap: 5, justifyContent: 'center',}}>
-                <Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '90%' }}>
+                <Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '90%', borderRadius: 5}}>
                   <CardContent>
-                    <Typography gutterBottom variant="h5" component="div" align='center'>
-                      <b>Top Songs</b>
+                    <Typography gutterBottom variant="h5" component="div" align='center' fontWeight='bold'>
+                        Top Songs
                     </Typography>
                     {profile ? topTracks.map((match, index) =>
-                      <Box key={index} sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
-                        <Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={match.album.images[1].url} />
-                        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
-                          <Link href={track_url.concat(match.track_id)} target="_blank" rel="noopener noreferrer">
-                            <Typography variant="body1">{match.name}</Typography>
-                          </Link>
-                          <Link href={artist_url.concat(match.artists[0].artist_id)} target="_blank" rel="noopener noreferrer">
-                            <Typography variant="body2">{match.artists.map(obj => obj.name).join(', ')}</Typography>
-                          </Link>
+                    <Link href={track_url.concat(match.track_id)} target="_blank" rel="noopener noreferrer" style={{ color:'white', textDecoration: 'none'}}>
+                        <Box key={index} sx={{display:'flex', flexDirection: 'row', gap: 1, mt: 2, p: 1, '&:hover': { bgcolor: 'primary.main'}, borderRadius: 2}}>
+                            <Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={match.album.images[1].url} />
+                            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
+                                <Typography variant="body1">{match.name}</Typography>
+                                <Typography variant="body2">{match.artists.map(obj => obj.name).join(', ')}</Typography>
+                            </Box>
                         </Box>
-                      </Box>) : null}
+                      </Link>) :
+                    <Box sx={{ display: 'flex', flexDirection: 'column', textAlign: 'center'}}>
+                        <Typography variant="body2">Nothing to see here yet!</Typography>
+                    </Box>
+                    }
                   </CardContent>
                 </Card>
                 <Divider orientation="vertical" flexItem />
-                <Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '90%' }}>
+                <Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '90%', borderRadius: 5}}>
                   <CardContent>
-                    <Typography gutterBottom variant="h5" component="div" align='center'>
-                      <b>Top Artists</b>
+                    <Typography gutterBottom variant="h5" component="div" align='center' fontWeight='bold'>
+                        Top Artists
                     </Typography>
-                    {topArtists ? topArtists.map((match, index) =>
-                      <Box key={index} sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
-                        <Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={match.images[0].url} />
-                        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
-                          <Link href={artist_url.concat(match.artist_id)} target="_blank" rel="noopener noreferrer">
-                            <Typography variant="body1">{match.name}</Typography>
-                          </Link>
-                        </Box>
-                      </Box>
-                    ) : null}
+                    {topArtists.length !== 0 ? topArtists.map((match, index) =>
+                        <Link href={artist_url.concat(match.artist_id)} target="_blank" rel="noopener noreferrer" style={{ color:'white', textDecoration: 'none'}}>
+                            <Box key={index} sx={{display:'flex', flexDirection: 'row', gap: 1, mt: 2, p: 1, '&:hover': { bgcolor: 'primary.main'}, borderRadius: 2}}>
+                                <Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={match.images[0].url} />
+                                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
+                                    <Typography variant="body1">{match.name}</Typography>
+                                </Box>
+                            </Box>
+                        </Link>
+                    ) : 
+                    <Box sx={{ display: 'flex', flexDirection: 'column', textAlign: 'center'}}>
+                            <Typography variant="body2">Nothing to see here yet!</Typography>
+                    </Box>
+                    }
                   </CardContent>
                 </Card>
             </Box>

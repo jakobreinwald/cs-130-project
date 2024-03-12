@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import SongCard from '../components/songCard'
-import ProfileCard from '../components/profileCard'
 import { Card, CardContent, Link } from '@mui/material';
 import { Box, Typography, Divider, Avatar } from '@mui/material';
 
@@ -32,52 +30,58 @@ function UserProfile({ token, profile }) {
 					<Avatar sx={{ bgcolor: 'grey.900', width: 250, height: 250, m: 5, }} src={profile !== null ? profile.images[1].url : null} />
 				</Link>
 				<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
-					<Typography variant="h2" sx={{ color: 'text.primary', mb: 3 }}>
-						Hi, {profile !== null ? profile.display_name : null}
-					</Typography>
+					<AnimatedGradientText text={`Hi, ${profile !== null ? profile.display_name : null}`}/>
 					<Typography variant="h4" sx={{ color: 'text.primary' }}>
 						You've discovered <b>{newSongs}</b> new song(s) and <b>{newUsers}</b> new profile(s)! Keep on exploring :)
 					</Typography>
 				</Box>
 			</Box>
 			<Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, justifyContent: 'center', }}>
-				<Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '90%' }}>
+				<Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '90%', borderRadius: 5}}>
 					<CardContent>
-						<Link href={(profile !== null && profile.hasOwnProperty('userPlaylist')) ? profile.userPlaylist.external_urls.spotify : null} target="_blank" rel="noopener noreferrer">
-							<Typography gutterBottom variant="h5" component="div" align='center'>
-								<b>{(profile !== null && profile.hasOwnProperty('userPlaylist')) ? profile.userPlaylist.name : "Matched Songs"}</b>
+						<Link href={(profile !== null && profile.hasOwnProperty('userPlaylist')) ? profile.userPlaylist.external_urls.spotify : null} target="_blank" rel="noopener noreferrer" sx={{color: 'white', textDecoration: 'none', '&:hover': {color: 'primary.main',},}}>
+							<Typography gutterBottom variant="h5" component="div" align='center' fontWeight='bold'>
+								{(profile !== null && profile.hasOwnProperty('userPlaylist')) ? profile.userPlaylist.name : "Matched Songs"}
 							</Typography>
 						</Link>
-						{matchedSongs.map(({ album, artists, name }, index) =>
-							<Box key={index} sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
-								<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={album.images[1].url} />
-								<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
-									<Link href={album.external_urls.spotify} target="_blank" rel="noopener noreferrer">
-										<Typography variant="body1">{name}</Typography>
-									</Link>
-									<Link href={artists[0].external_urls.spotify} target="_blank" rel="noopener noreferrer">
-										<Typography variant="body2">{artists.map(obj => obj.name).join(', ')}</Typography>
-									</Link>
-								</Box>
-							</Box>)}
+						{matchedSongs.length !== 0 ? matchedSongs.map(({ album, artists, name, external_urls }, index) =>
+                            <Link href={external_urls.spotify} target="_blank" rel="noopener noreferrer" style={{ color:'white', textDecoration: 'none'}}>
+                                <Box key={index} sx={{display:'flex', flexDirection: 'row', gap: 1, mt: 2, p: 1, '&:hover': { bgcolor: 'primary.main'}, borderRadius: 2}}>
+                                    <Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={album.images[1].url} />
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
+                                        <Typography variant="body1">{name}</Typography>
+                                        <Typography variant="body2">{artists.map(obj => obj.name).join(', ')}</Typography>
+                                    </Box>
+                                </Box>
+                            </Link>
+                            )
+                            :
+                        <Box sx={{ display: 'flex', flexDirection: 'column', textAlign: 'center'}}>
+                            <Typography variant="body2">Nothing to see here yet!</Typography>
+                        </Box>
+                        }
 					</CardContent>
 				</Card>
 				<Divider orientation="vertical" flexItem />
-				<Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '90%' }}>
+				<Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '90%', borderRadius: 5}}>
 					<CardContent>
-						<Typography gutterBottom variant="h5" component="div" align='center'>
-							<b>Matched Profiles</b>
+						<Typography gutterBottom variant="h5" component="div" align='center' fontWeight='bold'>
+							Matched Profiles
 						</Typography>
-						{matchedUsers.map(({ display_name, images, link }, index) =>
-							<Box key={index} sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2 }}>
-								<Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={images[1].url} />
-								<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
-									<Link href={link} target="_blank" rel="noopener noreferrer">
-										<Typography variant="body1">{display_name}</Typography>
-									</Link>
-								</Box>
-							</Box>
-						)}
+						{matchedUsers.length !== 0 ? matchedUsers.map(({ display_name, images, link }, index) =>
+                            <Link href={link} target="_blank" rel="noopener noreferrer" style={{ color:'white', textDecoration: 'none'}}>
+                                <Box key={index} sx={{display:'flex', flexDirection: 'row', gap: 1, mt: 2, p: 1, '&:hover': { bgcolor: 'primary.main'}, borderRadius: 2}}>
+                                    <Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={images[1].url} />
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
+                                            <Typography variant="body1">{display_name}</Typography>
+                                    </Box>
+                                </Box>
+                            </Link>
+						) : 
+                        <Box sx={{ display: 'flex', flexDirection: 'column', textAlign: 'center'}}>
+                            <Typography variant="body2">Nothing to see here yet!</Typography>
+                        </Box>
+                        }
 					</CardContent>
 				</Card>
 			</Box>
