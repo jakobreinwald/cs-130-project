@@ -273,6 +273,8 @@ class Database {
 		return Match.findOneAndUpdate(
 			{ $or: [{ user_a_id: user_id, user_b_id: match_id }, { user_a_id: match_id, user_b_id: user_id }] },
 			{
+        user_a_id: user_id,
+        user_b_id: match_id,
 				match_score: match_score,
 				top_shared_artist_ids: top_shared_artist_ids,
 				top_shared_genres: top_shared_genres,
