@@ -18,8 +18,8 @@ class Matching {
 
   /**
    * Dismisses a potential match for a given user
-   * @param {String} user_id - User ID
-   * @param {String} match_id - Match ID
+   * @param {String} user_id - Spotify user ID of logged in user
+   * @param {String} match_id - Spotify user ID of potential match
    * @returns {Promise<mongoose.UpdateWriteOpResult>} - Promise of the MongoDB update result
    */
 
@@ -29,8 +29,8 @@ class Matching {
 
   /**
    * Generates a list of potential matches for a user
-   * @param {String} user_id - User ID
-   * @returns {Promise<mongoose.UpdateWriteOpResult>} - Promise for Mongo update operation result
+   * @param {String} user_id - Spotify user ID of logged in user
+   * @returns {Promise<mongoose.Document>} - Promise for matched_user_to_outcome map in User document
    */
   async generateMatches(user_id) {
     // fetch user's top artists and genres from database
@@ -58,8 +58,8 @@ class Matching {
 
   /**
    * Calculates the match score between two users
-   * @param {String} user_id - User ID
-   * @param {String} match_user_id - Match User ID
+   * @param {String} user_id - Spotify user ID of logged in user
+   * @param {String} match_user_id - Spotify user ID of potential match
    * @returns {Promise<Array>} - Promise of the match score, user object, and match user object
    */
 
@@ -126,8 +126,8 @@ class Matching {
 
   /**
    * Gets all the mutual matches of a user
-   * @param {String} user_id - User ID
-   * @returns {Promise<Object[]>} - Promise of the mutual matches
+   * @param {String} user_id - Spotify user ID of logged in user
+   * @returns {Promise<Object[]>} - Promise of mutual match objects for user
    */
   async getMatches(user_id) {
     // fetch cached list of matches
@@ -149,8 +149,8 @@ class Matching {
 
   /**
    * Gets all the potential matches of a user
-   * @param {String} user_id - User ID
-   * @returns {Promise<Object[]>} - Promise of the potential matches
+   * @param {String} user_id - Spotify user ID of logged in user
+   * @returns {Promise<Object[]>} - Promise for matched_user_to_outcome map in User document
    */
   async getPotentialMatches(user_id) {
     return this.db.getPotentialMatches(user_id);
@@ -159,9 +159,9 @@ class Matching {
 
   /**
    * Likes a match
-   * @param {String} user_id - User ID
-   * @param {String} match_id - Match ID
-   * @returns {Promise<mongoose.UpdateWriteOpResult[]>} - Promise of the MongoDB update result
+   * @param {String} user_id - Spotify user ID of logged in user
+   * @param {String} match_id - Spotify user ID of potential match
+   * @returns {Promise<mongoose.UpdateWriteOpResult[]>} - Promise of the MongoDB update results for User and Match documents
    */
   async likeMatch(user_id, match_id) {
     const updated_likes = this.db.likeMatch(user_id, match_id);
