@@ -1,8 +1,8 @@
 {
-	"name": "minuet",
-	"version": "0.1.0",
-	"private": true,
-	"homepage": "https://www.minuet.lol",
+    "name": "minuet",
+    "version": "0.1.0",
+    "private": true,
+    "homepage": "https://www.minuet.lol",
 	"dependencies": {
 		"@emotion/react": "^11.11.3",
 		"@emotion/styled": "^11.11.0",
@@ -33,6 +33,11 @@
 			"react-app/jest"
 		]
 	},
+    "jest": {
+        "transformIgnorePatterns": [
+          "/node_modules/(?!axios).+\\.js$"
+        ]
+    },           
 	"browserslist": {
 		"production": [
 			">0.2%",
