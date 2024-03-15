@@ -39,11 +39,16 @@ function UserProfile({ token, profile }) {
 			<Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, justifyContent: 'center', }}>
 				<Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '90%', borderRadius: 5}}>
 					<CardContent>
-						<Link href={(profile !== null && profile.hasOwnProperty('userPlaylist')) ? profile.userPlaylist.external_urls.spotify : null} target="_blank" rel="noopener noreferrer" sx={{color: 'white', textDecoration: 'none', '&:hover': {color: 'primary.main',},}}>
-							<Typography gutterBottom variant="h5" component="div" align='center' fontWeight='bold'>
-								{(profile !== null && profile.hasOwnProperty('userPlaylist')) ? profile.userPlaylist.name : "Matched Songs"}
-							</Typography>
-						</Link>
+                        {(profile !== null && profile.hasOwnProperty('userPlaylist')) ? 
+                            <Link href={profile.userPlaylist.external_urls.spotify} target="_blank" rel="noopener noreferrer" sx={{color: 'white', textDecoration: 'none', '&:hover': {color: 'primary.main',},}}>
+                                <Typography gutterBottom variant="h5" component="div" align='center' fontWeight='bold'>
+                                    {profile.userPlaylist.name}
+                                </Typography>
+                            </Link> :
+                            <Typography gutterBottom variant="h5" component="div" align='center' fontWeight='bold'>
+                                Matched Songs
+                            </Typography>
+                        }
 						{matchedSongs.length !== 0 ? matchedSongs.map(({ album, artists, name, external_urls }, index) =>
                             <Link href={external_urls.spotify} target="_blank" rel="noopener noreferrer" style={{ color:'white', textDecoration: 'none'}}>
                                 <Box key={index} sx={{display:'flex', flexDirection: 'row', gap: 1, mt: 2, p: 1, '&:hover': { bgcolor: 'primary.main'}, borderRadius: 2}}>
