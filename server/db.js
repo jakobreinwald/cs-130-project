@@ -435,7 +435,7 @@ class Database {
 	/**
 	 * Returns objects for matching tracks in database, including associated albums and artists
 	 * @param {string[]} track_ids - Array of Spotify track IDs
-	 * @returns 
+	 * @returns {Promise<Object[]>} - Promise for array of Track objects with album and artists info
 	 */
 	async getFullTracks(track_ids) {
 		// Fetch track objects and associated album and artist objects from database
@@ -482,7 +482,7 @@ class Database {
 	/**
 	 * Returns nested array of matching Track objects, along with associated Album and Artist objects in database
 	 * @param {string[]} track_ids - Array of Spotify track IDs
-	 * @returns {Promise<[Object[], Object[], Object[]]>} - Promise for nested array of Track, Album, and Artist objects
+	 * @returns {Promise<Array<Object[]>>} - Promise for nested array of Track, Album, and Artist objects
 	 */
 	async getTracksWithAlbumAndArtists(track_ids) {
 		// Fetch track objects from database
