@@ -121,7 +121,7 @@ function SongFinder({ token, userId, displayName, profile, setProfile }) {
 								<FinderImage
 									image={album && album.hasOwnProperty('images') ? album.images[0].url : `https://open.spotify.com/track/${track_id}`}
 									mainText={name}
-									subText={artists[0].name}
+									subText={artists !== null ? artists[0].name : null}
 									link={`https://open.spotify.com/track/${track_id}`}
 								/>
 								<AudioPlayer previewUrl={preview_url} />

@@ -3,13 +3,13 @@ import axios from 'axios';
 const url = process.env.REACT_APP_BACKEND_URL;
 const spotify_url = 'https://api.spotify.com/v1';
 
-export const updateUserProfile = (token) => axios.post(`${url}/users`, {}, {
+export const updateUserProfile = (token) => axios.post(`${url}users`, {}, {
 	headers: {
 		"Authorization": 'Bearer ' + token,
 	}
 });
-export const getUserProfile = (id) => axios.get(`${url}/users/${id}/profile`);
-export const getUserRecs = (token, id) => axios.get(`${url}/users/${id}/recs`, {
+export const getUserProfile = (id) => axios.get(`${url}users/${id}/profile`);
+export const getUserRecs = (token, id) => axios.get(`${url}users/${id}/recs`, {
 	headers: {
 		"Authorization": 'Bearer ' + token,
 	}
@@ -21,7 +21,7 @@ export const getTracks = (token, ids) => axios.get(`${spotify_url}/tracks?ids=${
 	}
 });
 
-export const postNewSongDecision = (token, user_id, rec_id, action) => axios.post(`${url}/users/${user_id}/recs/${rec_id}?action=${action}`, {}, {
+export const postNewSongDecision = (token, user_id, rec_id, action) => axios.post(`${url}users/${user_id}/recs/${rec_id}?action=${action}`, {}, {
 	headers: {
 		"Authorization": 'Bearer ' + token,
 	}
@@ -32,7 +32,7 @@ export const getPlaylist = (token, id) => axios.get(`${spotify_url}/playlists/${
 	}
 });
 
-export const getUserMatches = (id) => axios.post(`${url}/users/${id}/generate_potential_matches`, {}, {});
-export const likeMatch = (id, match_id) => axios.post(`${url}/users/${id}/likeMatch/${match_id}`, {}, {});
-export const dismissMatch = (id, match_id) => axios.post(`${url}/users/${id}/dismissMatch/${match_id}`, {}, {});
-export const getMatchScore = (id, match_id) => axios.get(`${url}/users/${id}/calculateMatchScore/${match_id}`, {}, {})
+export const getUserMatches = (id) => axios.post(`${url}users/${id}/generate_potential_matches`, {}, {});
+export const likeMatch = (id, match_id) => axios.post(`${url}users/${id}/likeMatch/${match_id}`, {}, {});
+export const dismissMatch = (id, match_id) => axios.post(`${url}users/${id}/dismissMatch/${match_id}`, {}, {});
+export const getMatchScore = (id, match_id) => axios.get(`${url}users/${id}/calculateMatchScore/${match_id}`, {}, {})
