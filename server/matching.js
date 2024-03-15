@@ -13,7 +13,6 @@ class Matching {
   }
 
   // adds all possible matches to matched_user_to_outcome in user document
-  // TODO: figure out how to batch awaits
   async generateMatches(user_id) {
     // fetch user's top artists and genres from database
     const user_doc = await this.db.getUserDocument(user_id).catch(console.error);
