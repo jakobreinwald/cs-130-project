@@ -1,7 +1,3 @@
-// Constants
-const client_id = process.env.SPOTIFY_CLIENT_ID;
-const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
-
 // Dependencies
 const Database = require('./db');
 const Recommendations = require('./recommendations');
@@ -9,14 +5,27 @@ const Matching = require('./matching');
 const SpotifyAPI = require('./spotify_api');
 require('dotenv').config({ path: '.env.local' });
 
+/**
+ * Middleware helper class
+ */
 class Middleware {
-  constructor(redirect_uri) {
-    this.api = new SpotifyAPI(client_id, client_secret, redirect_uri);
+  /**
+   * Constructs Middleware helper with database client, recommendations and matching helpers
+   */
+  constructor() {
     this.db = new Database();
     this.recs = new Recommendations(this.db);
     this.matching = new Matching(this.db);
   }
 
+  /**
+   * Constructs map of genre names to summed counts by either top artists or top tracks
+   * @param {Map<string, string[]>} artist_id_to_genres - Map of artist ids to genre names
+   * @param {Object[]} fetched_artists - Array of Spotify artist objects
+   * @param {Object[]} fetched_tracks - Array of Spotify track objects
+   * @param {boolean} sum_by_tracks - Flag to sum genre counts by top tracks instead of artists
+   * @returns {Map<string, number>} - Map of genre names to summed counts
+   */
   calcGenreCounts(artist_id_to_genres, fetched_artists, fetched_tracks, sum_by_tracks) {
     if (sum_by_tracks) {
       return this.calcGenreCountsByTracks(artist_id_to_genres, fetched_tracks);
@@ -25,6 +34,12 @@ class Middleware {
     }
   }
 
+  /**
+   * Constructs map of genre names to summed counts by top artists
+   * @param {Map<string, string[]>} artist_id_to_genres - Map of artist ids to genre names
+   * @param {Object[]} fetched_artists - Array of Spotify artist objects
+   * @returns {Map<string, number>} - Map of genre names to summed counts
+   */
   calcGenreCountsByArtists(artist_id_to_genres, fetched_artists) {
     return fetched_artists
       .map(({ id }) => id)
@@ -35,6 +50,12 @@ class Middleware {
       }, new Map());
   }
 
+  /**
+   * Constructs map of genre names to summed counts by top tracks
+   * @param {Map<string, string[]>} artist_id_to_genres - Map of artist ids to genre names
+   * @param {Object[]} fetched_tracks - Array of Spotify track objects
+   * @returns {Map<string, number>} - Map of genre names to summed counts
+   */
   calcGenreCountsByTracks(artist_id_to_genres, fetched_tracks) {
     return fetched_tracks
       .flatMap(track => track.artists.map(({ id }) => id))
@@ -45,34 +66,80 @@ class Middleware {
       }, new Map());
   }
 
+  /**
+   * Returns match score for given user and potential match
+   * @param {string} user_id - Spotify user id of logged in user
+   * @param {string} match_id - Spotify user id of potential match
+   * @returns {Promise<Number>} - Promise for match score
+   */
   async calculateMatchScore(user_id, match_id) {
     return this.matching.calculateMatchScore(user_id, match_id);
   }
 
+  /**
+   * Marks potential match as dismissed for logged in user
+   * @param {string} user_id - Spotify user id of logged in user
+   * @param {string} match_id - Spotify user id of potential match to dismiss
+   * @returns {Promise<mongoose.UpdateWriteOpResult>} - Promise for Mongo update operation result
+   */
   async dismissMatch(user_id, match_id) {
     return this.matching.dismissMatch(user_id, match_id);
   }
 
+  /**
+   * Marks recommended track as dismissed for logged in user
+   * @param {string} user_id - Spotify user id of logged in user
+   * @param {string} rec_id - Spotify track id of recommendation to dismiss
+   * @returns {Promise<mongoose.UpdateWriteOpResult>} - Promise for Mongo update operation result
+   */
   async dismissRecommendation(user_id, rec_id) {
     return this.recs.dismissRecommendation(user_id, rec_id);
   }
 
+  /**
+   * Determines which profiles are potential matches for logged in user and caches in database
+   * @param {string} user_id - Spotify user id of logged in user
+   * @returns {Promise<Object[]>} - Promise for map of potential match ids to outcome (none by default)
+   */
   async generateMatches(user_id) {
     return this.matching.generateMatches(user_id);
   }
 
+  /**
+   * Gets a list of mutual matches for the user
+   * @param {string} user_id - Spotify user id of logged in user
+   * @returns {Promise<Object[]>} - Promise for array of mutual match objects { user_id, name, top_artist
+   */
   async getMatches(user_id) {
     return this.matching.getMatches(user_id);
   }
 
+  /**
+   * Gets a list of potential matches for the user
+   * @param {string} user_id - Spotify user id of logged in user
+   * @returns {Promise<Object[]>} - Promise for array of potential match objects { user_id, name, top_artist
+   */
   async getPotentialMatches(user_id) {
     return this.matching.getPotentialMatches(user_id);
   }
 
+  /**
+   * Gets requested number of track recommendations for user
+   * @param {string} access_token - Spotify access token for logged in user
+   * @param {string} user_id - Spotify user id of logged in user
+   * @param {number} num_req - Number of recommendations requested
+   * @returns {Promise<Object[]>} - Promise for array of full track objects cached in database
+   */
   async getRecommendations(access_token, user_id, num_req) {
     return this.recs.getRecommendations(access_token, user_id, num_req);
   }
 
+  /**
+   * Determines which artists are cached in database and which have not been cached
+   * @param {Object[]} top_artists - Array of Spotify artist objects
+   * @param {Object[]} top_tracks - Array of Spotify track objects
+   * @returns {Promise<Object>} - Promise for object with cached_artist and uncached_artist_ids fields
+   */
   async getCachedArtistsAndUncachedIds(top_artists, top_tracks) {
     // Extract artist ids from top tracks and filter out top artists previously fetched
     const top_artist_ids = new Set(top_artists.map(({ id }) => id));
@@ -89,6 +156,13 @@ class Middleware {
     });
   }
 
+  /**
+   * Fetches cached user profile and expands full top artist and track info
+   * @param {number} num_top_artists - Number of top artists to fetch
+   * @param {number} num_top_tracks - Number of top tracks to fetch
+   * @param {string} user_id - Spotify user ID
+   * @returns {Promise<Object>} - Promise for user profile object with full top artist and track info
+   */
   async getUserProfile(num_top_artists, num_top_tracks, user_id) {
     // Fetch user profile from database
     const user = await this.db.getUserProfile(user_id).catch(console.error);
@@ -128,14 +202,33 @@ class Middleware {
     };
   }
 
+  /**
+   * Marks potential match as liked for logged in user
+   * @param {string} user_id - Spotify user id of logged in user
+   * @param {string} match_id - Spotify user id of potential match to like
+   * @returns {Promise<mongoose.UpdateWriteOpResult>} - Promise for Mongo update operation result
+   */
   async likeMatch(user_id, match_id) {
     return this.matching.likeMatch(user_id, match_id);
   }
 
+  /**
+   * Marks recommended track as liked for user and adds to user's recommendations playlist
+   * @param {string} access_token - Spotify access token for logged in user
+   * @param {string} user_id - Spotify user id of logged in user
+   * @param {string} rec_id - Spotify track id of recommendation to like
+   */
   async likeRecommendation(access_token, user_id, rec_id) {
     return this.recs.likeRecommendation(access_token, user_id, rec_id);
   }
     
+  /**
+   * Constructs map of artist ids to genre names and isolates uncached artists
+   * @param {string} access_token - Spotify access token for logged in user
+   * @param {Object[]} top_artists - Array of Spotify artist objects
+   * @param {Object[]} top_tracks - Array of Spotify track objects
+   * @returns {Promise<Object>} - Promise for object with artist_id_to_genres map and uncached_artists array
+   */
   async processTopArtistsAndTracks(access_token, top_artists, top_tracks) {
     // Extract artist ids not cached in database or already fetched in top artists
     const { cached_artists, uncached_artist_ids } = await this.getCachedArtistsAndUncachedIds(top_artists, top_tracks)
@@ -176,6 +269,11 @@ class Middleware {
       });
   }
 
+  /**
+   * Fetches user profile data from Spotify API and creates/updates User document in database
+   * @param {string} access_token - Spotify access token for logged in user
+   * @returns {Promise<Object>} - Promise for updated User document
+   */
   async updateLoggedInUser(access_token) {
     // Fetch user profile, top artists, and top tracks from Spotify API
     const artists = SpotifyAPI.fetchUserTopArtists(access_token, 'medium_term', 50);

@@ -23,6 +23,11 @@ const middleware = new Middleware(redirect_uri);
 
 // Middleware helpers
 
+ /**
+  * Validates the Authorization header and returns the access token if valid
+  * @param {string} auth - The Authorization header value
+  * @result {string} - Access token if valid, null otherwise
+  */
 function validateAuth(auth) {
 	if (!auth) {
 		return null;
@@ -32,6 +37,11 @@ function validateAuth(auth) {
 	return auth.split(' ')[1];
 }
 
+/**
+ * Validates the num_recs query parameter and returns the number of recommendations if valid
+ * @param {string} num_recs - The num_recs query parameter value
+ * @returns {number} casted_num_recs - The number of recommendations if valid, null otherwise
+ */
 function validateNumRecs(num_recs) {
 	if (num_recs === undefined) { // default to 5 if num_recs not provided
 		return 5;
@@ -48,11 +58,17 @@ function validateNumRecs(num_recs) {
 
 
 // GET endpoints
-
+/**
+ * Redirects to Spotify login page
+ */
 app.get('/login', (req, res) => {
 	res.redirect(api.getLoginRedirectURL());
 });
 
+/**
+ * Callback endpoint for Spotify login
+ * @result {Object} response - The access token and refresh token
+ */
 app.get('/callback', (req, res) => {
 	api.getAccessToken(req.query.code)
 		.then(response => {
@@ -61,27 +77,45 @@ app.get('/callback', (req, res) => {
 		.catch(console.error);
 });
 
-// TODO: test this endpoint
+/**
+ * Get mutual matches
+ * @param {string} id - Spotify user ID
+ * @result {Object[]} res - The mutual matches
+ */
 app.get('/users/:id/mutual_matches', (req, res) => {
 	middleware.getMatches(req.params.id)
 		.then(matches => res.json(matches))
 		.catch(console.error);
 });
 
-// Used to retrieve potential matches for a user
+/**
+ * Used to retrieve potential matches for a user
+ * @param {string} id - Spotify user ID
+ * @result {Object[]} - The potential matches
+ */
 app.get('/users/:id/potential_matches', (req, res) => {
 	middleware.getPotentialMatches(req.params.id)
 		.then(matches => res.json(matches))
 		.catch(console.error);
 });
 
+/**
+ * Used to retrieve a user's profile
+ * @param {string} id - Spotify user ID
+ * @result {Object} - The user's profile
+ */
 app.get('/users/:id/profile', (req, res) => {
 	return middleware.getUserProfile(5, 5, req.params.id)
 		.then(user => res.json(user))
 		.catch(console.error);
 });
 
-// GET /users/{{user_id}}/recs?num_recs={{num_recs}}
+/**
+ * Used to retrieve a user's top artists
+ * @param {string} id - Spotify user ID
+ * @parem {number} num_recs - The number artists to retrieve
+ * @result {Object[]} res - The user's top artists
+ */
 app.get('/users/:id/recs', (req, res) => {
 	const access_token = validateAuth(req.header('Authorization'));
 	const num_recs = validateNumRecs(req.query.num_recs);
@@ -99,7 +133,12 @@ app.get('/users/:id/recs', (req, res) => {
 		.catch(console.error);
 });
 
-// TODO: test endpoint
+/**
+ * Used to retrieve a user's potential matches
+ * @param {string} id - Spotify user ID of logged in user
+ * @param {string} match_id - Spotify user ID of potential match
+ * @result {Object []} - The potential matches
+ */
 app.get('/users/:id/potential_matches/:match_id', (req, res) => {
 	const pot_user_obj = middleware.getUser(req.params.match_id);
 	// display_name different from user_id
@@ -116,6 +155,10 @@ app.get('/users/:id/calculateMatchScore/:match_id', (req, res) => {
 
 // POST endpoints
 
+/**
+ * Used to get and update a users profile
+ * @result {Object} user - The updated user profile
+ */
 app.post('/users', (req, res) => {
 	// Validate request authorization and extract access token
 	const access_token = validateAuth(req.header('Authorization'), res);
@@ -126,6 +169,12 @@ app.post('/users', (req, res) => {
 		.catch(console.error);
 });
 
+/**
+ * Used to either like or dismiss a song recommendation
+ * @param {string} user_id - Spotify user ID
+ * @param {string} rec_id - Spotify track ID
+ * @result {Object} recs - The song recommendations
+ */
 app.post('/users/:user_id/recs/:rec_id', (req, res) => {
 	// Extract access token from request auth and get action from query string
 	const access_token = validateAuth(req.header('Authorization'));
@@ -147,26 +196,44 @@ app.post('/users/:user_id/recs/:rec_id', (req, res) => {
 	}
 });
 
-// Use to generate potential matches for a user
+/**
+ * Use to generate potential matches for a user
+ * @param {string} id - Spotify user ID of logged in user
+ * @result {Object[]} - The potential matches
+ */
 app.post('/users/:id/generate_potential_matches', (req, res) => {
 	middleware.generateMatches(req.params.id)
 		.then(matches => res.json(matches))
 		.catch(console.error);
 });
 
+/**
+ * Used to like a match
+ * @param {string} id - Spotify user ID of logged in user
+ * @param {string} match_id - Spotify user ID of potential match
+ * @result {Object} - Either returns the match id or an error
+ */
 app.post('/users/:id/likeMatch/:match_id', (req, res) => {
 	middleware.likeMatch(req.params.id, req.params.match_id)
 		.then(() => res.json({ 'liked': req.params.match_id }))
 		.catch(console.error);
 });
 
+/**
+ * Used to dismiss a match
+ * @param {string} id - Spotify user ID of logged in user
+ * @param {string} match_id - Spotify user ID of potential match
+ * @result {Object} - Either returns the match id or an error
+ */
 app.post('/users/:id/dismissMatch/:match_id', (req, res) => {
 	middleware.dismissMatch(req.params.id, req.params.match_id)
 		.then(() => res.json({ 'dismissed': req.params.match_id }))
 		.catch(console.error);
 });
 
-// Start Express server
+/**
+ * Used to start the express server
+ */
 app.listen(port, () => {
 	console.log(`Minuet server listening on port ${port}`)
 });
