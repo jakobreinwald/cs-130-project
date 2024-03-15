@@ -45,4 +45,4 @@ jobs:
 
     - name: Build frontend
       working-directory: ./minuet
-      run: npm run build  # Adjust command based on your build script
+      run: CI=false npm run build  # Adjust command based on your build script
