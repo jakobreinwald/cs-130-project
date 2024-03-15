@@ -58,7 +58,6 @@ function validateNumRecs(num_recs) {
 
 
 // GET endpoints
-
 /**
  * Redirects to Spotify login page
  */
