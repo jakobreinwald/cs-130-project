@@ -33,6 +33,7 @@ class Matching {
       .filter(pot_user_obj => pot_user_obj.user_id !== user_id)
       .map(({ user_id }) => user_id));
 
+    // TODO: this code would need to be refactored to use db.getGenres and db.getArtists methods
     // // loop through all genres and find all users who listen to the genre
     // for (const genre of user_genres) {
     //   const genre_obj = await this.db.getGenre(genre);
@@ -113,9 +114,6 @@ class Matching {
 
     let artist_match_score = 0;
     for (const [user_artist_rank, artist] of user_obj.top_artist_ids.entries()) {
-      // const artist_obj = await this.db.getArtist(artist);
-      // const user_artist_rank = artist_obj.listener_id_to_rank.get(user_obj.user_id) ?? num_top_artists;
-      // const match_artist_rank = artist_obj.listener_id_to_rank.get(match_user_obj.user_id) ?? num_top_artists;
       const match_artist_index = match_user_obj.top_artist_ids.indexOf(artist);
       const match_artist_rank = match_artist_index === -1 ? num_top_artists : match_artist_index;
       artist_match_score += (num_top_artists - user_artist_rank) * (num_top_artists - match_artist_rank);
