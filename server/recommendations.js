@@ -6,11 +6,24 @@ const rec_batch_len = 5;
 // Dependencies
 const SpotifyAPI = require('./spotify_api');
 
+/**
+ * Song recommendations helper class
+ */
 class Recommendations {
+  /**
+   * Constructs Recommendations helper with database client instance
+   * @param {Database} database - Database client instance
+   */
   constructor(database) {
     this.db = database;
   }
 
+  /**
+   * Creates a new playlist on user's Spotify account for recommended tracks, if not already created
+   * @param {string} access_token - Spotify access token for logged in user
+   * @param {mongoose.Document} user_doc - User document from database
+   * @returns {Promise<mongoose.Document>} - Updated user document with cached playlist id
+   */
   static async createRecommendedTracksPlaylist(access_token, user_doc) {
     const { recommended_tracks_playlist_id, user_id } = user_doc;
     
@@ -45,6 +58,14 @@ class Recommendations {
     return Promise.resolve(user_doc);
   }
   
+  /**
+   * Updates offsets of top artist and tracks arrays used to determine recommendation seeds
+   * @param {number} artist_offset - Current offset of user's top artists array
+   * @param {number} track_offset - Current offset of user's top tracks array
+   * @param {number} num_top_artists - Size of user's top artists array
+   * @param {number} num_top_tracks - Size of user's top tracks array
+   * @returns {number[]} - Updated artist and track offsets
+   */
   static updateRecommendationSeedOffsets(artist_offset, track_offset, num_top_artists, num_top_tracks) {
     artist_offset += num_artist_seeds;
     track_offset += num_track_seeds;
@@ -60,10 +81,25 @@ class Recommendations {
     return [artist_offset, track_offset];
   }
 
+  /**
+   * Marks a recommended track as dismissed
+   * @param {string} user_id - Spotify user id of logged in user
+   * @param {string} rec_id - Spotify track id of recommended track
+   * @returns {Promise<mongoose.UpdateWriteOpResult>} - Promise for Mongo update operation result 
+   */
   async dismissRecommendation(user_id, rec_id) {
     return this.db.dismissRecommendation(user_id, rec_id);
   }
 
+  /**
+   * Requests track recommendations from Spotify API using selection of user's top artists and tracks as seeds
+   * @param {string} access_token - Spotify access token for logged in user
+   * @param {mongoose.Document} user - User document from database
+   * @param {number} artist_offset - Seed-determining offset for top artists array
+   * @param {number} track_offset - Seed-determining offset for top tracks array
+   * @param {number} batch_len - Number of recommendations to request from the Spotify API in each batch
+   * @returns {Promise<Object[]>} - Promise for array of Spotify track objects
+   */
   async fetchRecommendations(access_token, user, artist_offset, track_offset, batch_len) {
     // Extract top artists, tracks, and seed-determining offsets from user document
     const { top_artist_ids, top_track_ids } = user;
@@ -78,6 +114,14 @@ class Recommendations {
       .catch(console.error);
   }
 
+  /**
+   * Generates and caches requested number of recommendations for user
+   * @param {string} access_token - Spotify access token for logged in user
+   * @param {mongoose.Document} user - User document from database
+   * @param {number} batch_len - Number of recommendations to request from the Spotify API in each batch
+   * @param {number} num_req - Number of recommendations to generate in total
+   * @returns {Promise<string[]>} - Promise for array of Spotify recommended track ids
+   */
   async generateRecommendations(access_token, user, batch_len, num_req) {
     // Extract previous recommendations, seed-determining offsets, top artist and track ids from user document
     const {
@@ -123,6 +167,13 @@ class Recommendations {
     return Promise.all([cached_rec_ids, cached_tracks]).then(() => req_rec_ids);
   }
 
+  /**
+   * Gets requested number of track recommendations for user, either from cache or by generating new recommendations
+   * @param {string} access_token - Spotify access token for logged in user
+   * @param {string} user_id - Spotify user id of logged in user
+   * @param {number} num_req - Number of recommendations requested
+   * @returns {Promise<Object[]>} - Promise for array of full track objects cached in database
+   */
   async getRecommendations(access_token, user_id, num_req) {
     // Isolate first num_req recommendations that user has not yet interacted with
     const user = await this.db.getUserDocument(user_id).catch(console.error);
@@ -155,6 +206,13 @@ class Recommendations {
     return this.db.getFullTracks(rec_ids);
   }
 
+  /**
+   * Marks a recommended track as liked in database and adds to designated Spotify playlist
+   * @param {string} access_token - Spotify access token for logged in user
+   * @param {string} user_id - Spotify user id of logged in user
+   * @param {string} rec_id - Spotify track id of recommended track
+   * @returns {Promise<AxiosResponse>} - Promise for Axios response object
+   */
   async likeRecommendation(access_token, user_id, rec_id) {
     // Mark recommendation as liked in database and add to user's Spotify account
     const playlist_id = await this.db.likeRecommendation(user_id, rec_id)
