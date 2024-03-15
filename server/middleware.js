@@ -70,7 +70,7 @@ class Middleware {
    * Returns match score for given user and potential match
    * @param {string} user_id - Spotify user id of logged in user
    * @param {string} match_id - Spotify user id of potential match
-   * @returns {Promise<number>} - Promise for match score
+   * @returns {Promise<Number>} - Promise for match score
    */
   async calculateMatchScore(user_id, match_id) {
     return this.matching.calculateMatchScore(user_id, match_id);
@@ -106,18 +106,18 @@ class Middleware {
   }
 
   /**
-   * 
+   * Gets a list of mutual matches for the user
    * @param {string} user_id - Spotify user id of logged in user
-   * @returns 
+   * @returns {Promise<Object[]>} - Promise for array of mutual match objects { user_id, name, top_artist
    */
   async getMatches(user_id) {
     return this.matching.getMatches(user_id);
   }
 
   /**
-   * 
+   * Gets a list of potential matches for the user
    * @param {string} user_id - Spotify user id of logged in user
-   * @returns 
+   * @returns {Promise<Object[]>} - Promise for array of potential match objects { user_id, name, top_artist
    */
   async getPotentialMatches(user_id) {
     return this.matching.getPotentialMatches(user_id);
