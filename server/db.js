@@ -305,7 +305,6 @@ class Database {
 	 * @returns {Promise<mongoose.UpdateWriteOpResult>} - Promise for Mongo update operation result
 	 */
 	async dismissMatch(user_id, match_id) {
-		// TODO: increment match offset in user document
 		return User.updateOne(
 			{ user_id: user_id },
 			{ $set: { [`matched_user_to_outcome.${match_id}`]: 'dismissed' } }
