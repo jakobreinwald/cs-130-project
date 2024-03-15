@@ -86,7 +86,7 @@ function App() {
 				? await getTracks(token, likedTracks)
 				: { data: { tracks: [] } };
 			const matchedUsersLinks = dbProfile.data.matched_users
-				.map(({ user_id }) => `/cs-130-project/user/${user_id}`);
+				.map(({ user_id }) => `/user/${user_id}`);
 
 			const frontEndUser = { ...dbProfile.data, userPlaylist: userPlaylist.data, recommendedTracks: recommendedTracks.data.tracks, matchedUsersLinks };
 			setProfile(frontEndUser);

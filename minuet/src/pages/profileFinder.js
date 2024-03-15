@@ -105,7 +105,7 @@ function ProfileFinder(props) {
 									image={element.images[1] ? element.images[1].url : null}
 									mainText={element.display_name}
 									subText={`Their top artist: ${element.top_artists[0] ? element.top_artists[0].name : null}`}
-									link={`/user/:${element.user_id}`}
+									link={`/user/${element.user_id}`}
 								/>
 							</Box>
 						</Slide>
