@@ -79,7 +79,7 @@ app.get('/callback', (req, res) => {
 
 /**
  * Get mutual matches
- * @param {string} id - The user id
+ * @param {string} id - Spotify user ID
  * @result {Object[]} res - The mutual matches
  */
 app.get('/users/:id/mutual_matches', (req, res) => {
@@ -90,7 +90,7 @@ app.get('/users/:id/mutual_matches', (req, res) => {
 
 /**
  * Used to retrieve potential matches for a user
- * @param {string} id - The user id
+ * @param {string} id - Spotify user ID
  * @result {Object[]} - The potential matches
  */
 app.get('/users/:id/potential_matches', (req, res) => {
@@ -101,7 +101,7 @@ app.get('/users/:id/potential_matches', (req, res) => {
 
 /**
  * Used to retrieve a user's profile
- * @param {string} id - The user id
+ * @param {string} id - Spotify user ID
  * @result {Object} - The user's profile
  */
 app.get('/users/:id/profile', (req, res) => {
@@ -112,7 +112,7 @@ app.get('/users/:id/profile', (req, res) => {
 
 /**
  * Used to retrieve a user's top artists
- * @param {string} id - The user id
+ * @param {string} id - Spotify user ID
  * @parem {number} num_recs - The number artists to retrieve
  * @result {Object[]} res - The user's top artists
  */
@@ -135,8 +135,8 @@ app.get('/users/:id/recs', (req, res) => {
 
 /**
  * Used to retrieve a user's potential matches
- * @param {string} id - The user id
- * @param {string} match_id - The match id
+ * @param {string} id - Spotify user ID of logged in user
+ * @param {string} match_id - Spotify user ID of potential match
  * @result {Object []} - The potential matches
  */
 app.get('/users/:id/potential_matches/:match_id', (req, res) => {
@@ -171,8 +171,8 @@ app.post('/users', (req, res) => {
 
 /**
  * Used to either like or dismiss a song recommendation
- * @param {string} user_id - The user id
- * @param {string} rec_id - The recommendation id
+ * @param {string} user_id - Spotify user ID
+ * @param {string} rec_id - Spotify track ID
  * @result {Object} recs - The song recommendations
  */
 app.post('/users/:user_id/recs/:rec_id', (req, res) => {
@@ -198,7 +198,7 @@ app.post('/users/:user_id/recs/:rec_id', (req, res) => {
 
 /**
  * Use to generate potential matches for a user
- * @param {string} id - The user id
+ * @param {string} id - Spotify user ID of logged in user
  * @result {Object[]} - The potential matches
  */
 app.post('/users/:id/generate_potential_matches', (req, res) => {
@@ -209,8 +209,8 @@ app.post('/users/:id/generate_potential_matches', (req, res) => {
 
 /**
  * Used to like a match
- * @param {string} id - The user id
- * @param {string} match_id - The match id
+ * @param {string} id - Spotify user ID of logged in user
+ * @param {string} match_id - Spotify user ID of potential match
  * @result {Object} - Either returns the match id or an error
  */
 app.post('/users/:id/likeMatch/:match_id', (req, res) => {
@@ -221,8 +221,8 @@ app.post('/users/:id/likeMatch/:match_id', (req, res) => {
 
 /**
  * Used to dismiss a match
- * @param {string} id - The user id
- * @param {string} match_id - The match id
+ * @param {string} id - Spotify user ID of logged in user
+ * @param {string} match_id - Spotify user ID of potential match
  * @result {Object} - Either returns the match id or an error
  */
 app.post('/users/:id/dismissMatch/:match_id', (req, res) => {
