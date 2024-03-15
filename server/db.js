@@ -242,6 +242,32 @@ class Database {
 	}
 
 	/**
+	 * Creates or updates Match document in database
+	 * @param {string} user_id - Spotify user ID of logged in user
+	 * @param {string} match_id - Spotify user ID of potential match
+	 * @param {number} match_score - Match score between logged in user and potential match
+	 * @param {string[]} top_shared_artist_ids - Array of Spotify artist IDs shared between user and match
+	 * @param {string[]} top_shared_genres - Array of genre names shared between user and match
+	 * @param {string[]} top_shared_track_ids - Array of Spotify track IDs shared between user and match
+	 * @returns {Promise<mongoose.Document>} - Promise for updated Match document
+	 */
+	async createOrUpdateMatch(user_id, match_id, match_score, top_shared_artist_ids, top_shared_genres, top_shared_track_ids) {
+		// check if match exists
+		return Match.findOneAndUpdate(
+			{ $or: [{ user_a_id: user_id, user_b_id: match_id }, { user_a_id: match_id, user_b_id: user_id }] },
+			{
+        user_a_id: user_id,
+        user_b_id: match_id,
+				match_score: match_score,
+				top_shared_artist_ids: top_shared_artist_ids,
+				top_shared_genres: top_shared_genres,
+				top_shared_track_ids: top_shared_track_ids
+			},
+			{ new: true, upsert: true }
+		).exec();
+	}
+
+	/**
 	 * Creates or updates Track documents in database
 	 * @param {Object[]} tracks - Array of Track objects from Spotify API
 	 * @return {Promise<BulkWriteOpResult>} - Promise for Mongo bulk write operation result
@@ -338,32 +364,6 @@ class Database {
 		await User.updateOne(
 			{ user_id: user_id },
 			{ $set: { [`matched_user_to_outcome.${match_id}`]: 'liked' } }
-		).exec();
-	}
-
-	/**
-	 * Creates or updates Match document in database
-	 * @param {string} user_id - Spotify user ID of logged in user
-	 * @param {string} match_id - Spotify user ID of potential match
-	 * @param {number} match_score - Match score between logged in user and potential match
-	 * @param {string[]} top_shared_artist_ids - Array of Spotify artist IDs shared between user and match
-	 * @param {string[]} top_shared_genres - Array of genre names shared between user and match
-	 * @param {string[]} top_shared_track_ids - Array of Spotify track IDs shared between user and match
-	 * @returns {Promise<mongoose.Document>} - Promise for updated Match document
-	 */
-	async createOrUpdateMatch(user_id, match_id, match_score, top_shared_artist_ids, top_shared_genres, top_shared_track_ids) {
-		// check if match exists
-		return Match.findOneAndUpdate(
-			{ $or: [{ user_a_id: user_id, user_b_id: match_id }, { user_a_id: match_id, user_b_id: user_id }] },
-			{
-        user_a_id: user_id,
-        user_b_id: match_id,
-				match_score: match_score,
-				top_shared_artist_ids: top_shared_artist_ids,
-				top_shared_genres: top_shared_genres,
-				top_shared_track_ids: top_shared_track_ids
-			},
-			{ new: true, upsert: true }
 		).exec();
 	}
 

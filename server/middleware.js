@@ -168,7 +168,7 @@ class Middleware {
     const user = await this.db.getUserProfile(user_id).catch(console.error);
 
     if (!user) {
-      return Promise.reject('Failed to fetch user profile');
+      return Promise.reject(new Error('Failed to fetch user from database'));
     }
 
     // Fetch matched users from database
@@ -188,7 +188,7 @@ class Middleware {
       .catch(console.error);
 
     if (!matched_users || !top_artists || !top_tracks) {
-      return Promise.reject('Failed to fetch matched users, top artists and/or tracks for user');
+      return Promise.reject(new Error('Failed to fetch full profile'));
     }
 
     // Return user profile with full top artist and track info

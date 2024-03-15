@@ -68,26 +68,26 @@ class Matching {
 
     // check if the user objects exist
     if (!user_obj || !match_user_obj) {
-      return -1;
+      return [-1, user_obj, null];
     }
     // check if the genre counts exist
     if (!user_obj.genre_counts || !match_user_obj.genre_counts) {
-      return -1;
+      return [-1, user_obj, match_user_obj];
     }
 
     // check if the genre counts are empty
     if ((user_obj.genre_counts.size == 0) || (match_user_obj.genre_counts.size == 0)) {
-      return -1;
+      return [-1, user_obj, match_user_obj];
     }
 
     // check if the top artist ids exist
     if (!user_obj.top_artist_ids || !match_user_obj.top_artist_ids) {
-      return -1;
+      return [-1, user_obj, match_user_obj];
     }
 
     // check if the top artist ids are empty
     if ((user_obj.top_artist_ids.length == 0) || (match_user_obj.top_artist_ids.length == 0)) {
-      return -1;
+      return [-1, user_obj, match_user_obj];
     }
 
     const user_genre_counts_keys = Object.keys(user_obj.genre_counts);

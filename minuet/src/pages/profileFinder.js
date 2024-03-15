@@ -24,13 +24,15 @@ function ProfileFinder(props) {
 			let promises = [];
 			for (const [userId, value] of Object.entries(users)) {
 				if (value === "none" && userId[0] !== '3' && userId !== 'limelego') {
-					promises.push(getUserProfile(userId))
+					promises.push(getUserProfile(userId));
 				}
 			}
-			return Promise.all(promises)
+			return Promise.allSettled(promises);
 		};
-		const otherProfiles = (await getOtherProfiles(matchedUsers)).map((p) => p.data)
-		setPfs(otherProfiles)
+		const otherProfiles = await getOtherProfiles(matchedUsers)
+			.then(res => res.filter(({ status }) => status === 'fulfilled'))
+			.then(res => res.map(({ value }) => value.data));
+		setPfs(otherProfiles);
 	};
 
 	useEffect(() => {

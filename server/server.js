@@ -107,7 +107,16 @@ app.get('/users/:id/potential_matches', (req, res) => {
 app.get('/users/:id/profile', (req, res) => {
 	return middleware.getUserProfile(5, 5, req.params.id)
 		.then(user => res.json(user))
-		.catch(console.error);
+		.catch(error => {
+			switch (error.message) {
+				case 'Failed to fetch user from database':
+					return res.status(404).json({ error: 'User not found' });
+				case 'Failed to fetch full profile':
+					return res.status(500).json({ error: 'Failed to fetch full profile' });
+				default:
+					console.error(error);
+			}
+		});
 });
 
 /**
@@ -121,9 +130,9 @@ app.get('/users/:id/recs', (req, res) => {
 	const num_recs = validateNumRecs(req.query.num_recs);
 
 	if (!access_token) {
-		return res.status(401).send('Unauthorized');
+		return res.status(401).json({ error: 'Invalid or missing access token in Authorization header' });
 	} else if (!num_recs) {
-		return res.status(400).send('num_recs parameter must be a positive integer');
+		return res.status(400).json({ error: 'num_recs parameter must be a positive integer' });
 	}
 
 	const user_id = req.params.id;
