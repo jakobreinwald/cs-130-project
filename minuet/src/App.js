@@ -90,7 +90,7 @@ function App() {
 
 			const frontEndUser = { ...dbProfile.data, userPlaylist: userPlaylist.data, recommendedTracks: recommendedTracks.data.tracks, matchedUsersLinks };
 			setProfile(frontEndUser);
-			console.log("Profile: ", frontEndUser);
+			console.log("Frontend profile: ", frontEndUser);
 			return frontEndUser;
 		}
 		return pairedProfile;
