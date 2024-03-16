@@ -142,9 +142,9 @@ class Database {
 	createTrackModel({ album, artists, duration_ms, name, popularity, preview_url }) {
 		// Convert Spotify API object to Track model
 		return {
-				duration_ms,
+		duration_ms,
 		name,
-				popularity,
+		popularity,
 		preview_url,
 		album_id: album.id,
 		artist_ids: artists.map(({ id }) => id)
