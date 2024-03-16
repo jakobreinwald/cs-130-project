@@ -22,6 +22,7 @@ jobs:
           echo REACT_APP_FRONTEND_URL=${{ secrets.REACT_APP_FRONTEND_URL }} >> .env
           npm install  # Install dependencies (if needed)
           CI=false npm run build  # Build your frontend
+          echo "www.minuet.lol" > build/CNAME # Add custom domain
           mv build ../public  # Move build files to temporary directory
 
       - name: Deploy to GitHub Pages
