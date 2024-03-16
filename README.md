@@ -92,3 +92,19 @@ A repository can also be setup to build continuously whenever a commit is pushed
 The CI script will also be run when a new pull request is created or when more commits are pushed to its linked `issue` branch. Such build assures peer reviewers that the new commits when accepted will not break the build. In fact, a successful CI build can be a prerequisute for peer reviewers to look at the changes.
 
 When a tag is pushed to the `master` branch, the CI script will additionally deliver and/or deploy the built artifact(s). The script can also be configured to create a Github release based on the tag.
+
+## Installing
+
+To install dependencies, navigate to ./minuet and run `npm install`.  
+Then, navigate to ./server and run `npm install`.  
+
+This assures that both dependencies are installed for the server and frontend.
+
+## Building
+
+To build the app, navigate to ./minuet and run `npm run build`. The final production build will be in ./minuet/build.
+
+## Deploying
+
+To deploy the app, use the final production build found in ./minuet/build. The server.js file in ./server also needs to be deployed.  
+Optionally, use our CD pipeline to automatically deploy the app to any of our preset URLS.
