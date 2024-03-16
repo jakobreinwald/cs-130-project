@@ -47,7 +47,7 @@ To deploy the app, use the final production build found in ./minuet/build. Our C
 
 ### Deploying Backend 
 
-The server.js file in ./server also needs to be deployed. This can be done by pushing the latest server code to the Heroku App via ```git push heroku master```. 
+The backend of the app will also be deployed on changes to the main branch, with the same CI/CD pipeline. 
 
 ### CI/CD
 
