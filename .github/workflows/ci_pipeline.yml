@@ -30,7 +30,15 @@ jobs:
 
     - name: Run tests (backend)
       working-directory: ./server
-      run: npm test  
+      run: |          
+        touch .env.local
+        echo MONGO_USERNAME=${{ secrets.MONGO_USERNAME }} >> .env.local
+        echo MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }} >> .env.local
+        echo MONGO_CLUSTER=${{ secrets.MONGO_CLUSTER }} >> .env.local
+        echo MONGO_HOST=${{ secrets.MONGO_HOST }} >> .env.local
+        echo SPOTIFY_CLIENT_ID=${{ secrets.SPOTIFY_CLIENT_ID }} >> .env.local
+        echo SPOTIFY_CLIENT_SECRET=${{ secrets.SPOTIFY_CLIENT_SECRET }} >> .env.local
+        npm test
 
     - name: Setup Node.js for frontend
       uses: actions/setup-node@v4
