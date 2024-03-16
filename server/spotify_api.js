@@ -113,12 +113,12 @@ class SpotifyAPI {
 		const ids = artist_ids.join(',');
 
     if (ids === '') {
-      return Promise.resolve({ data: { artists: [] } });
+      	return Promise.resolve({ data: { artists: [] } });
     }
 
     return axios.get(`${base_url}/artists`, {
-      headers: SpotifyAPI.getHeaders(access_token),
-      params: { ids }
+		headers: SpotifyAPI.getHeaders(access_token),
+		params: { ids }
     });
   }
 

@@ -88,17 +88,17 @@ class Database {
 	 * @param {string} album_obj.release_date_precision - Album release date precision as defined by Spotify API
 	 * @returns {Object} - Album model for Mongo database
 	 */
-  createAlbumModel({ album_type, artists, images, name, release_date, release_date_precision }) {
-    // 
-    return {
-      album_type,
-      images,
-      name,
-      release_date,
-      release_date_precision,
-      artist_ids: artists.map(({ id }) => id)
-    };
-  }
+	createAlbumModel({ album_type, artists, images, name, release_date, release_date_precision }) {
+		// 
+		return {
+		album_type,
+		images,
+		name,
+		release_date,
+		release_date_precision,
+		artist_ids: artists.map(({ id }) => id)
+		};
+	}
 
 	/**
 	 * Converts Spotify API object to Artist model
@@ -108,13 +108,13 @@ class Database {
 	 * @param {string} artist_obj.name - Artist name
 	 * @returns {Object} - Artist model for Mongo database
 	 */
-  createArtistModel({ genres, images, name }) {
-    return {
-      genres,
-      images,
-      name
-    };
-  }
+	createArtistModel({ genres, images, name }) {
+		return {
+		genres,
+		images,
+		name
+		};
+	}
 
 	/**
 	 * Ensures Spotify API object conforms to database Image model
@@ -139,17 +139,17 @@ class Database {
 	 * @param {string} track_obj.preview_url - Track audio preview URL
 	 * @returns {Object} - Track model for Mongo database
 	 */
-  createTrackModel({ album, artists, duration_ms, name, popularity, preview_url }) {
-    // Convert Spotify API object to Track model
-    return {
-			duration_ms,
-      name,
-			popularity,
-      preview_url,
-      album_id: album.id,
-      artist_ids: artists.map(({ id }) => id)
-    };
-  }
+	createTrackModel({ album, artists, duration_ms, name, popularity, preview_url }) {
+		// Convert Spotify API object to Track model
+		return {
+		duration_ms,
+		name,
+		popularity,
+		preview_url,
+		album_id: album.id,
+		artist_ids: artists.map(({ id }) => id)
+		};
+	}
 
 	/**
 	 * Returns Mongo findOne query for given user
@@ -168,18 +168,18 @@ class Database {
 	 * @param {mongoose.Document} user_doc - User document from Mongo database
 	 * @returns {Promise<mongoose.Document>} - Promise for updated User document
 	 */
-  async addRecommendations(artist_offset, track_offset, rec_ids, user_doc) {
-    // Update seed-determining offsets
-    user_doc.rec_seed_artist_offset = artist_offset;
-    user_doc.rec_seed_track_offset = track_offset;
+	async addRecommendations(artist_offset, track_offset, rec_ids, user_doc) {
+		// Update seed-determining offsets
+		user_doc.rec_seed_artist_offset = artist_offset;
+		user_doc.rec_seed_track_offset = track_offset;
 
-    // Add new recommended tracks that user has not yet acted upon
-    user_doc.recommended_and_fresh_tracks = rec_ids.reduce((map, rec_id) => {
-        map.set(rec_id, '');
-        return map;
-      }, user_doc.recommended_and_fresh_tracks);
+		// Add new recommended tracks that user has not yet acted upon
+		user_doc.recommended_and_fresh_tracks = rec_ids.reduce((map, rec_id) => {
+			map.set(rec_id, '');
+			return map;
+		}, user_doc.recommended_and_fresh_tracks);
 
-		return user_doc.save();
+			return user_doc.save();
 	}
 
 	/**
@@ -303,26 +303,26 @@ class Database {
 	 * @param {Object} user_obj - User object from Spotify API
 	 * @returns {Promise<mongoose.Document>} - Promise for updated User document
 	 */
-  async createOrUpdateUser(genre_counts, top_artist_ids, top_track_ids, user_obj) {
-    // Update existing User document, otherwise create new document
-    // sum the values of the genre_counts map
-    const total_genre_count = Array.from(genre_counts.values()).reduce((a, b) => a + b, 0);
-    const { id, display_name } = user_obj;
-    const images = user_obj.images ? user_obj.images.map(this.createImageModel) : [];
+	async createOrUpdateUser(genre_counts, top_artist_ids, top_track_ids, user_obj) {
+		// Update existing User document, otherwise create new document
+		// sum the values of the genre_counts map
+		const total_genre_count = Array.from(genre_counts.values()).reduce((a, b) => a + b, 0);
+		const { id, display_name } = user_obj;
+		const images = user_obj.images ? user_obj.images.map(this.createImageModel) : [];
 
-    return User.findOneAndUpdate(
-      { user_id: id },
-      {
-        display_name,
-        genre_counts,
-        images,
-        top_artist_ids,
-        top_track_ids,
-        total_genre_count
-      },
-      { new: true, upsert: true }
-    ).exec();
-  }
+		return User.findOneAndUpdate(
+		{ user_id: id },
+		{
+			display_name,
+			genre_counts,
+			images,
+			top_artist_ids,
+			top_track_ids,
+			total_genre_count
+		},
+		{ new: true, upsert: true }
+		).exec();
+	}
 
 	/**
 	 * Marks a potential profile match as dismissed in User document

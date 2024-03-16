@@ -217,6 +217,7 @@ class Middleware {
    * @param {string} access_token - Spotify access token for logged in user
    * @param {string} user_id - Spotify user id of logged in user
    * @param {string} rec_id - Spotify track id of recommendation to like
+   * @returns {Promise<AxiosResponse>} - Promise for Axios response object
    */
   async likeRecommendation(access_token, user_id, rec_id) {
     return this.recs.likeRecommendation(access_token, user_id, rec_id);
