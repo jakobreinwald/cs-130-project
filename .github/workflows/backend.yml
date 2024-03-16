@@ -16,7 +16,6 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -26,16 +25,26 @@ jobs:
           cd server
           npm install
 
-      - name: Login to Heroku
-        run: npx heroku login -i
-        env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+      - uses: actions/checkout@v2
+      - uses: akhileshns/heroku-deploy@v3.13.15 # This is the action
+        with:
+          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+          heroku_app_name: "minuet" #Must be unique in Heroku
+          heroku_email: "jakob.reinwald@yahoo.com"
+      
 
-      - name: Add Heroku remote
-        run: git remote add heroku https://git.heroku.com/minuet.git  # App git location
+      # - name: Login to Heroku
+      #   run: npx heroku login -i
+      #   env:
+      #     HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+      #     heroku_app_name: "minuet"
+      #     heroku_email: "jakob.reinwald@yahoo.com"
 
-      - name: Deploy to Heroku
-        run: npx heroku git:remote -a minuet
+      # - name: Add Heroku remote
+      #   run: git remote add heroku https://git.heroku.com/minuet.git  # App git location
 
-      - name: Deploy to Heroku
-        run: git push heroku main
+      # - name: Deploy to Heroku
+      #   run: npx heroku git:remote -a minuet
+
+      # - name: Deploy to Heroku
+      #   run: git push heroku main
