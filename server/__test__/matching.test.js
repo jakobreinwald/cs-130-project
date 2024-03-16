@@ -89,3 +89,15 @@ test('Like match', async () => {
         ]});
     expect(match_obj).not.toBeNull();
 });
+
+// Test calculate match score
+test('Calculate match score', async () => {
+    await params.match_user_obj.save();
+    await params.artist_obj.save();
+    await matching.likeMatch(params.user_id, params.match_id);
+    const [match_score, user_obj, match_user_obj] = await matching.calculateMatchScore(params.user_id, params.match_id);
+    expect(match_score).toBe(1);
+
+    const [match_score2, user_obj2, match_user_obj2] = await matching.calculateMatchScore(params.match_id, params.user_id);
+    expect(match_score2).toBe(1);
+});
