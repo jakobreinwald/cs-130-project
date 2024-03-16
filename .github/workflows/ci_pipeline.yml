@@ -43,6 +43,10 @@ jobs:
       working-directory: ./minuet 
       run: npm install
 
+    - name: Run tests (frontend)
+      working-directory: ./minuet 
+      run: npm test
+
     - name: Build frontend
       working-directory: ./minuet
       run: CI=false npm run build  # Adjust command based on your build script
