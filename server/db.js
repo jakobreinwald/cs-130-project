@@ -17,6 +17,10 @@ class Database {
 			.catch(console.error);
 	}
 
+	close() {
+		mongoose.connection.close();
+	}
+
 	/**
 	 * Returns Mongo updateOne operation for given Album object
 	 * @param {Object} album_obj - Album object from Spotify API
@@ -76,7 +80,7 @@ class Database {
 			}
 		};
 	}
-	
+
 	/**
 	 * Converts Spotify API object to Album model
 	 * @param {Object} album_obj - Album object from Spotify API
@@ -91,12 +95,12 @@ class Database {
 	createAlbumModel({ album_type, artists, images, name, release_date, release_date_precision }) {
 		// 
 		return {
-		album_type,
-		images,
-		name,
-		release_date,
-		release_date_precision,
-		artist_ids: artists.map(({ id }) => id)
+			album_type,
+			images,
+			name,
+			release_date,
+			release_date_precision,
+			artist_ids: artists.map(({ id }) => id)
 		};
 	}
 
@@ -110,9 +114,9 @@ class Database {
 	 */
 	createArtistModel({ genres, images, name }) {
 		return {
-		genres,
-		images,
-		name
+			genres,
+			images,
+			name
 		};
 	}
 
@@ -142,12 +146,12 @@ class Database {
 	createTrackModel({ album, artists, duration_ms, name, popularity, preview_url }) {
 		// Convert Spotify API object to Track model
 		return {
-		duration_ms,
-		name,
-		popularity,
-		preview_url,
-		album_id: album.id,
-		artist_ids: artists.map(({ id }) => id)
+			duration_ms,
+			name,
+			popularity,
+			preview_url,
+			album_id: album.id,
+			artist_ids: artists.map(({ id }) => id)
 		};
 	}
 
@@ -179,7 +183,7 @@ class Database {
 			return map;
 		}, user_doc.recommended_and_fresh_tracks);
 
-			return user_doc.save();
+		return user_doc.save();
 	}
 
 	/**
@@ -256,8 +260,8 @@ class Database {
 		return Match.findOneAndUpdate(
 			{ $or: [{ user_a_id: user_id, user_b_id: match_id }, { user_a_id: match_id, user_b_id: user_id }] },
 			{
-        user_a_id: user_id,
-        user_b_id: match_id,
+				user_a_id: user_id,
+				user_b_id: match_id,
 				match_score: match_score,
 				top_shared_artist_ids: top_shared_artist_ids,
 				top_shared_genres: top_shared_genres,
@@ -286,14 +290,14 @@ class Database {
 		// Update existing Track documents, otherwise create new documents
 		const updated_tracks = this.createOrUpdateTracks(tracks);
 
-    // Extract albums and artists from tracks, then create/update respective documents
-    const albums = tracks.map(({ album }) => album);
-    const updated_albums = this.createOrUpdateAlbums(albums);
-    const artists = tracks.flatMap(({ artists }) => artists);
-    const updated_artists = this.createOrUpdateArtists([], artists, null);
+		// Extract albums and artists from tracks, then create/update respective documents
+		const albums = tracks.map(({ album }) => album);
+		const updated_albums = this.createOrUpdateAlbums(albums);
+		const artists = tracks.flatMap(({ artists }) => artists);
+		const updated_artists = this.createOrUpdateArtists([], artists, null);
 
-    return Promise.all([updated_albums, updated_artists, updated_tracks]);
-  }
+		return Promise.all([updated_albums, updated_artists, updated_tracks]);
+	}
 
 	/**
 	 * Creates or updates User document in database with genre counts, top artists, and top tracks
@@ -311,16 +315,16 @@ class Database {
 		const images = user_obj.images ? user_obj.images.map(this.createImageModel) : [];
 
 		return User.findOneAndUpdate(
-		{ user_id: id },
-		{
-			display_name,
-			genre_counts,
-			images,
-			top_artist_ids,
-			top_track_ids,
-			total_genre_count
-		},
-		{ new: true, upsert: true }
+			{ user_id: id },
+			{
+				display_name,
+				genre_counts,
+				images,
+				top_artist_ids,
+				top_track_ids,
+				total_genre_count
+			},
+			{ new: true, upsert: true }
 		).exec();
 	}
 
@@ -592,7 +596,7 @@ class Database {
 	async getMatch(user_id, match_id) {
 		return Match.findOne({ $or: [{ user_a_id: user_id, user_b_id: match_id }, { user_a_id: match_id, user_b_id: user_id }] }).exec();
 	}
-	
+
 	/**
 	 * Returns matches field containing Match documents for given user
 	 * @param {string} user_id - Spotify user ID
