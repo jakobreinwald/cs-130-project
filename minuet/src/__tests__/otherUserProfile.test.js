@@ -14,7 +14,7 @@ jest.mock('react-router-dom', () => ({
     ...jest.requireActual('react-router-dom'),
     useParams: jest.fn()
 }));
-jest.mock('../components/AnimatedMatchPercentage', () => ({ targetValue }) => (
+jest.mock('../components/animatedMatchPercentage', () => ({ targetValue }) => (
     <div>{`${targetValue}% Match`}</div>
 ));
 

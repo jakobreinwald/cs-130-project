@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import LandingPage from '../pages/LandingPage';
+import LandingPage from '../pages/landingPage';
 import getToken from '../getToken';
 
 // Mocking the getToken module
