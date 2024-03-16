@@ -106,4 +106,12 @@ test('Calculate match score', async () => {
 	expect(match_score2).toBe(1);
 });
 
-db.close();
+beforeAll(done => {
+	done()
+})
+
+afterAll(done => {
+	// Closing the DB connection allows Jest to exit successfully.
+	db.close();
+	done()
+})
