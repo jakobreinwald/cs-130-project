@@ -70,14 +70,14 @@ function OtherUserProfile({ loggedInUserId }) {
                 </Box>
             </Box>
             <Box sx={{display: 'flex', flexDirection:'row', gap: 5, justifyContent: 'center',}}>
-                <Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '90%', borderRadius: 5}}>
+                <Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '60%', borderRadius: 5}}>
                   <CardContent>
                     <Typography gutterBottom variant="h5" component="div" align='center' fontWeight='bold'>
                         Top Songs
                     </Typography>
                     {profile ? topTracks.map((match, index) =>
                     <Link href={track_url.concat(match.track_id)} target="_blank" rel="noopener noreferrer" style={{ color:'white', textDecoration: 'none'}}>
-                        <Box key={index} sx={{display:'flex', flexDirection: 'row', gap: 1, mt: 2, p: 1, '&:hover': { bgcolor: 'primary.main'}, borderRadius: 2}}>
+                        <Box key={index} sx={{display:'flex', flexDirection: 'row', alignItems: 'center', gap: 1, mt: 2, p: 1, '&:hover': { bgcolor: 'primary.main'}, borderRadius: 2}}>
                             <Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={match.album.images[1].url} />
                             <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
                                 <Typography variant="body1">{match.name}</Typography>
@@ -92,14 +92,14 @@ function OtherUserProfile({ loggedInUserId }) {
                   </CardContent>
                 </Card>
                 <Divider orientation="vertical" flexItem />
-                <Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '90%', borderRadius: 5}}>
+                <Card sx={{ bgcolor: 'background.secondary', flexGrow: 1, minWidth: '60%', borderRadius: 5}}>
                   <CardContent>
                     <Typography gutterBottom variant="h5" component="div" align='center' fontWeight='bold'>
                         Top Artists
                     </Typography>
                     {topArtists.length !== 0 ? topArtists.map((match, index) =>
                         <Link href={artist_url.concat(match.artist_id)} target="_blank" rel="noopener noreferrer" style={{ color:'white', textDecoration: 'none'}}>
-                            <Box key={index} sx={{display:'flex', flexDirection: 'row', gap: 1, mt: 2, p: 1, '&:hover': { bgcolor: 'primary.main'}, borderRadius: 2}}>
+                            <Box key={index} sx={{display:'flex', flexDirection: 'row', alignItems: 'center', gap: 1, mt: 2, p: 1, '&:hover': { bgcolor: 'primary.main'}, borderRadius: 2}}>
                                 <Avatar sx={{ bgcolor: 'text.primary' }} variant="rounded" src={match.images[0].url} />
                                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
                                     <Typography variant="body1">{match.name}</Typography>
